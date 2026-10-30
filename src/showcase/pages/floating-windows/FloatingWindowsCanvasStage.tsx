@@ -337,7 +337,7 @@ export const FloatingWindowsCanvasStage: React.FC<FloatingWindowsCanvasStageProp
           >
             <div className="flex items-center justify-between pb-2 border-b border-neutral-200/80 dark:border-neutral-800 mb-2">
               <span className="text-xs font-bold tracking-tight">
-                {tier === 'user' ? 'USER PRESET WINDOWS (6)' : 'DEV PRESET WINDOWS (19)'}
+                {tier === 'user' ? 'USER PRESET WINDOWS' : 'DEV PRESET WINDOWS'} ({activeTierWindows.length})
               </span>
               <span className="text-[10px] font-mono text-neutral-400">Enqueues to Stack</span>
             </div>

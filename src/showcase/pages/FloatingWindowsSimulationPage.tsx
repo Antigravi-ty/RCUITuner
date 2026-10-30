@@ -321,11 +321,11 @@ export const FloatingWindowsSimulationPage: React.FC<FloatingWindowsSimulationPa
           </div>
           <div>
             <h1 className="text-2xl font-bold tracking-tight">
-              6D · Floating Window Suite (6 User + 19 Developer)
+              6D · Floating Window Suite ({USER_PRESET_WINDOWS.length} User + {DEV_PRESET_WINDOWS.length} Developer)
             </h1>
             <p className={`text-xs mt-0.5 ${isLight ? 'text-neutral-500' : 'text-neutral-400'}`}>
-              Strict separation of <strong>User Only (6 Player Windows)</strong> and{' '}
-              <strong>Developer Only (19 Engineering Tuners &amp; Labs)</strong>. Supports Direct Inspector, Multi-Window Stack, and Flat Matrix Audit Wall.
+              Strict separation of <strong>User Only ({USER_PRESET_WINDOWS.length} Player Windows)</strong> and{' '}
+              <strong>Developer Only ({DEV_PRESET_WINDOWS.length} Engineering Tuners &amp; Labs)</strong>. Supports Direct Inspector, Multi-Window Stack, and Flat Matrix Audit Wall.
             </p>
           </div>
         </div>

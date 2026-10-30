@@ -152,7 +152,7 @@ export const FloatingWindowsFlatMatrixWall: React.FC<FloatingWindowsFlatMatrixWa
             >
               <Layers className="h-3.5 w-3.5" />
               <span>
-                All {tier === 'user' ? 'User (6)' : 'Developer (19)'} Windows &amp; Tabs
+                All {tier === 'user' ? 'User' : 'Developer'} ({tierList.length}) Windows &amp; Tabs
               </span>
             </button>
           </div>
