@@ -5,7 +5,6 @@ import {
   Eye,
 } from 'lucide-react';
 import {
-  CenterUpperGlowConfig,
   CenterUpperTypographyConfig,
   CenterUpperTimingConfig,
 } from '../../../ui-core/hud/CenterUpperInfoHUD';
@@ -14,7 +13,9 @@ import {
   TakeoverVignetteOverlay,
   TakeoverHudPayload,
   TakeoverVignetteConfig,
+  TakeoverGlowConfig,
   TakeoverSignal,
+  resolveTakeoverTopLabelVisuals,
 } from '../../../ui-core/hud/TakeoverCountdownHUD';
 import { StepperScoreboardHUD } from '../../../ui-core/hud/StepperScoreboardHUD';
 import { EdgePlayerHudStrip } from '../../../ui-core/hud/EdgePlayerHudStrip';
@@ -44,19 +45,19 @@ export const TAKEOVER_DIRECTORY_ITEMS: JumpDirectoryItem[] = [
     id: 'takeover-stage',
     code: '5G-1',
     name: 'HudAnchorStage (bottom-center + upward offset)',
-    label: 'Takeover live stage · Scoreboard + Team Roster · Bottom-center upward offset · Replacing In -> 3-2-1 -> Cockpit HUD return',
+    label: 'Takeover live stage · Scoreboard + Team Roster · Rounded-rect 4-edge vignette · Team-colored Top Regular + White glowing stroke',
   },
   {
     id: 'takeover-tuner',
     code: '5G-2',
-    name: 'Vignette, Typography & Motion Tuner',
-    label: '4-edge vignette intensity/distance/Cubic-Bezier curve + Bottom-only scale pop + Force Uppercase OFF + One-click copy config',
+    name: 'Vignette, Team Top Label & Motion Tuner',
+    label: 'Rounded-rectangle vignette intensity/distance/corner radius/curve + Team-colored top label & white stroke + One-click copy config',
   },
   {
     id: 'takeover-archetypes',
     code: '5G-3',
     name: 'Scenario Presets & Integration Recipe',
-    label: 'Bot Takeover / Disconnect Reconnect / Mid-Match Handoff presets & decoupled code recipe',
+    label: 'Blue & Orange Team Bot Takeover / Disconnect Reconnect / Mid-Match Handoff presets & decoupled code recipe',
   },
 ];
 
@@ -71,7 +72,7 @@ export interface TakeoverStageCanvasProps {
   isCockpitVisible: boolean;
   myTeamSide: 'blue' | 'orange';
   activePayload: TakeoverHudPayload | null;
-  glowConfig: CenterUpperGlowConfig;
+  glowConfig: TakeoverGlowConfig;
   typoConfig: CenterUpperTypographyConfig;
   timingConfig: CenterUpperTimingConfig;
   vignetteConfig: TakeoverVignetteConfig;
@@ -128,7 +129,7 @@ export const TakeoverStageCanvas: React.FC<TakeoverStageCanvasProps> = ({
         </div>
       )}
 
-      {/* 4-Edge Atmospheric Vignette Layer BELOW the HUD layer (`z-10` under `HudAnchorStage z-20`) */}
+      {/* Rounded-Rectangle 4-Edge Atmospheric Vignette Layer BELOW the HUD layer (`z-10` under `HudAnchorStage z-20`) */}
       <TakeoverVignetteOverlay
         config={vignetteConfig}
         active={vignettePreviewActive}
@@ -255,7 +256,7 @@ export const TakeoverStageCanvas: React.FC<TakeoverStageCanvasProps> = ({
 
         {/* 6. BOTTOM-CENTER UPWARD OFFSET: Takeover Countdown Banner
             - Relative to `bottom-center`, offset upward by `bottomOffsetPx` (NOT global center)
-            - Top Regular (`Take over in`) stays completely still; Bottom Thin (`3 -> 2 -> 1`) scales */}
+            - Top Regular (`Takeover in...`) stays completely still in Team Color + White Glowing Stroke; Bottom Thin (`3 -> 2 -> 1`) scales */}
         <HudZone
           anchor="bottom-center"
           flush
@@ -265,6 +266,7 @@ export const TakeoverStageCanvas: React.FC<TakeoverStageCanvasProps> = ({
           <HudSlot visible={true} mode="reserve">
             <TakeoverCountdownHUD
               payload={activePayload}
+              teamSide={myTeamSide}
               glowConfig={glowConfig}
               typographyConfig={typoConfig}
               timingConfig={timingConfig}
@@ -289,6 +291,13 @@ export const TakeoverStageCanvas: React.FC<TakeoverStageCanvasProps> = ({
         />
         <span>
           Signal: <strong className="text-amber-400">{activeSignal}</strong>
+        </span>
+        <span className="opacity-30">|</span>
+        <span>
+          Team:{' '}
+          <strong className={myTeamSide === 'blue' ? 'text-blue-400' : 'text-orange-400'}>
+            {myTeamSide === 'blue' ? 'BLUE' : 'ORANGE'}
+          </strong>
         </span>
         <span className="opacity-30">|</span>
         <span>
@@ -388,7 +397,7 @@ export const TakeoverStageBackdropBar: React.FC<TakeoverStageBackdropBarProps> =
       <div>
         <ColorSwatchInput
           label="Preview Background Main Color (Background Color)"
-          description="Verify 4-edge vignette and Out Glow contrast against dark/light stadium tones"
+          description="Verify rounded-rect 4-edge vignette and Out Glow contrast against stadium tones"
           value={stageBgColor}
           onChange={setStageBgColor}
           presets={BG_COLOR_SWATCHES}
@@ -443,25 +452,25 @@ export interface TakeoverScenarioPreset {
 export const TAKEOVER_SCENARIO_PRESETS: TakeoverScenarioPreset[] = [
   {
     id: 'bot-handoff',
-    badge: '① Bot Takeover · Standard',
-    title: 'Take over in · 3 -> 2 -> 1',
-    topText: 'Take over in',
+    badge: '① Bot Takeover · Blue Team',
+    title: 'Takeover in... · 3 -> 2 -> 1',
+    topText: 'Takeover in...',
     subText: '',
     teamSide: 'blue',
   },
   {
     id: 'reconnect-resume',
-    badge: '② Reconnect Handoff · Orange Side',
-    title: 'Take over in (Reconnect Resume)',
-    topText: 'Take over in',
+    badge: '② Reconnect Handoff · Orange Team',
+    title: 'Takeover in... (Orange Side)',
+    topText: 'Takeover in...',
     subText: 'RECONNECTED · OCTANE_99',
     teamSide: 'orange',
   },
   {
     id: 'training-intervention',
     badge: '③ Replay / Training Intervention',
-    title: 'Replacing in · 3 -> 2 -> 1',
-    topText: 'Replacing in',
+    title: 'Replacing in... · 3 -> 2 -> 1',
+    topText: 'Replacing in...',
     subText: '',
     teamSide: 'blue',
   },
@@ -472,7 +481,8 @@ export interface TakeoverArchetypesSectionProps {
   stageBgColor: string;
   bottomOffsetPx: number;
   topLabelText: string;
-  glowConfig: CenterUpperGlowConfig;
+  myTeamSide: 'blue' | 'orange';
+  glowConfig: TakeoverGlowConfig;
   typoConfig: CenterUpperTypographyConfig;
   timingConfig: CenterUpperTimingConfig;
   vignetteConfig: TakeoverVignetteConfig;
@@ -484,6 +494,7 @@ export const TakeoverArchetypesSection: React.FC<TakeoverArchetypesSectionProps>
   stageBgColor,
   bottomOffsetPx,
   topLabelText,
+  myTeamSide,
   glowConfig,
   typoConfig,
   timingConfig,
@@ -509,53 +520,59 @@ export const TakeoverArchetypesSection: React.FC<TakeoverArchetypesSectionProps>
           </h2>
         </div>
         <span className="text-xs font-mono opacity-65">
-          Click any card to play the `replacing-in` -&gt; `3-2-1` -&gt; Cockpit HUD deployment sequence
+          Click any card to switch Team Side (Blue vs Orange) &amp; run the `replacing-in` -&gt; `3-2-1` -&gt; Cockpit HUD sequence
         </span>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {TAKEOVER_SCENARIO_PRESETS.map((preset) => (
-          <div
-            key={preset.id}
-            onClick={() => onSelectScenario(preset)}
-            className="group relative h-44 rounded-2xl border border-neutral-800 overflow-hidden flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-transform hover:scale-[1.01]"
-            style={{ backgroundColor: stageBgColor }}
-          >
-            <span className="absolute top-2.5 left-3 text-[10px] font-mono tracking-wider text-amber-400/90 bg-black/60 px-2 py-0.5 rounded border border-amber-500/30">
-              {preset.badge}
-            </span>
+        {TAKEOVER_SCENARIO_PRESETS.map((preset) => {
+          const topVisuals = resolveTakeoverTopLabelVisuals(glowConfig, preset.teamSide);
+          return (
             <div
-              style={{
-                fontFamily: 'var(--font-jetbrains), monospace',
-                fontWeight: 400,
-                fontSize: '20px',
-                color: glowConfig.topLabelColor || '#FFFFFF',
-              }}
-              className="leading-none select-none"
+              key={preset.id}
+              onClick={() => onSelectScenario(preset)}
+              className="group relative h-44 rounded-2xl border border-neutral-800 overflow-hidden flex flex-col items-center justify-center gap-2 cursor-pointer transition-transform hover:scale-[1.01]"
+              style={{ backgroundColor: stageBgColor }}
             >
-              {typoConfig.uppercase ? preset.topText.toUpperCase() : preset.topText}
+              <span className="absolute top-2.5 left-3 text-[10px] font-mono tracking-wider text-amber-400/90 bg-black/60 px-2 py-0.5 rounded border border-amber-500/30">
+                {preset.badge}
+              </span>
+              <div
+                style={{
+                  fontFamily: 'var(--font-jetbrains), monospace',
+                  fontWeight: typoConfig.topFontWeight,
+                  fontSize: '20px',
+                  color: topVisuals.fillColor,
+                  WebkitTextStroke: topVisuals.strokeCss,
+                  paintOrder: 'stroke fill',
+                  textShadow: topVisuals.textShadowCss,
+                }}
+                className="leading-none select-none"
+              >
+                {typoConfig.uppercase ? preset.topText.toUpperCase() : preset.topText}
+              </div>
+              <div
+                style={{
+                  fontFamily: 'var(--font-jetbrains), monospace',
+                  fontWeight: typoConfig.mainFontWeight,
+                  fontSize: '44px',
+                  color: glowConfig.textColor,
+                }}
+                className="leading-none select-none"
+              >
+                3 · 2 · 1
+              </div>
+              <span className="absolute bottom-2.5 text-[10px] font-mono text-neutral-400 group-hover:text-white transition-colors flex items-center gap-1">
+                <Eye className="h-3 w-3 text-amber-400" />
+                <span>Click to run {preset.title} sequence →</span>
+              </span>
             </div>
-            <div
-              style={{
-                fontFamily: 'var(--font-jetbrains), monospace',
-                fontWeight: 100,
-                fontSize: '52px',
-                color: glowConfig.textColor,
-              }}
-              className="leading-none select-none"
-            >
-              3 · 2 · 1
-            </div>
-            <span className="absolute bottom-2.5 text-[10px] font-mono text-neutral-400 group-hover:text-white transition-colors flex items-center gap-1">
-              <Eye className="h-3 w-3 text-amber-400" />
-              <span>Click to run {preset.title} sequence →</span>
-            </span>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <CodeBlock
-        title="Zero Coupling TakeoverOverlay (`bottom-center` upward offset + `TakeoverVignetteOverlay` + `replacing-in` Signal) Recipe"
+        title="Zero Coupling TakeoverOverlay (`bottom-center` upward offset + Rounded-Rect `TakeoverVignetteOverlay` + Team-Colored Top Label) Recipe"
         language="tsx"
         isLight={isLight}
         code={`import { HudAnchorStage, HudZone, HudSlot } from '@/ui-core/layout/HudAnchorStage';
@@ -567,15 +584,15 @@ import {
 export function MatchTakeoverOverlay({
   isReplacingIn,
   countdownDigit, // '3' | '2' | '1' | null
+  teamSide = '${myTeamSide}', // 'blue' | 'orange'
 }: {
   isReplacingIn: boolean;
   countdownDigit: '3' | '2' | '1' | null;
+  teamSide?: 'blue' | 'orange';
 }) {
-  const isCockpitVisible = !isReplacingIn;
-
   return (
     <div className="relative w-full h-full overflow-hidden">
-      {/* 1. 4-Edge Vignette Layer underneath the HUD layer (z-10 < HudAnchorStage z-20) */}
+      {/* 1. Rounded-Rectangle 4-Edge Vignette Mask underneath the HUD layer (z-10 < HudAnchorStage z-20) */}
       <TakeoverVignetteOverlay
         active={isReplacingIn}
         config={{
@@ -584,6 +601,7 @@ export function MatchTakeoverOverlay({
           intensityPct: ${vignetteConfig.intensityPct},
           distancePct: ${vignetteConfig.distancePct},
           outerReachPct: ${vignetteConfig.outerReachPct},
+          cornerRadiusPx: ${vignetteConfig.cornerRadiusPx ?? 36},
           curve: {
             p1x: ${vignetteConfig.curve.p1x},
             p1y: ${vignetteConfig.curve.p1y},
@@ -606,11 +624,13 @@ export function MatchTakeoverOverlay({
         >
           <HudSlot visible={isReplacingIn} mode="reserve">
             <TakeoverCountdownHUD
+              teamSide={teamSide}
               payload={
                 countdownDigit
                   ? {
-                      topText: '${topLabelText}', // JetBrains Mono Regular (400) — Stationary
+                      topText: '${topLabelText}', // JetBrains Mono Regular (400) — Team Color + White Glowing Stroke
                       mainText: countdownDigit, // JetBrains Mono Thin (100) — Scales 3 -> 2 -> 1
+                      teamSide,
                     }
                   : null
               }
@@ -628,7 +648,7 @@ export function MatchTakeoverOverlay({
                 topFontSizePx: ${typoConfig.topFontSizePx},
                 topFontWeight: ${typoConfig.topFontWeight},
                 lineGapPx: ${typoConfig.lineGapPx},
-                uppercase: ${typoConfig.uppercase}, // Default false ('Take over in')
+                uppercase: ${typoConfig.uppercase}, // Default false ('Takeover in...')
               }}
               timingConfig={{
                 durationMs: ${timingConfig.durationMs},
@@ -647,3 +667,4 @@ export function MatchTakeoverOverlay({
     </section>
   );
 };
+

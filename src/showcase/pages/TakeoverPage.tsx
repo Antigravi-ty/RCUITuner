@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
-  Sparkles,
   Play,
   Square,
   Timer,
@@ -9,13 +8,13 @@ import {
   Users,
 } from 'lucide-react';
 import {
-  CenterUpperGlowConfig,
   CenterUpperTypographyConfig,
   CenterUpperTimingConfig,
 } from '../../ui-core/hud/CenterUpperInfoHUD';
 import {
   TakeoverHudPayload,
   TakeoverVignetteConfig,
+  TakeoverGlowConfig,
   TakeoverSignal,
   DEFAULT_TAKEOVER_GLOW,
   DEFAULT_TAKEOVER_TYPOGRAPHY,
@@ -53,9 +52,9 @@ export const TakeoverPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }
   );
   const [arenaPreset, setArenaPreset] = useSyncedState<ArenaLightingPreset>(
     '5g:arenaPreset',
-    'night'
+    'daylight'
   );
-  const [stageBrightness, setStageBrightness] = useSyncedState<number>('5g:stageBrightness', 62);
+  const [stageBrightness, setStageBrightness] = useSyncedState<number>('5g:stageBrightness', 100);
   const [showPitchLines, setShowPitchLines] = useSyncedState<boolean>('5g:showPitchLines', true);
   const [showAnchorGuides, setShowAnchorGuides] = useSyncedState<boolean>(
     '5g:showAnchorGuides',
@@ -68,7 +67,7 @@ export const TakeoverPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }
     DEFAULT_TAKEOVER_LAYOUT.bottomOffsetPx
   );
 
-  // Team roster & Scoreboard configuration
+  // Team roster & Scoreboard configuration ('blue' vs 'orange' also drives Top Regular team color)
   const [myTeamSide, setMyTeamSide] = useSyncedState<'blue' | 'orange'>('5g:myTeamSide', 'blue');
 
   // Takeover signal ('replacing-in' retracts BallCam, Speedometer, FlipIndicator, BoostMeter; 'takeover-complete' deploys them)
@@ -82,7 +81,7 @@ export const TakeoverPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }
   );
   const [topLabelText, setTopLabelText] = useSyncedState<string>(
     '5g:topLabelText',
-    'Take over in'
+    'Takeover in...'
   );
   const [subCaptionText, setSubCaptionText] = useSyncedState<string>('5g:subCaptionText', '');
   const [countdownIntervalMs, setCountdownIntervalMs] = useSyncedState<number>(
@@ -96,8 +95,8 @@ export const TakeoverPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }
   const [loopSequence, setLoopSequence] = useSyncedState<boolean>('5g:loopSequence', false);
   const sequenceTimerRef = useRef<number | null>(null);
 
-  // Glow, Typography (`uppercase: false` by default), Timing, and 4-Edge Vignette
-  const [glowConfig, setGlowConfig] = useSyncedState<CenterUpperGlowConfig>('5g:glowConfig', {
+  // Glow, Typography (`uppercase: false` by default), Timing, and Rounded-Rect 4-Edge Vignette
+  const [glowConfig, setGlowConfig] = useSyncedState<TakeoverGlowConfig>('5g:glowConfig', {
     ...DEFAULT_TAKEOVER_GLOW,
   });
   const [syncGlowWithText, setSyncGlowWithText] = useSyncedState<boolean>(
@@ -289,7 +288,7 @@ export const DEFAULT_5G_TAKEOVER_CONFIG = ${JSON.stringify(snapshot, null, 2)};`
       const stepMs = Math.max(250, stepIntervalOverride ?? countdownIntervalMs);
       const steps: ('3' | '2' | '1')[] = ['3', '2', '1'];
 
-      // Phase 1: Dispatch 'replacing-in' signal -> retract BallCam, Speedometer, Flip, Boost + fade in 4-edge vignette
+      // Phase 1: Dispatch 'replacing-in' signal -> retract BallCam, Speedometer, Flip, Boost + fade in rounded-rect vignette
       setActiveSignal('replacing-in');
       setIsSequencePlaying(true);
       setIsVisibleOnStage(true);
@@ -374,6 +373,7 @@ export const DEFAULT_5G_TAKEOVER_CONFIG = ${JSON.stringify(snapshot, null, 2)};`
         topText: topLabelText,
         mainText: countdownStep,
         subText: subCaptionText,
+        teamSide: myTeamSide,
         glow: glowConfig,
         typography: typoConfig,
         timing: {
@@ -411,9 +411,9 @@ export const DEFAULT_5G_TAKEOVER_CONFIG = ${JSON.stringify(snapshot, null, 2)};`
   return (
     <div className="flex flex-col gap-8 max-w-6xl w-full">
       <PageJumpDirectory
-        layerTag="Layer 5G · HUD Bottom-Center Upward Takeover & 4-Edge Vignette"
+        layerTag="Layer 5G · HUD Bottom-Center Upward Takeover & Rounded-Rect Vignette"
         title="Takeover · Player Handoff & Reconnect Countdown System"
-        subtitle="Cloned and evolved from 5E (Five Echo) for bot takeover and disconnect-reconnect handoffs: keeps Scoreboard and Team Roster visible, hides Cockpit HUD (BallCam, Speedometer, Flip Indicator, Boost Gauge) on `replacing-in` signal with a 4-edge vignette underneath the UI layer, anchors relative to `bottom-center` with upward offset, keeps Top Regular (`Take over in`) stationary while Bottom Thin (`3 -> 2 -> 1`) pops, and slides all Cockpit HUD gauges back in upon completion."
+        subtitle="Cloned and evolved from 5E (Five Echo) for bot takeover and disconnect-reconnect handoffs: keeps Scoreboard and Team Roster visible, hides Cockpit HUD (BallCam, Speedometer, Flip Indicator, Boost Gauge) on `replacing-in` signal with a rounded-rectangle 4-edge vignette mask underneath the UI layer, anchors relative to `bottom-center` with upward offset, renders Top Regular (`Takeover in...`) in Team Color (Blue vs Orange) + White Glowing Stroke while Bottom Thin (`3 -> 2 -> 1`) pops, and slides all Cockpit HUD gauges back in upon completion."
         items={TAKEOVER_DIRECTORY_ITEMS}
         isLight={isLight}
       />
@@ -434,13 +434,13 @@ export const DEFAULT_5G_TAKEOVER_CONFIG = ${JSON.stringify(snapshot, null, 2)};`
               5G-1
             </Badge>
             <h2 className="text-base font-bold tracking-tight">
-              Takeover Stage (`anchor=&quot;bottom-center&quot;` + Upward Offset) · `replacing-in` Signal &amp; 4-Edge Vignette
+              Takeover Stage (`anchor=&quot;bottom-center&quot;` + Upward Offset) · `replacing-in` Signal &amp; Rounded-Rect Vignette
             </h2>
             <Badge variant="primary" size="sm" isLight={isLight}>
-              Top Regular Stationary · Bottom Thin 3-2-1 Scale Pop
+              Top Regular: Team Color + White Glowing Stroke
             </Badge>
             <Badge variant="success" size="sm" isLight={isLight}>
-              No Force Uppercase (`Take over in`)
+              No Force Uppercase (`Takeover in...`)
             </Badge>
           </div>
 
@@ -455,7 +455,7 @@ export const DEFAULT_5G_TAKEOVER_CONFIG = ${JSON.stringify(snapshot, null, 2)};`
               }`}
             >
               <Users className="h-3.5 w-3.5" />
-              <span>Team Roster: {myTeamSide === 'blue' ? 'Blue Team [1-3]' : 'Orange Team [1-3]'}</span>
+              <span>Team Side: {myTeamSide === 'blue' ? 'Blue Team [1-3]' : 'Orange Team [1-3]'}</span>
             </button>
             <ToggleSwitch
               label="Anchor Guide Crosshair"
@@ -687,6 +687,8 @@ export const DEFAULT_5G_TAKEOVER_CONFIG = ${JSON.stringify(snapshot, null, 2)};`
         handleCopyConfig={handleCopyConfig}
         handleResetDefaults={handleResetDefaults}
         buildExportCode={buildExportCode}
+        myTeamSide={myTeamSide}
+        setMyTeamSide={setMyTeamSide}
         vignetteConfig={vignetteConfig}
         setVignetteConfig={setVignetteConfig}
         alwaysPreviewVignette={alwaysPreviewVignette}
@@ -713,6 +715,7 @@ export const DEFAULT_5G_TAKEOVER_CONFIG = ${JSON.stringify(snapshot, null, 2)};`
         stageBgColor={stageBgColor}
         bottomOffsetPx={bottomOffsetPx}
         topLabelText={topLabelText}
+        myTeamSide={myTeamSide}
         glowConfig={glowConfig}
         typoConfig={typoConfig}
         timingConfig={timingConfig}
@@ -724,3 +727,4 @@ export const DEFAULT_5G_TAKEOVER_CONFIG = ${JSON.stringify(snapshot, null, 2)};`
 };
 
 export default TakeoverPage;
+

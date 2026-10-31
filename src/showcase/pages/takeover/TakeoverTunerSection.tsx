@@ -9,15 +9,18 @@ import {
   Check,
   Code2,
   Eye,
+  Users,
 } from 'lucide-react';
 import {
-  CenterUpperGlowConfig,
   CenterUpperTypographyConfig,
   CenterUpperTimingConfig,
 } from '../../../ui-core/hud/CenterUpperInfoHUD';
 import {
   TakeoverVignetteConfig,
+  TakeoverGlowConfig,
+  TakeoverTopLabelStyleConfig,
   DEFAULT_TAKEOVER_GLOW,
+  DEFAULT_TAKEOVER_TOP_LABEL_STYLE,
   DEFAULT_TAKEOVER_TYPOGRAPHY,
   DEFAULT_TAKEOVER_TIMING,
   DEFAULT_TAKEOVER_VIGNETTE,
@@ -36,9 +39,9 @@ import { CodeBlock } from '../../CodeBlock';
 import { RL_GLOW_SWATCHES } from '../center-upper-info/CenterUpperArchetypesAndBackdrop';
 
 export const VIGNETTE_BEZIER_PRESETS: CubicBezierPreset[] = [
-  { name: 'Smooth Edge (Default)', value: { p1x: 0.42, p1y: 0.0, p2x: 0.22, p2y: 1.0 } },
+  { name: 'Calibrated Rect (Default)', value: { p1x: 0.28, p1y: 0.01, p2x: 0.0, p2y: 1.01 } },
+  { name: 'Smooth Edge', value: { p1x: 0.42, p1y: 0.0, p2x: 0.22, p2y: 1.0 } },
   { name: 'Deep Corner Pinch', value: { p1x: 0.68, p1y: 0.0, p2x: 0.88, p2y: 0.35 } },
-  { name: 'Wide Soft Tunnel', value: { p1x: 0.2, p1y: 0.45, p2x: 0.35, p2y: 1.0 } },
   { name: 'Linear Falloff', value: { p1x: 0.33, p1y: 0.33, p2x: 0.67, p2y: 0.67 } },
 ];
 
@@ -51,6 +54,24 @@ export const VIGNETTE_COLOR_SWATCHES = [
   '#27120B',
 ];
 
+export const BLUE_TEAM_SWATCHES = [
+  '#2563EB',
+  '#3B82F6',
+  '#0284C7',
+  '#38BDF8',
+  '#1D4ED8',
+  '#60A5FA',
+];
+
+export const ORANGE_TEAM_SWATCHES = [
+  '#EA580C',
+  '#F97316',
+  '#FB923C',
+  '#D97706',
+  '#EF4444',
+  '#F59E0B',
+];
+
 export interface TakeoverTunerSectionProps {
   isLight: boolean;
   showExportedCode: boolean;
@@ -59,6 +80,10 @@ export interface TakeoverTunerSectionProps {
   handleCopyConfig: () => void;
   handleResetDefaults: () => void;
   buildExportCode: () => string;
+  myTeamSide: 'blue' | 'orange';
+  setMyTeamSide: (
+    val: 'blue' | 'orange' | ((prev: 'blue' | 'orange') => 'blue' | 'orange')
+  ) => void;
   vignetteConfig: TakeoverVignetteConfig;
   setVignetteConfig: (
     val:
@@ -67,11 +92,11 @@ export interface TakeoverTunerSectionProps {
   ) => void;
   alwaysPreviewVignette: boolean;
   setAlwaysPreviewVignette: (val: boolean | ((prev: boolean) => boolean)) => void;
-  glowConfig: CenterUpperGlowConfig;
+  glowConfig: TakeoverGlowConfig;
   setGlowConfig: (
     val:
-      | CenterUpperGlowConfig
-      | ((prev: CenterUpperGlowConfig) => CenterUpperGlowConfig)
+      | TakeoverGlowConfig
+      | ((prev: TakeoverGlowConfig) => TakeoverGlowConfig)
   ) => void;
   syncGlowWithText: boolean;
   setSyncGlowWithText: (val: boolean | ((prev: boolean) => boolean)) => void;
@@ -103,6 +128,8 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
   handleCopyConfig,
   handleResetDefaults,
   buildExportCode,
+  myTeamSide,
+  setMyTeamSide,
   vignetteConfig,
   setVignetteConfig,
   alwaysPreviewVignette,
@@ -122,6 +149,23 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
   setIsVisibleOnStage,
   setTriggerNonce,
 }) => {
+  const resolvedTopStyle: Required<TakeoverTopLabelStyleConfig> = {
+    ...DEFAULT_TAKEOVER_TOP_LABEL_STYLE,
+    ...(glowConfig.topLabelStyle ?? {}),
+  };
+
+  const updateTopLabelStyle = (patch: Partial<TakeoverTopLabelStyleConfig>) => {
+    setGlowConfig((prev) => ({
+      ...prev,
+      topLabelStyle: {
+        ...DEFAULT_TAKEOVER_TOP_LABEL_STYLE,
+        ...(prev.topLabelStyle ?? {}),
+        ...patch,
+      },
+    }));
+    setIsVisibleOnStage(true);
+  };
+
   return (
     <section id="takeover-tuner" className="grid grid-cols-1 lg:grid-cols-2 gap-5 scroll-mt-24">
       {/* Top Export & Solidify Default Parameters Bar across all columns */}
@@ -141,7 +185,7 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
               Takeover Parameter Tuner &amp; One-Click Config Exporter
             </span>
             <span className="text-xs font-mono opacity-65">
-              Adjust 4-edge vignette intensity/distance/curve, bottom-center upward offset, and typography; copy JSON/TS anytime
+              Adjust rounded-rectangle vignette mask, team-colored `Takeover in...` + white glowing stroke, bottom offset, and typography
             </span>
           </div>
 
@@ -202,7 +246,7 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
 
         {showExportedCode && (
           <CodeBlock
-            title="Current Takeover Parameter Snapshot (Vignette + Bottom-Center Offset + Glow + Motion + Typography)"
+            title="Current Takeover Parameter Snapshot (Rounded-Rect Vignette + Team Top Label + Bottom-Center Offset + Typography)"
             language="typescript"
             isLight={isLight}
             code={buildExportCode()}
@@ -210,7 +254,7 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
         )}
       </div>
 
-      {/* Card 1: 4-Edge Vignette Tuner (Intensity, Distance, Outer Reach, Cubic-Bezier Curve) */}
+      {/* Card 1: Rounded-Rectangle 4-Edge Vignette Tuner */}
       <div
         className={`p-5 rounded-3xl border flex flex-col gap-4 ${
           isLight
@@ -222,7 +266,7 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
           <div className="flex items-center gap-2">
             <Eye className="h-4 w-4 text-sky-500" />
             <h3 className="text-sm font-bold font-mono">
-              1. 4-Edge Vignette Under-HUD Layer (Intensity · Distance · Curve)
+              1. Rounded-Rect 4-Edge Vignette Mask (Intensity · Distance · Curve)
             </h3>
           </div>
           <button
@@ -237,7 +281,7 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
 
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <ToggleSwitch
-            label="Enable 4-Edge Vignette Under HUD"
+            label="Enable Rounded-Rect Vignette Mask"
             checked={vignetteConfig.enabled}
             onCheckedChange={(v) => setVignetteConfig((prev) => ({ ...prev, enabled: v }))}
             isLight={isLight}
@@ -252,7 +296,7 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
 
         <ColorSwatchInput
           label="Vignette Edge Tint Color"
-          description="Rendered at z-10 underneath the z-20 HUD layer"
+          description="Rendered at z-10 underneath the z-20 HUD layer as a concentric rounded-rectangle mask"
           value={vignetteConfig.color}
           onChange={(hex) => setVignetteConfig((prev) => ({ ...prev, color: hex }))}
           presets={VIGNETTE_COLOR_SWATCHES}
@@ -261,7 +305,7 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
 
         <SliderControl
           label="Vignette Edge Intensity (Peak Opacity)"
-          description="Controls maximum darkening strength at the 4 screen edges during Takeover"
+          description="Controls maximum darkening strength at the 4 screen edges during Takeover (default 50%)"
           value={vignetteConfig.intensityPct}
           min={0}
           max={100}
@@ -275,8 +319,8 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
         />
 
         <SliderControl
-          label="Clear Center Distance (Inner Start Radius)"
-          description="Distance from center (0%–95%) that stays 100% clear before vignette falloff begins"
+          label="Clear Center Rect Distance (Inner Opening)"
+          description="Rectangular distance from center (0%–95%, default 40%) that stays 100% clear before edge falloff"
           value={vignetteConfig.distancePct}
           min={0}
           max={95}
@@ -288,22 +332,37 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
           isLight={isLight}
         />
 
-        <SliderControl
-          label="Outer Full-Density Reach (Corner Spread)"
-          description="Radial distance where the vignette reaches 100% of its configured intensity"
-          value={vignetteConfig.outerReachPct}
-          min={35}
-          max={140}
-          step={1}
-          unit="%"
-          editable
-          allowOutOfBoundsInput
-          onChange={(v) => setVignetteConfig((prev) => ({ ...prev, outerReachPct: v }))}
-          isLight={isLight}
-        />
+        <div className="grid grid-cols-2 gap-3">
+          <SliderControl
+            label="Outer Full-Density Reach"
+            description="Default 120%"
+            value={vignetteConfig.outerReachPct}
+            min={35}
+            max={140}
+            step={1}
+            unit="%"
+            editable
+            allowOutOfBoundsInput
+            onChange={(v) => setVignetteConfig((prev) => ({ ...prev, outerReachPct: v }))}
+            isLight={isLight}
+          />
+          <SliderControl
+            label="Rect Corner Radius"
+            description="Rounded-rect mask corner radius"
+            value={vignetteConfig.cornerRadiusPx ?? 36}
+            min={0}
+            max={160}
+            step={2}
+            unit="px"
+            editable
+            allowOutOfBoundsInput
+            onChange={(v) => setVignetteConfig((prev) => ({ ...prev, cornerRadiusPx: v }))}
+            isLight={isLight}
+          />
+        </div>
 
         <CubicBezierCurveEditor
-          title="Vignette Spatial Falloff Curve (Inner Clear -> Outer Edge)"
+          title="Rounded-Rect Vignette Falloff Curve (Inner Clear Rect -> Outer Edge)"
           p1x={vignetteConfig.curve.p1x}
           p1y={vignetteConfig.curve.p1y}
           p2x={vignetteConfig.curve.p2x}
@@ -382,13 +441,13 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
 
         <div className="p-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 flex flex-col gap-2">
           <span className="text-xs font-mono font-bold text-emerald-500">
-            Anchor Reference: Bottom-Center Upward Offset (`anchor=&quot;bottom-center&quot;`)
+            Anchor Reference: Bottom-Center Upward Offset (`anchor=&quot;bottom-center&quot;`, Default 24px)
           </span>
           <SliderControl
             label="Upward Offset from Bottom-Center (Bottom Offset px)"
-            description=" strictly anchored to bottom-center and shifted upward (NOT global center)"
+            description="Strictly anchored to bottom-center and shifted upward (NOT global center)"
             value={bottomOffsetPx}
-            min={24}
+            min={0}
             max={280}
             step={2}
             unit="px"
@@ -406,7 +465,7 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
         <div className="flex items-center gap-2 pt-1">
           <Timer className="h-4 w-4 text-sky-500" />
           <span className="text-xs font-bold font-mono">
-            Bottom `3 -&gt; 2 -&gt; 1` Scale Pop Envelope (Top `Take over in` Never Moves)
+            Bottom `3 -&gt; 2 -&gt; 1` Scale Pop Envelope (Top `Takeover in...` Never Moves)
           </span>
         </div>
 
@@ -498,7 +557,7 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
         </div>
       </div>
 
-      {/* Card 3: Color & Outer Glow Tuner */}
+      {/* Card 3: Team-Colored Top Label + White Glowing Stroke & Countdown Glow Tuner */}
       <div
         className={`p-5 rounded-3xl border flex flex-col gap-4 ${
           isLight
@@ -510,7 +569,7 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
           <div className="flex items-center gap-2">
             <Palette className="h-4 w-4 text-amber-500" />
             <h3 className="text-sm font-bold font-mono">
-              3. Color &amp; Outer Glow (`Out Glow` Tuner)
+              3. Team-Colored `Takeover in...` + White Glowing Stroke &amp; Digit Glow
             </h3>
           </div>
           <button
@@ -526,6 +585,103 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
           </button>
         </div>
 
+        {/* Team-Specific Top Label Section */}
+        <div className="p-3.5 rounded-2xl border border-sky-500/30 bg-sky-500/5 flex flex-col gap-3">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <span className="text-xs font-mono font-bold text-sky-400 flex items-center gap-1.5">
+              <Users className="h-3.5 w-3.5" />
+              <span>Top Label (`Takeover in...`): Team Color + White Glowing Stroke</span>
+            </span>
+            <ToggleSwitch
+              label="Use Team Color"
+              checked={resolvedTopStyle.useTeamColor}
+              onCheckedChange={(v) => updateTopLabelStyle({ useTeamColor: v })}
+              isLight={isLight}
+            />
+          </div>
+
+          <SegmentedSwitch
+            size="sm"
+            fullWidth
+            isLight={isLight}
+            value={myTeamSide}
+            onValueChange={(v) => {
+              setMyTeamSide(v as 'blue' | 'orange');
+              setIsVisibleOnStage(true);
+            }}
+            options={[
+              {
+                value: 'blue',
+                label: `Blue Team (${resolvedTopStyle.blueTeamColor})`,
+              },
+              {
+                value: 'orange',
+                label: `Orange Team (${resolvedTopStyle.orangeTeamColor})`,
+              },
+            ]}
+          />
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <ColorSwatchInput
+              label="Blue Team Top Label Fill"
+              value={resolvedTopStyle.blueTeamColor}
+              onChange={(hex) => updateTopLabelStyle({ blueTeamColor: hex })}
+              presets={BLUE_TEAM_SWATCHES}
+              isLight={isLight}
+            />
+            <ColorSwatchInput
+              label="Orange Team Top Label Fill"
+              value={resolvedTopStyle.orangeTeamColor}
+              onChange={(hex) => updateTopLabelStyle({ orangeTeamColor: hex })}
+              presets={ORANGE_TEAM_SWATCHES}
+              isLight={isLight}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <ColorSwatchInput
+              label="Top Label Stroke & Glow Color"
+              description="Default #FFFFFF white glowing stroke"
+              value={resolvedTopStyle.strokeColor}
+              onChange={(hex) =>
+                updateTopLabelStyle({ strokeColor: hex, glowColor: hex })
+              }
+              presets={['#FFFFFF', '#F8FAFC', '#E0F2FE', '#FFFBEB', '#FEF08A']}
+              isLight={isLight}
+            />
+            <div className="flex flex-col gap-2">
+              <SliderControl
+                label="White Stroke Width"
+                value={resolvedTopStyle.strokeWidthPx}
+                min={0}
+                max={3}
+                step={0.05}
+                unit="px"
+                editable
+                allowOutOfBoundsInput
+                formatValue={(v) => v.toFixed(2)}
+                onChange={(v) =>
+                  updateTopLabelStyle({ strokeWidthPx: Number(v.toFixed(2)) })
+                }
+                isLight={isLight}
+              />
+              <SliderControl
+                label="White Outer Glow Blur"
+                value={resolvedTopStyle.outerBlurPx}
+                min={0}
+                max={48}
+                step={1}
+                unit="px"
+                editable
+                allowOutOfBoundsInput
+                onChange={(v) => updateTopLabelStyle({ outerBlurPx: v })}
+                isLight={isLight}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Countdown Digit Color & Glow */}
         <ColorSwatchInput
           label="Bottom Countdown Digit Color (Main Thin 100)"
           description="Default Rocket League yellow #FFE600"
@@ -534,7 +690,7 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
             setGlowConfig((prev) => ({
               ...prev,
               textColor: hex,
-              ...(syncGlowWithText ? { glowColor: hex, topLabelGlowColor: hex } : {}),
+              ...(syncGlowWithText ? { glowColor: hex } : {}),
             }));
             setIsVisibleOnStage(true);
           }}
@@ -544,7 +700,7 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
 
         <div className="flex items-center justify-between px-1">
           <ToggleSwitch
-            label="Outer glow color follows main text"
+            label="Digit outer glow color follows bottom digit text"
             checked={syncGlowWithText}
             onCheckedChange={(sync) => {
               setSyncGlowWithText(sync);
@@ -552,7 +708,6 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
                 setGlowConfig((prev) => ({
                   ...prev,
                   glowColor: prev.textColor,
-                  topLabelGlowColor: prev.textColor,
                 }));
               }
               setIsVisibleOnStage(true);
@@ -562,14 +717,13 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
         </div>
 
         <ColorSwatchInput
-          label="Outer Glow Color (Out Glow Color)"
+          label="Bottom Digit Outer Glow Color (Out Glow Color)"
           description="Default Amber Gold #F59E0B"
           value={glowConfig.glowColor}
           onChange={(hex) => {
             setGlowConfig((prev) => ({
               ...prev,
               glowColor: hex,
-              topLabelGlowColor: hex,
             }));
             setIsVisibleOnStage(true);
           }}
@@ -577,22 +731,8 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
           isLight={isLight}
         />
 
-        <ColorSwatchInput
-          label="Top Regular Stationary Label Color (`Take over in`)"
-          value={glowConfig.topLabelColor ?? '#FFFFFF'}
-          onChange={(hex) => {
-            setGlowConfig((prev) => ({
-              ...prev,
-              topLabelColor: hex,
-            }));
-            setIsVisibleOnStage(true);
-          }}
-          presets={['#FFFFFF', '#FEF08A', '#E0F2FE', '#FFEDD5', '#FFE600', '#94A3B8']}
-          isLight={isLight}
-        />
-
         <SliderControl
-          label="Out Glow Total Intensity"
+          label="Bottom Digit Out Glow Total Intensity"
           value={glowConfig.intensityPct}
           min={0}
           max={200}
@@ -657,7 +797,7 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
         </div>
       </div>
 
-      {/* Card 4: Typography Hierarchy (`uppercase: false` by default) */}
+      {/* Card 4: Typography Hierarchy (`uppercase: false` by default, mainFontSizePx: 56) */}
       <div
         className={`p-5 rounded-3xl border flex flex-col gap-4 ${
           isLight
@@ -669,7 +809,7 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
           <div className="flex items-center gap-2">
             <Sliders className="h-4 w-4 text-purple-500" />
             <h3 className="text-sm font-bold font-mono">
-              4. Typography Hierarchy (`uppercase: false` Default)
+              4. Typography Hierarchy (`mainFontSizePx: 56`, `uppercase: false`)
             </h3>
           </div>
           <button
@@ -686,7 +826,7 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
         </div>
 
         <SliderControl
-          label="Bottom Countdown Digit Font Size (`3 · 2 · 1`)"
+          label="Bottom Countdown Digit Font Size (`3 · 2 · 1`, Default 56px)"
           value={typoConfig.mainFontSizePx}
           min={36}
           max={136}
@@ -727,7 +867,7 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
         </div>
 
         <SliderControl
-          label="Top Stationary Label Font Size (`Take over in`)"
+          label="Top Stationary Label Font Size (`Takeover in...`, Default 24px)"
           value={typoConfig.topFontSizePx}
           min={12}
           max={52}
@@ -806,7 +946,7 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
 
         <div className="flex items-center justify-between pt-1">
           <ToggleSwitch
-            label="Force Uppercase (Default OFF for 'Take over in')"
+            label="Force Uppercase (Default OFF for 'Takeover in...')"
             checked={typoConfig.uppercase}
             onCheckedChange={(v) => {
               setTypoConfig((prev) => ({ ...prev, uppercase: v }));
@@ -828,3 +968,4 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
     </section>
   );
 };
+
