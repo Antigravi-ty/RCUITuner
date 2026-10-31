@@ -146,4 +146,23 @@ main section {
   box-shadow: var(--tw-inset-shadow, 0 0 #0000), var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--hud-perimeter-ring-lg) !important;
 }
 
+@keyframes rcui-flow-backdrop {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.rcui-flow-backdrop {
+  background: linear-gradient(45deg, #ff7b00, #ffae19, #00d2ff, #7928ca);
+  background-size: 300% 300%;
+  animation: rcui-flow-backdrop 4s ease infinite;
+}
+
+
 

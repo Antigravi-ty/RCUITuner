@@ -20,7 +20,7 @@ import { ColorSwatchInput } from '../../../ui-core/compounds/tuner/ColorSwatchIn
 import { JumpDirectoryItem } from '../../PageJumpDirectory';
 import { CodeBlock } from '../../CodeBlock';
 
-export type StageBgMode = 'solid' | 'gradient' | 'arena';
+export type StageBgMode = 'solid' | 'gradient' | 'arena' | 'flow';
 
 export interface CustomAnnouncementPreset {
   id: string;

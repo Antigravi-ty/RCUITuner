@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type ArenaLightingPreset = 'daylight' | 'twilight' | 'night';
+export type ArenaLightingPreset = 'daylight' | 'twilight' | 'night' | 'flow';
 
 export interface ArenaBackdropProps {
   preset?: ArenaLightingPreset;
@@ -23,6 +23,11 @@ export const ArenaBackdrop: React.FC<ArenaBackdropProps> = React.memo(({
   const norm = brightness / 100;
 
   const getBackdropStyles = (): React.CSSProperties => {
+    if (preset === 'flow') {
+      return {
+        filter: `brightness(${(0.75 + norm * 0.45).toFixed(2)})`,
+      };
+    }
     if (preset === 'daylight') {
       return {
         backgroundImage: `
@@ -64,7 +69,9 @@ export const ArenaBackdrop: React.FC<ArenaBackdropProps> = React.memo(({
     >
       {/* Dynamic atmospheric gradient */}
       <div
-        className="absolute inset-0 pointer-events-none"
+        className={`absolute inset-0 pointer-events-none ${
+          preset === 'flow' ? 'rcui-flow-backdrop' : ''
+        }`}
         style={getBackdropStyles()}
       />
 
