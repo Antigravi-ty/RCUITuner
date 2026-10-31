@@ -25,10 +25,10 @@ import { TakeoverGlowAndTypographyCards, BLUE_TEAM_SWATCHES, ORANGE_TEAM_SWATCHE
 export { BLUE_TEAM_SWATCHES, ORANGE_TEAM_SWATCHES };
 
 export const VIGNETTE_BEZIER_PRESETS: CubicBezierPreset[] = [
-  { name: 'Smooth Seamless (Default)', value: { p1x: 0.36, p1y: 0.0, p2x: 0.22, p2y: 1.0 } },
+  { name: 'Smooth Seamless (Default)', value: { p1x: 0.64, p1y: 0.0, p2x: 0.28, p2y: 1.0 } },
+  { name: 'Classic Ease-Out', value: { p1x: 0.36, p1y: 0.0, p2x: 0.22, p2y: 1.0 } },
   { name: 'Calibrated Rect', value: { p1x: 0.28, p1y: 0.01, p2x: 0.0, p2y: 1.01 } },
   { name: 'Soft Gaussian Feather', value: { p1x: 0.42, p1y: 0.0, p2x: 0.58, p2y: 1.0 } },
-  { name: 'Deep Corner Pinch', value: { p1x: 0.68, p1y: 0.0, p2x: 0.88, p2y: 0.35 } },
   { name: 'Linear Falloff', value: { p1x: 0.33, p1y: 0.33, p2x: 0.67, p2y: 0.67 } },
 ];
 
@@ -288,8 +288,8 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
               onClick={() =>
                 setVignetteConfig((prev) => ({
                   ...prev,
-                  depthTopPct: prev.depthYPct ?? 58,
-                  depthBottomPct: prev.depthYPct ?? 58,
+                  depthTopPct: prev.depthYPct ?? 15,
+                  depthBottomPct: prev.depthYPct ?? 15,
                   verticalOffsetPx: 0,
                 }))
               }
@@ -302,8 +302,8 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <SliderControl
               label="Vertical Depth (Y - Linked Master)"
-              description="Default 58% (links Top & Bottom depth)"
-              value={vignetteConfig.depthYPct ?? 58}
+              description="Default 15% (links Top & Bottom depth)"
+              value={vignetteConfig.depthYPct ?? 15}
               min={0}
               max={140}
               step={1}
@@ -323,8 +323,8 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
             />
             <SliderControl
               label="Horizontal Depth (X - Left/Right)"
-              description="Default 17% (symmetric side feathering)"
-              value={vignetteConfig.depthXPct ?? 17}
+              description="Default 0% (symmetric side feathering)"
+              value={vignetteConfig.depthXPct ?? 0}
               min={0}
               max={100}
               step={1}
@@ -339,8 +339,8 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <SliderControl
               label="Top Edge Depth (Y-Top)"
-              description="Lower = shorter top shadow"
-              value={vignetteConfig.depthTopPct ?? vignetteConfig.depthYPct ?? 58}
+              description="Default 0% (lower = shorter top shadow)"
+              value={vignetteConfig.depthTopPct ?? 0}
               min={0}
               max={140}
               step={1}
@@ -352,8 +352,8 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
             />
             <SliderControl
               label="Bottom Edge Depth (Y-Bottom)"
-              description="Higher = taller bottom shadow"
-              value={vignetteConfig.depthBottomPct ?? vignetteConfig.depthYPct ?? 58}
+              description="Default 35% (higher = taller bottom shadow)"
+              value={vignetteConfig.depthBottomPct ?? 35}
               min={0}
               max={140}
               step={1}
@@ -383,8 +383,8 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <SliderControl
               label="Feather Range (Blur)"
-              description="Default 164px continuous transition span"
-              value={vignetteConfig.blurPx ?? 164}
+              description="Default 160px continuous transition span"
+              value={vignetteConfig.blurPx ?? 160}
               min={20}
               max={350}
               step={2}
@@ -476,7 +476,7 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
             />
             <SliderControl
               label="Vignette Density / Opacity (t=1)"
-              description="Default 100% darkening at outer perimeter"
+              description="Default 85% darkening at outer perimeter"
               value={vignetteConfig.intensityPct}
               min={0}
               max={100}
@@ -507,7 +507,7 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
           />
           <SliderControl
             label="Outer Full-Density Reach (t=1)"
-            description="Default 160% feather reach factor"
+            description="Default 100% feather reach factor"
             value={vignetteConfig.outerReachPct}
             min={35}
             max={160}

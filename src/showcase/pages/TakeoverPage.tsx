@@ -34,14 +34,14 @@ import { TakeoverTunerSection } from './takeover/TakeoverTunerSection';
 import type { StageBgMode } from './center-upper-info/CenterUpperArchetypesAndBackdrop';
 
 export const TakeoverPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }) => {
-  const [stageBgMode, setStageBgMode] = useSyncedState<StageBgMode>('5g-v2:stageBgMode', 'arena');
+  const [stageBgMode, setStageBgMode] = useSyncedState<StageBgMode>('5g-v5:stageBgMode', 'flow');
   const [stageBgColor, setStageBgColor] = useSyncedState<string>('5g-v2:stageBgColor', '#090D16');
   const [stageBgSecondaryColor, setStageBgSecondaryColor] = useSyncedState<string>(
     '5g-v2:stageBgSecondaryColor',
     '#1E293B'
   );
   const [arenaPreset, setArenaPreset] = useSyncedState<ArenaLightingPreset>(
-    '5g-v4:arenaPreset',
+    '5g-v5:arenaPreset',
     'flow'
   );
   const [stageBrightness, setStageBrightness] = useSyncedState<number>('5g-v2:stageBrightness', 100);
@@ -53,7 +53,7 @@ export const TakeoverPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }
 
   // Upward offset relative to bottom-center (NOT global center)
   const [bottomOffsetPx, setBottomOffsetPx] = useSyncedState<number>(
-    '5g-v4:bottomOffsetPx',
+    '5g-v5:bottomOffsetPx',
     DEFAULT_TAKEOVER_LAYOUT.bottomOffsetPx
   );
 
@@ -86,7 +86,7 @@ export const TakeoverPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }
   const sequenceTimerRef = useRef<number | null>(null);
 
   // Glow, Typography (uppercase: false by default), Timing, and Seamless Rounded-Rect 4-Edge Vignette
-  const [glowConfig, setGlowConfig] = useSyncedState<TakeoverGlowConfig>('5g-v4:glowConfig', {
+  const [glowConfig, setGlowConfig] = useSyncedState<TakeoverGlowConfig>('5g-v5:glowConfig', {
     ...DEFAULT_TAKEOVER_GLOW,
   });
   const [syncGlowWithText, setSyncGlowWithText] = useSyncedState<boolean>(
@@ -94,20 +94,20 @@ export const TakeoverPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }
     true
   );
   const [typoConfig, setTypoConfig] = useSyncedState<CenterUpperTypographyConfig>(
-    '5g-v4:typoConfig',
+    '5g-v5:typoConfig',
     {
       ...DEFAULT_TAKEOVER_TYPOGRAPHY,
     }
   );
   const [timingConfig, setTimingConfig] = useSyncedState<CenterUpperTimingConfig>(
-    '5g-v4:timingConfig',
+    '5g-v5:timingConfig',
     {
       ...DEFAULT_TAKEOVER_TIMING,
       persistentInspect: true,
     }
   );
   const [rawVignetteConfig, setVignetteConfig] = useSyncedState<TakeoverVignetteConfig>(
-    '5g-v4:vignetteConfig',
+    '5g-v5:vignetteConfig',
     {
       ...DEFAULT_TAKEOVER_VIGNETTE,
     }
@@ -261,6 +261,7 @@ export const DEFAULT_5G_TAKEOVER_CONFIG = ${JSON.stringify(snapshot, null, 2)};`
     crossClientSync.resetAll({ scopePrefix: '5g-v2:' });
     crossClientSync.resetAll({ scopePrefix: '5g-v3:' });
     crossClientSync.resetAll({ scopePrefix: '5g-v4:' });
+    crossClientSync.resetAll({ scopePrefix: '5g-v5:' });
   }, []);
 
   const handleSetVisibleOnStage = useCallback(
