@@ -126,7 +126,7 @@ export const MENU_ROUTE_CONFIG: Record<ActiveMenuRoute, LayerRouteConfig> = {
   'garage': { id: 'garage', label: 'Garage Loadout', layer: 2, width: 640, tier: 'user', parentRoute: 'main-menu' },
   'settings': { id: 'settings', label: 'Game Settings', layer: 2, width: 680, tier: 'both', parentRoute: 'main-menu' },
   'additional-preview': { id: 'additional-preview', label: 'Additional Preview', layer: 2, width: 600, tier: 'developer', parentRoute: 'main-menu' },
-  'room-host-control': { id: 'room-host-control', label: 'Room Host Control', layer: 2, width: 520, tier: 'user', parentRoute: 'play' },
+  'room-host-control': { id: 'room-host-control', label: 'Room Host Control', layer: 2, width: 720, tier: 'user', parentRoute: 'play' },
   'audio-eq': { id: 'audio-eq', label: 'Acoustics & EQ', layer: 3, width: 480, tier: 'developer', parentRoute: 'settings' },
   'trajectory': { id: 'trajectory', label: 'Ball Trajectory Predictor', layer: 3, width: 560, tier: 'both', parentRoute: 'settings' },
   'online-warmup': { id: 'online-warmup', label: 'Online Warmup & Match', layer: 3, width: 480, tier: 'user', parentRoute: 'play' },
