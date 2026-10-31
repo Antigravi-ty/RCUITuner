@@ -256,53 +256,9 @@ export const RecipesPage: React.FC<{ isLight?: boolean }> = ({ isLight = true })
             code={exportConfigCode()}
           />
         )}
-
-        {/* Top Categorized & Searchable On-Demand Selector Directory */}
-        <PageJumpDirectory
-          title="6A · Menu recipe generator and categorized search directory (Click-to-Mount Recipe Selector)"
-          subtitle="Click any card to mount its specific menu and tuner independently (Isolated change tracking, Zero redundancy DOM Consumption) "
-          items={RECIPES_JUMP_ITEMS}
-          activeId={activeRecipeId}
-          preventDefaultJump={renderMode === 'single'}
-          categories={RECIPES_CATEGORIES}
-          searchable={true}
-          collapsible={true}
-          onSelect={handleDirectorySelect}
-          isLight={isLight}
-          headerExtra={
-            <div className="inline-flex items-center rounded-lg border p-0.5 text-[11px] font-mono bg-white/80 dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800">
-              <button
-                type="button"
-                onClick={() => setRenderMode('single')}
-                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md cursor-pointer transition-colors ${
-                  renderMode === 'single'
-                    ? 'bg-amber-500 text-neutral-950 font-bold'
-                    : 'text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200'
-                }`}
-                title="Generate on click: Mount only the currently selected 1 Menu modules, Smooth mouse scrolling"
-              >
-                <Zap className="h-3 w-3" />
-                <span>On-demand single module ({1}/{RECIPES_JUMP_ITEMS.length})</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setRenderMode('all')}
-                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md cursor-pointer transition-colors ${
-                  renderMode === 'all'
-                    ? 'bg-amber-500 text-neutral-950 font-bold'
-                    : 'text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200'
-                }`}
-                title="Expand all 31 Modules in a single long list (High resource usage) "
-              >
-                <Layers className="h-3 w-3" />
-                <span>Fully expanded ({RECIPES_JUMP_ITEMS.length})</span>
-              </button>
-            </div>
-          }
-        />
       </div>
 
-      {/* Active Module Quick Switcher & Related Sibling Tuners Bar */}
+      {/* Active Module Quick Switcher & Related Sibling Tuners Bar (Placed at the top in single mode so stepping through modules stays pinned at the top) */}
       {renderMode === 'single' && (
         <div
           id="recipes-active-workbench-bar"
@@ -431,8 +387,8 @@ export const RecipesPage: React.FC<{ isLight?: boolean }> = ({ isLight = true })
         </div>
       )}
 
-      {/* Stage Area: Single On-Demand Module (Default) vs All Modules */}
-      {renderMode === 'single' ? (
+      {/* Stage Area: Single On-Demand Module (Default, pinned at top) */}
+      {renderMode === 'single' && (
         <OnDemandRecipeStage
           itemId={activeRecipeId}
           isLight={isLight}
@@ -440,7 +396,53 @@ export const RecipesPage: React.FC<{ isLight?: boolean }> = ({ isLight = true })
           onToggleLayer3Error={handleToggleLayer3Error}
           onSelectRecipeId={handleSelectRecipeId}
         />
-      ) : (
+      )}
+
+      {/* Categorized & Searchable On-Demand Selector Directory */}
+      <PageJumpDirectory
+        title="6A · Menu recipe generator and categorized search directory (Click-to-Mount Recipe Selector)"
+        subtitle="Click any card to mount its specific menu and tuner independently (Isolated change tracking, Zero redundancy DOM Consumption) "
+        items={RECIPES_JUMP_ITEMS}
+        activeId={activeRecipeId}
+        preventDefaultJump={renderMode === 'single'}
+        categories={RECIPES_CATEGORIES}
+        searchable={true}
+        collapsible={true}
+        onSelect={handleDirectorySelect}
+        isLight={isLight}
+        headerExtra={
+          <div className="inline-flex items-center rounded-lg border p-0.5 text-[11px] font-mono bg-white/80 dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800">
+            <button
+              type="button"
+              onClick={() => setRenderMode('single')}
+              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md cursor-pointer transition-colors ${
+                renderMode === 'single'
+                  ? 'bg-amber-500 text-neutral-950 font-bold'
+                  : 'text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200'
+              }`}
+              title="Generate on click: Mount only the currently selected 1 Menu modules, Smooth mouse scrolling"
+            >
+              <Zap className="h-3 w-3" />
+              <span>On-demand single module ({1}/{RECIPES_JUMP_ITEMS.length})</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setRenderMode('all')}
+              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md cursor-pointer transition-colors ${
+                renderMode === 'all'
+                  ? 'bg-amber-500 text-neutral-950 font-bold'
+                  : 'text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200'
+              }`}
+              title="Expand all 31 Modules in a single long list (High resource usage) "
+            >
+              <Layers className="h-3 w-3" />
+              <span>Fully expanded ({RECIPES_JUMP_ITEMS.length})</span>
+            </button>
+          </div>
+        }
+      />
+
+      {renderMode === 'all' && (
         <div className="flex flex-col gap-12">
           {RECIPES_JUMP_ITEMS.map((item) => {
             const id = item.id || item.targetId || item.code;

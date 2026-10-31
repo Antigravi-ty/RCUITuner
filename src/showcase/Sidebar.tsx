@@ -436,7 +436,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           isCollapsed
             ? 'w-0 border-r-0 opacity-0 pointer-events-none'
             : 'w-68 border-r opacity-100'
-        } shrink-0 overflow-hidden flex flex-col justify-between select-none transition-all duration-200 ease-out ${
+        } shrink-0 overflow-hidden flex flex-col justify-between transition-all duration-200 ease-out ${
           isLight
             ? 'bg-[#fbfbfd] border-neutral-200/80 text-neutral-800'
             : 'bg-neutral-950/80 border-neutral-800 text-neutral-200'

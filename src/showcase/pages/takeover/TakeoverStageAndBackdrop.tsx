@@ -597,11 +597,13 @@ export function MatchTakeoverOverlay({
         active={isReplacingIn}
         config={{
           enabled: ${vignetteConfig.enabled},
+          innerColor: '${vignetteConfig.innerColor ?? '#000000'}',
+          innerIntensityPct: ${vignetteConfig.innerIntensityPct ?? 0},
           color: '${vignetteConfig.color}',
           intensityPct: ${vignetteConfig.intensityPct},
           distancePct: ${vignetteConfig.distancePct},
           outerReachPct: ${vignetteConfig.outerReachPct},
-          cornerRadiusPx: ${vignetteConfig.cornerRadiusPx ?? 36},
+          cornerRadiusPx: ${vignetteConfig.cornerRadiusPx ?? 12},
           curve: {
             p1x: ${vignetteConfig.curve.p1x},
             p1y: ${vignetteConfig.curve.p1y},

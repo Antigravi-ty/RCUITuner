@@ -1,5 +1,5 @@
 import React, { useState as useLocalState, useEffect, useRef } from 'react';
-import { ArrowRight, Info } from 'lucide-react';
+import { ArrowRight, Info, ChevronLeft, ChevronRight, Lock, Unlock } from 'lucide-react';
 import { ContainerTransitionMode } from '../../ui-core/navigation/transitions';
 import type { MenuPanelWidthAdaptiveMode } from '../../ui-core/navigation/menuPanelAdaptive';
 import { createScopedSyncedState } from '../stores/crossClientSync';
@@ -207,6 +207,14 @@ export const MenuLayerPreviewPage: React.FC<MenuLayerPreviewPageProps> = ({
   const [containerPreset, setContainerPreset] = useState<
     'full' | '1080p-compact' | 'small-squeeze'
   >('full', 'containerPreset');
+  const [boundaryLocked, setBoundaryLocked] = useState<boolean>(
+    false,
+    'boundaryLocked'
+  );
+  const [manualBoundarySize, setManualBoundarySize] = useState<{
+    width: number;
+    height: number;
+  }>({ width: 960, height: 640 }, 'manualBoundarySize');
   const [widthMode, setWidthMode] = useState<MenuPanelWidthAdaptiveMode>(
     'design-auto-expand', 'widthMode'
   );
@@ -223,7 +231,10 @@ export const MenuLayerPreviewPage: React.FC<MenuLayerPreviewPageProps> = ({
     currentRoute, displayedRoute,
     visibilityTier, layer1ContextMode,
     touchMode, stageSize,
-    containerPreset, widthMode,
+    containerPreset,
+    boundaryLocked,
+    manualBoundarySize,
+    widthMode,
     manualMinWidths,
   });
   const handleSelectRoute = (
@@ -334,6 +345,22 @@ export const MenuLayerPreviewPage: React.FC<MenuLayerPreviewPageProps> = ({
   const activePlaylistStep = activePlaylist[activePlaylistIdx] || activePlaylist[0];
   const auditInfo = resolveRouteAuditInfo(currentRoute, visibilityTier);
 
+  const stepPlaylistBy = (delta: 1 | -1) => {
+    const nextIdx = (activePlaylistIdx + delta + activePlaylist.length) % activePlaylist.length;
+    const step = activePlaylist[nextIdx];
+    if (!step) return;
+    if (step.contextMode) setLayer1ContextMode(step.contextMode);
+    if (step.route === 'settings' && step.subtab) setSettingsTab(step.subtab);
+    if (step.route === 'garage' && step.subtab) setGarageTab(step.subtab);
+    setLayer3StepOverride({
+      progressStatus: step.progressStatus ?? 'idle',
+      currentStep: step.currentStep ?? 1,
+      defaultEditingConfig: Boolean(step.defaultEditingConfig),
+    });
+    handleSelectRoute(step.route);
+    showToast(`[${nextIdx + 1}/${activePlaylist.length}] ${step.label}`);
+  };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
@@ -353,20 +380,7 @@ export const MenuLayerPreviewPage: React.FC<MenuLayerPreviewPageProps> = ({
         handleNavigateBack();
       } else if (!isEditable && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
         e.preventDefault();
-        const delta = e.key === 'ArrowRight' ? 1 : -1;
-        const nextIdx = (activePlaylistIdx + delta + activePlaylist.length) % activePlaylist.length;
-        const step = activePlaylist[nextIdx];
-        if (!step) return;
-        if (step.contextMode) setLayer1ContextMode(step.contextMode);
-        if (step.route === 'settings' && step.subtab) setSettingsTab(step.subtab);
-        if (step.route === 'garage' && step.subtab) setGarageTab(step.subtab);
-        setLayer3StepOverride({
-          progressStatus: step.progressStatus ?? 'idle',
-          currentStep: step.currentStep ?? 1,
-          defaultEditingConfig: Boolean(step.defaultEditingConfig),
-        });
-        handleSelectRoute(step.route);
-        showToast(`[${nextIdx + 1}/${activePlaylist.length}] ${step.label}`);
+        stepPlaylistBy(e.key === 'ArrowRight' ? 1 : -1);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -421,15 +435,40 @@ export const MenuLayerPreviewPage: React.FC<MenuLayerPreviewPageProps> = ({
     showToast( `[ok] Restored ${activeMetricKey} Auto-detect minimum width (${activeRouteSize.autoMinWidth}px)`
     );
   };
-  const effectiveStageW =
+  const autoResolvedStageW =
     containerPreset === '1080p-compact' ? Math.min(stageSize.width, 760)
       : containerPreset === 'small-squeeze' ? Math.min(stageSize.width, 520)
       : stageSize.width;
-  const effectiveStageH =
+  const autoResolvedStageH =
     containerPreset === '1080p-compact' ? 520
       : containerPreset === 'small-squeeze' ? 380
       : currentRoute !== 'layer-0' && !isDockState
       ? Math.max(stageSize.height, 620, Math.min(980, expandedH + 48)) : Math.max(stageSize.height, 620);
+
+  const effectiveStageW = boundaryLocked ? manualBoundarySize.width : autoResolvedStageW;
+  const effectiveStageH = boundaryLocked ? manualBoundarySize.height : autoResolvedStageH;
+
+  const handleToggleBoundaryLock = () => {
+    if (!boundaryLocked) {
+      const snapW = Math.max(320, Math.round(autoResolvedStageW));
+      const snapH = Math.max(260, Math.round(autoResolvedStageH));
+      setManualBoundarySize({ width: snapW, height: snapH });
+      setBoundaryLocked(true);
+      showToast(`[ok] Canvas Boundary Locked at ${snapW}×${snapH}px`);
+    } else {
+      setBoundaryLocked(false);
+      showToast('[ok] Canvas Boundary Unlocked (Auto-Adaptive)');
+    }
+  };
+
+  const handleChangeManualBoundarySize = (next: { width: number; height: number }) => {
+    setManualBoundarySize({
+      width: Math.max(320, Math.min(2560, Math.round(next.width))),
+      height: Math.max(260, Math.min(1600, Math.round(next.height))),
+    });
+    setBoundaryLocked(true);
+  };
+
   const xExpanded =
     currentRoute !== 'layer-0' ? activeRouteSize.x
       : Math.max(16, Math.round((effectiveStageW - expandedW) / 2));
@@ -448,17 +487,259 @@ export const MenuLayerPreviewPage: React.FC<MenuLayerPreviewPageProps> = ({
     (transitionMode === 'fluid-morph' ? liveAnimPhase === 'expanded' : stepPhase !== 'fadeOut' && stepPhase !== 'resize' && liveAnimPhase === 'expanded');
   const isPillContentVisible = liveAnimPhase === 'collapsed';
   return (
-    <div className="flex flex-col gap-6 w-full">
+    <div className="flex flex-col gap-5 w-full">
       <MenuLayerTopHeaderBar isLight={isLight} currentRoute={currentRoute} transitionMode={transitionMode}
         setTransitionMode={setTransitionMode} showToast={showToast} />
-      {/* Top Jump Directory: Click any recipe to activate it in the sandbox stage and scroll to stage */}
-      <PageJumpDirectory
-        title={`7A · Menu Layer Full-link sandbox quick-jump directory (${visibilityTier === 'user' ? 'User Only View' : 'Developer Only View'})`}
-        subtitle="Click any card to immediately L6 Menu component loaded into the fluid stage below with smooth positioning · Click copy icon to copy standard reference name"
-        items={MENU_SANDBOX_JUMP_ITEMS.filter((item) => item.tier === visibilityTier)} onSelect={(item) => {
-        const r = (item as JumpDirectoryItem & { route?: ActiveMenuRoute }).route; if (r) handleSelectRoute(r); }}
-        isLight={isLight} />
-      {/* Top multi-level shortcut selector area */}
+
+      {/* 1. TOP-PINNED PREVIEW STAGE & LINEAR SCANNER BAR (Placed at the very top so control deck layout recomputes below never shift or bounce the stage) */}
+      <div className="flex flex-col gap-3">
+        <div
+          className={`flex flex-wrap items-center justify-between gap-2.5 px-3.5 py-2 rounded-2xl border text-xs font-mono ${
+            isLight
+              ? 'bg-white border-neutral-200 text-neutral-800 shadow-2xs'
+              : 'bg-neutral-900/90 border-neutral-800 text-neutral-200'
+          }`}
+        >
+          <div className="flex items-center gap-2 flex-wrap">
+            <div
+              className={`inline-flex items-center p-0.5 rounded-lg border ${
+                isLight ? 'bg-neutral-100 border-neutral-200' : 'bg-neutral-950 border-neutral-800'
+              }`}
+            >
+              <button
+                type="button"
+                onClick={() => handleChangeVisibilityTier('user')}
+                className={`px-2 py-0.5 rounded-md text-[11px] font-bold cursor-pointer transition-colors ${
+                  visibilityTier === 'user'
+                    ? 'bg-emerald-500 text-white'
+                    : 'text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200'
+                }`}
+              >
+                User ({USER_LINEAR_PLAYLIST.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => handleChangeVisibilityTier('developer')}
+                className={`px-2 py-0.5 rounded-md text-[11px] font-bold cursor-pointer transition-colors ${
+                  visibilityTier === 'developer'
+                    ? 'bg-amber-500 text-neutral-950'
+                    : 'text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200'
+                }`}
+              >
+                Dev ({DEV_LINEAR_PLAYLIST.length})
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => stepPlaylistBy(-1)}
+              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl border font-bold cursor-pointer transition-all active:scale-95 ${
+                isLight
+                  ? 'bg-neutral-100 hover:bg-neutral-200 border-neutral-300 text-neutral-800'
+                  : 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-neutral-100'
+              }`}
+              title="Previous page in linear inspection playlist (ArrowLeft ←)"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+              <span>Prev (←)</span>
+            </button>
+
+            <span className="px-2.5 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-bold">
+              [{activePlaylistIdx + 1}/{activePlaylist.length}] {activePlaylistStep?.label || currentRoute}
+            </span>
+
+            <button
+              type="button"
+              onClick={() => stepPlaylistBy(1)}
+              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl border font-bold cursor-pointer transition-all active:scale-95 ${
+                isLight
+                  ? 'bg-neutral-100 hover:bg-neutral-200 border-neutral-300 text-neutral-800'
+                  : 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-neutral-100'
+              }`}
+              title="Next page in linear inspection playlist (ArrowRight →)"
+            >
+              <span>Next (→)</span>
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+
+          {/* Top Quick Canvas Boundary Manual / Lock W×H */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[11px] text-neutral-400">Canvas Boundary:</span>
+            {(
+              [
+                { id: 'full', label: 'Auto' },
+                { id: '1080p-compact', label: '760×520' },
+                { id: 'small-squeeze', label: '520×380' },
+              ] as const
+            ).map((preset) => (
+              <button
+                key={preset.id}
+                type="button"
+                onClick={() => {
+                  setContainerPreset(preset.id);
+                  if (preset.id === '1080p-compact' && boundaryLocked) {
+                    setManualBoundarySize({ width: 760, height: 520 });
+                  } else if (preset.id === 'small-squeeze' && boundaryLocked) {
+                    setManualBoundarySize({ width: 520, height: 380 });
+                  }
+                }}
+                className={`px-2 py-0.5 rounded-lg border text-[11px] cursor-pointer transition-all ${
+                  containerPreset === preset.id && !boundaryLocked
+                    ? 'bg-amber-500 text-white border-amber-500 font-bold'
+                    : isLight
+                    ? 'bg-neutral-100 border-neutral-200 text-neutral-600 hover:text-neutral-900'
+                    : 'bg-neutral-950 border-neutral-800 text-neutral-400 hover:text-neutral-200'
+                }`}
+              >
+                {preset.label}
+              </button>
+            ))}
+
+            <div
+              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-xl border ${
+                boundaryLocked
+                  ? 'border-sky-500/60 bg-sky-500/10 text-sky-500'
+                  : isLight
+                  ? 'border-neutral-200 bg-neutral-50 text-neutral-700'
+                  : 'border-neutral-800 bg-neutral-950 text-neutral-300'
+              }`}
+            >
+              <input
+                type="number"
+                min={320}
+                max={2560}
+                step={10}
+                value={Math.round(effectiveStageW)}
+                onChange={(e) =>
+                  handleChangeManualBoundarySize({
+                    width: Number(e.target.value) || effectiveStageW,
+                    height: effectiveStageH,
+                  })
+                }
+                className={`w-14 px-1 py-0.5 text-center rounded border font-mono text-[11px] font-bold ${
+                  isLight
+                    ? 'bg-white border-neutral-300 text-neutral-900'
+                    : 'bg-neutral-900 border-neutral-700 text-neutral-100'
+                }`}
+                title="Canvas Boundary Width (px)"
+              />
+              <span className="opacity-60">×</span>
+              <input
+                type="number"
+                min={260}
+                max={1600}
+                step={10}
+                value={Math.round(effectiveStageH)}
+                onChange={(e) =>
+                  handleChangeManualBoundarySize({
+                    width: effectiveStageW,
+                    height: Number(e.target.value) || effectiveStageH,
+                  })
+                }
+                className={`w-14 px-1 py-0.5 text-center rounded border font-mono text-[11px] font-bold ${
+                  isLight
+                    ? 'bg-white border-neutral-300 text-neutral-900'
+                    : 'bg-neutral-900 border-neutral-700 text-neutral-100'
+                }`}
+                title="Canvas Boundary Height (px)"
+              />
+              <span className="text-[10px] opacity-60">px</span>
+              <button
+                type="button"
+                onClick={handleToggleBoundaryLock}
+                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-bold border cursor-pointer transition-all ${
+                  boundaryLocked
+                    ? 'bg-sky-500 text-white border-sky-400 shadow-2xs'
+                    : isLight
+                    ? 'bg-white hover:bg-neutral-100 border-neutral-300 text-neutral-700'
+                    : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-700 text-neutral-300'
+                }`}
+                title={
+                  boundaryLocked
+                    ? 'Unlock Canvas Boundary (return to auto-adaptive stage size)'
+                    : 'Lock current Canvas Boundary W×H so stepping through pages never jumps or resizes the stage'
+                }
+              >
+                {boundaryLocked ? (
+                  <>
+                    <Lock className="h-3 w-3" />
+                    <span>Locked</span>
+                  </>
+                ) : (
+                  <>
+                    <Unlock className="h-3 w-3" />
+                    <span>Lock W×H</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className={`px-3.5 py-2.5 rounded-xl border ${isLight ? 'bg-white border-neutral-200 shadow-2xs' : 'bg-neutral-900/80 border-neutral-800'}`}>
+          <AuditTicketHeader
+            index={activePlaylistIdx + 1}
+            label={activePlaylistStep?.label || MENU_ROUTE_CONFIG[currentRoute]?.label || currentRoute}
+            description={activePlaylistStep?.breadcrumb}
+            referenceCode={auditInfo.referenceCode}
+            componentName={auditInfo.componentName}
+            sourceFile={auditInfo.sourceFile}
+            stateId={activePlaylistStep?.id || currentRoute}
+            activeProps={{
+              route: currentRoute,
+              tier: visibilityTier,
+              ...(currentRoute === 'main-menu' || currentRoute === 'room-host-control' ? { contextMode: layer1ContextMode } : {}),
+              ...(currentRoute === 'settings' ? { activeTab: settingsTab } : {}),
+              ...(currentRoute === 'garage' ? { activeTab: garageTab } : {}),
+              ...(currentRoute === 'host-match' || currentRoute === 'host-training' || currentRoute === 'join-room'
+                ? {
+                    progressStatus: layer3StepOverride.progressStatus ?? 'idle',
+                    currentStep: layer3StepOverride.currentStep ?? 1,
+                    ...(currentRoute === 'host-match' ? { defaultEditingConfig: Boolean(layer3StepOverride.defaultEditingConfig) } : {}),
+                  }
+                : {}),
+            }}
+            badgeColor={visibilityTier === 'user' ? 'emerald' : 'amber'}
+            tunerStatus={auditInfo.tunerStatus}
+            isLight={isLight}
+          />
+        </div>
+
+        <MenuLayerStageCanvas isLight={isLight} stageRef={stageRef} contentWrapperRef={contentWrapperRef}
+          containerPreset={containerPreset} boundaryLocked={boundaryLocked} manualBoundarySize={manualBoundarySize}
+          isCursorHidden={isCursorHidden} currentRoute={currentRoute}
+          displayedRoute={displayedRoute} isDockState={isDockState} ballSimSpeed={ballSimSpeed}
+          hasStackIcon={hasStackIcon} backdropDuration={backdropDuration} triggerShake={triggerShake}
+          showToast={showToast} handleSelectRoute={handleSelectRoute} handleNavigateBack={handleNavigateBack}
+          isShaking={isShaking} targetX={targetX} targetY={targetY} targetW={targetW} targetH={targetH}
+          targetRadius={targetRadius} handleTriggerExpand={handleTriggerExpand}
+          handleTriggerCollapse={handleTriggerCollapse} isPillHovered={isPillHovered}
+          setIsPillHovered={setIsPillHovered} isPillContentVisible={isPillContentVisible}
+          isContentVisible={isContentVisible} visibilityTier={visibilityTier}
+          handleChangeVisibilityTier={handleChangeVisibilityTier} layer1ContextMode={layer1ContextMode}
+          setLayer1ContextMode={setLayer1ContextMode} touchMode={touchMode} setTouchMode={setTouchMode}
+          settingsTab={settingsTab} setSettingsTab={setSettingsTab} garageTab={garageTab} setGarageTab={setGarageTab}
+          bgRenderPaused={bgRenderPaused} setBgRenderPaused={setBgRenderPaused} lastParentRoute={lastParentRoute}
+          setLastParentRoute={setLastParentRoute} handleAddPresetWindow={handleAddPresetWindow} windows={windows}
+          minimizedCount={minimizedCount} totalCount={totalCount} closeWindow={closeWindow}
+          setLiveAnimPhase={setLiveAnimPhase} layer3StepOverride={layer3StepOverride} />
+      </div>
+
+      {/* 2. ADAPTIVE ENGINE & ROUTE CONTROL DECKS (Below the preview stage so layout recomputations never push the stage) */}
+      <MenuLayerAdaptiveControlDeck isLight={isLight} currentRoute={currentRoute} settingsTab={settingsTab}
+        garageTab={garageTab} layer1ContextMode={layer1ContextMode} setLayer1ContextMode={setLayer1ContextMode}
+        showInlineTuner={showInlineTuner} setShowInlineTuner={setShowInlineTuner}
+        onNavigateShowcase={onNavigateShowcase} widthMode={widthMode} setWidthMode={setWidthMode}
+        isDockState={isDockState} targetW={targetW} targetH={targetH} activeRouteSize={activeRouteSize}
+        minWidthDraft={minWidthDraft} setMinWidthDraft={setMinWidthDraft}
+        setIsEditingMinWidth={setIsEditingMinWidth} hasManualMinOverride={hasManualMinOverride}
+        applyManualMinWidth={applyManualMinWidth} handleResetAutoMinWidth={handleResetAutoMinWidth}
+        containerPreset={containerPreset} setContainerPreset={setContainerPreset}
+        effectiveStageW={effectiveStageW} effectiveStageH={effectiveStageH}
+        boundaryLocked={boundaryLocked} onToggleBoundaryLock={handleToggleBoundaryLock}
+        manualBoundarySize={manualBoundarySize} onChangeManualBoundarySize={handleChangeManualBoundarySize} />
+
       <MenuLayerRouteSelectorBar
         isLight={isLight} visibilityTier={visibilityTier}
         onChangeVisibilityTier={handleChangeVisibilityTier} layer1ContextMode={layer1ContextMode}
@@ -473,60 +754,14 @@ export const MenuLayerPreviewPage: React.FC<MenuLayerPreviewPageProps> = ({
         onToggleInlineTuner={() => setShowInlineTuner((prev) => !prev)}
         layer3StepOverride={layer3StepOverride}
         onChangeLayer3StepOverride={setLayer3StepOverride} />
-      <MenuLayerAdaptiveControlDeck isLight={isLight} currentRoute={currentRoute} settingsTab={settingsTab}
-        garageTab={garageTab} layer1ContextMode={layer1ContextMode} setLayer1ContextMode={setLayer1ContextMode}
-        showInlineTuner={showInlineTuner} setShowInlineTuner={setShowInlineTuner}
-        onNavigateShowcase={onNavigateShowcase} widthMode={widthMode} setWidthMode={setWidthMode}
-        isDockState={isDockState} targetW={targetW} targetH={targetH} activeRouteSize={activeRouteSize}
-        minWidthDraft={minWidthDraft} setMinWidthDraft={setMinWidthDraft}
-        setIsEditingMinWidth={setIsEditingMinWidth} hasManualMinOverride={hasManualMinOverride}
-        applyManualMinWidth={applyManualMinWidth} handleResetAutoMinWidth={handleResetAutoMinWidth}
-        containerPreset={containerPreset} setContainerPreset={setContainerPreset} />
-      <div className={`px-3.5 py-2.5 rounded-xl border ${isLight ? 'bg-white border-neutral-200 shadow-2xs' : 'bg-neutral-900/80 border-neutral-800'}`}>
-        <AuditTicketHeader
-          index={activePlaylistIdx + 1}
-          label={activePlaylistStep?.label || MENU_ROUTE_CONFIG[currentRoute]?.label || currentRoute}
-          description={activePlaylistStep?.breadcrumb}
-          referenceCode={auditInfo.referenceCode}
-          componentName={auditInfo.componentName}
-          sourceFile={auditInfo.sourceFile}
-          stateId={activePlaylistStep?.id || currentRoute}
-          activeProps={{
-            route: currentRoute,
-            tier: visibilityTier,
-            ...(currentRoute === 'main-menu' || currentRoute === 'room-host-control' ? { contextMode: layer1ContextMode } : {}),
-            ...(currentRoute === 'settings' ? { activeTab: settingsTab } : {}),
-            ...(currentRoute === 'garage' ? { activeTab: garageTab } : {}),
-            ...(currentRoute === 'host-match' || currentRoute === 'host-training' || currentRoute === 'join-room'
-              ? {
-                  progressStatus: layer3StepOverride.progressStatus ?? 'idle',
-                  currentStep: layer3StepOverride.currentStep ?? 1,
-                  ...(currentRoute === 'host-match' ? { defaultEditingConfig: Boolean(layer3StepOverride.defaultEditingConfig) } : {}),
-                }
-              : {}),
-          }}
-          badgeColor={visibilityTier === 'user' ? 'emerald' : 'amber'}
-          tunerStatus={auditInfo.tunerStatus}
-          isLight={isLight}
-        />
-      </div>
-      <MenuLayerStageCanvas isLight={isLight} stageRef={stageRef} contentWrapperRef={contentWrapperRef}
-        containerPreset={containerPreset} isCursorHidden={isCursorHidden} currentRoute={currentRoute}
-        displayedRoute={displayedRoute} isDockState={isDockState} ballSimSpeed={ballSimSpeed}
-        hasStackIcon={hasStackIcon} backdropDuration={backdropDuration} triggerShake={triggerShake}
-        showToast={showToast} handleSelectRoute={handleSelectRoute} handleNavigateBack={handleNavigateBack}
-        isShaking={isShaking} targetX={targetX} targetY={targetY} targetW={targetW} targetH={targetH}
-        targetRadius={targetRadius} handleTriggerExpand={handleTriggerExpand}
-        handleTriggerCollapse={handleTriggerCollapse} isPillHovered={isPillHovered}
-        setIsPillHovered={setIsPillHovered} isPillContentVisible={isPillContentVisible}
-        isContentVisible={isContentVisible} visibilityTier={visibilityTier}
-        handleChangeVisibilityTier={handleChangeVisibilityTier} layer1ContextMode={layer1ContextMode}
-        setLayer1ContextMode={setLayer1ContextMode} touchMode={touchMode} setTouchMode={setTouchMode}
-        settingsTab={settingsTab} setSettingsTab={setSettingsTab} garageTab={garageTab} setGarageTab={setGarageTab}
-        bgRenderPaused={bgRenderPaused} setBgRenderPaused={setBgRenderPaused} lastParentRoute={lastParentRoute}
-        setLastParentRoute={setLastParentRoute} handleAddPresetWindow={handleAddPresetWindow} windows={windows}
-        minimizedCount={minimizedCount} totalCount={totalCount} closeWindow={closeWindow}
-        setLiveAnimPhase={setLiveAnimPhase} layer3StepOverride={layer3StepOverride} />
+
+      <PageJumpDirectory
+        title={`7A · Menu Layer Full-link sandbox quick-jump directory (${visibilityTier === 'user' ? 'User Only View' : 'Developer Only View'})`}
+        subtitle="Click any card to immediately load the L6 Menu component into the fluid stage above · Click copy icon to copy standard reference name"
+        items={MENU_SANDBOX_JUMP_ITEMS.filter((item) => item.tier === visibilityTier)} onSelect={(item) => {
+        const r = (item as JumpDirectoryItem & { route?: ActiveMenuRoute }).route; if (r) handleSelectRoute(r); }}
+        isLight={isLight} />
+
       {/* Bottom navigation bar */}
       {onNavigateToReserved && (
         <div className={`p-3.5 rounded-xl border flex items-center justify-between text-xs transition-colors ${

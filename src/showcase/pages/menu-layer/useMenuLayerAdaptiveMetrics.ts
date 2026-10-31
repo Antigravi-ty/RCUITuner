@@ -22,6 +22,8 @@ export interface UseMenuLayerAdaptiveMetricsParams {
   touchMode: boolean;
   stageSize: { width: number; height: number };
   containerPreset: 'full' | '1080p-compact' | 'small-squeeze';
+  boundaryLocked?: boolean;
+  manualBoundarySize?: { width: number; height: number };
   widthMode: MenuPanelWidthAdaptiveMode;
   manualMinWidths: Record<string, number>;
 }
@@ -34,6 +36,8 @@ export function useMenuLayerAdaptiveMetrics({
   touchMode,
   stageSize,
   containerPreset,
+  boundaryLocked = false,
+  manualBoundarySize,
   widthMode,
   manualMinWidths,
 }: UseMenuLayerAdaptiveMetricsParams) {
@@ -233,13 +237,17 @@ export function useMenuLayerAdaptiveMetrics({
         : undefined;
 
     const effectiveBoundsH =
-      containerPreset === '1080p-compact'
+      boundaryLocked && manualBoundarySize
+        ? manualBoundarySize.height
+        : containerPreset === '1080p-compact'
         ? 520
         : containerPreset === 'small-squeeze'
         ? 380
         : Math.max(stageSize.height, 620, Math.min(980, naturalH + 48));
     const effectiveBoundsW =
-      containerPreset === '1080p-compact'
+      boundaryLocked && manualBoundarySize
+        ? manualBoundarySize.width
+        : containerPreset === '1080p-compact'
         ? Math.min(stageSize.width, 760)
         : containerPreset === 'small-squeeze'
         ? Math.min(stageSize.width, 520)

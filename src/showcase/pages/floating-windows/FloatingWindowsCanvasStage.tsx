@@ -223,6 +223,8 @@ export interface FloatingWindowsCanvasStageProps {
   isLight: boolean;
   canvasRef: React.RefObject<HTMLDivElement | null>;
   containerPreset: 'full' | '1080p-compact' | 'small-squeeze';
+  boundaryLocked?: boolean;
+  manualBoundarySize?: { width: number; height: number };
   opacity: number;
   totalCount: number;
   minimizedCount: number;
@@ -241,6 +243,8 @@ export const FloatingWindowsCanvasStage: React.FC<FloatingWindowsCanvasStageProp
   isLight,
   canvasRef,
   containerPreset,
+  boundaryLocked = false,
+  manualBoundarySize,
   opacity,
   totalCount,
   minimizedCount,
@@ -254,29 +258,34 @@ export const FloatingWindowsCanvasStage: React.FC<FloatingWindowsCanvasStageProp
   closeWindow,
   handleAddPresetToStack,
 }) => {
+  const lockedW = boundaryLocked && manualBoundarySize ? manualBoundarySize.width : undefined;
+  const lockedH = boundaryLocked && manualBoundarySize ? manualBoundarySize.height : undefined;
+
   return (
     <>
       <div
         ref={canvasRef}
-        className={`relative mx-auto rounded-2xl border p-6 overflow-hidden select-none transition-all duration-300 ${
+        className={`relative mx-auto rounded-2xl border p-6 overflow-hidden transition-all duration-300 ${
           isLight
             ? 'bg-neutral-100/70 border-neutral-200 shadow-inner'
             : 'bg-neutral-950/80 border-neutral-800 shadow-inner'
         }`}
         style={{
-          width:
-            containerPreset === 'full'
-              ? '100%'
-              : containerPreset === '1080p-compact'
-              ? '760px'
-              : '520px',
+          width: lockedW
+            ? `${lockedW}px`
+            : containerPreset === 'full'
+            ? '100%'
+            : containerPreset === '1080p-compact'
+            ? '760px'
+            : '520px',
           maxWidth: '100%',
-          height:
-            containerPreset === 'full'
-              ? '700px'
-              : containerPreset === '1080p-compact'
-              ? '520px'
-              : '380px',
+          height: lockedH
+            ? `${lockedH}px`
+            : containerPreset === 'full'
+            ? '700px'
+            : containerPreset === '1080p-compact'
+            ? '520px'
+            : '380px',
           backgroundImage: isLight
             ? 'radial-gradient(#d4d4d8 1px, transparent 1px)'
             : 'radial-gradient(#27272a 1px, transparent 1px)',

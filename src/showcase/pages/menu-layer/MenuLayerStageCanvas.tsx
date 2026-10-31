@@ -23,6 +23,8 @@ export interface MenuLayerStageCanvasProps {
   stageRef: React.RefObject<HTMLDivElement | null>;
   contentWrapperRef: React.RefObject<HTMLDivElement | null>;
   containerPreset: 'full' | '1080p-compact' | 'small-squeeze';
+  boundaryLocked?: boolean;
+  manualBoundarySize?: { width: number; height: number };
   isCursorHidden: boolean;
   currentRoute: ActiveMenuRoute;
   displayedRoute: ActiveMenuRoute;
@@ -80,6 +82,8 @@ export const MenuLayerStageCanvas: React.FC<MenuLayerStageCanvasProps> = ({
   stageRef,
   contentWrapperRef,
   containerPreset,
+  boundaryLocked = false,
+  manualBoundarySize,
   isCursorHidden,
   currentRoute,
   displayedRoute,
@@ -125,6 +129,9 @@ export const MenuLayerStageCanvas: React.FC<MenuLayerStageCanvasProps> = ({
   setLiveAnimPhase,
   layer3StepOverride,
 }) => {
+  const lockedW = boundaryLocked && manualBoundarySize ? manualBoundarySize.width : undefined;
+  const lockedH = boundaryLocked && manualBoundarySize ? manualBoundarySize.height : undefined;
+
   return (
     <div
       id="storybook-preview-stage"
@@ -137,24 +144,28 @@ export const MenuLayerStageCanvas: React.FC<MenuLayerStageCanvasProps> = ({
           : 'bg-neutral-950/80 border-neutral-800 shadow-inner'
       }`}
       style={{
-        minHeight:
-          containerPreset === '1080p-compact'
-            ? '520px'
-            : containerPreset === 'small-squeeze'
-            ? '380px'
-            : `${Math.max(620, Math.min(980, targetH + 48))}px`,
-        height:
-          containerPreset === '1080p-compact'
-            ? '520px'
-            : containerPreset === 'small-squeeze'
-            ? '380px'
-            : undefined,
-        maxWidth:
-          containerPreset === '1080p-compact'
-            ? '760px'
-            : containerPreset === 'small-squeeze'
-            ? '520px'
-            : undefined,
+        width: lockedW ? `${lockedW}px` : undefined,
+        minHeight: lockedH
+          ? `${lockedH}px`
+          : containerPreset === '1080p-compact'
+          ? '520px'
+          : containerPreset === 'small-squeeze'
+          ? '380px'
+          : `${Math.max(620, Math.min(980, targetH + 48))}px`,
+        height: lockedH
+          ? `${lockedH}px`
+          : containerPreset === '1080p-compact'
+          ? '520px'
+          : containerPreset === 'small-squeeze'
+          ? '380px'
+          : undefined,
+        maxWidth: lockedW
+          ? '100%'
+          : containerPreset === '1080p-compact'
+          ? '760px'
+          : containerPreset === 'small-squeeze'
+          ? '520px'
+          : undefined,
         backgroundImage: isLight
           ? 'radial-gradient(#d4d4d8 1px, transparent 1px)'
           : 'radial-gradient(#27272a 1px, transparent 1px)',

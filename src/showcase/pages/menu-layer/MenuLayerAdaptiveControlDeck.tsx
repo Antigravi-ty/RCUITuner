@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layers, Ruler } from 'lucide-react';
+import { Layers, Ruler, Lock, Unlock } from 'lucide-react';
 import type { ContainerTransitionMode } from '../../../ui-core/navigation/transitions';
 import type {
   ClampedMenuPanelGeometry,
@@ -202,6 +202,12 @@ export interface MenuLayerAdaptiveControlDeckProps {
   handleResetAutoMinWidth: () => void;
   containerPreset: 'full' | '1080p-compact' | 'small-squeeze';
   setContainerPreset: (preset: 'full' | '1080p-compact' | 'small-squeeze') => void;
+  effectiveStageW?: number;
+  effectiveStageH?: number;
+  boundaryLocked?: boolean;
+  onToggleBoundaryLock?: () => void;
+  manualBoundarySize?: { width: number; height: number };
+  onChangeManualBoundarySize?: (next: { width: number; height: number }) => void;
 }
 
 export const MenuLayerAdaptiveControlDeck: React.FC<
@@ -230,7 +236,20 @@ export const MenuLayerAdaptiveControlDeck: React.FC<
   handleResetAutoMinWidth,
   containerPreset,
   setContainerPreset,
+  effectiveStageW = 900,
+  effectiveStageH = 620,
+  boundaryLocked = false,
+  onToggleBoundaryLock,
+  manualBoundarySize,
+  onChangeManualBoundarySize,
 }) => {
+  const displayBoundaryW = Math.round(
+    boundaryLocked && manualBoundarySize ? manualBoundarySize.width : effectiveStageW
+  );
+  const displayBoundaryH = Math.round(
+    boundaryLocked && manualBoundarySize ? manualBoundarySize.height : effectiveStageH
+  );
+
   return (
     <>
       {showInlineTuner &&
@@ -486,13 +505,13 @@ export const MenuLayerAdaptiveControlDeck: React.FC<
           )}
         </div>
 
-        <div className="flex items-center gap-1.5 font-mono text-[11px]">
-          <span className="text-neutral-400">Canvas Boundary Detection:</span>
+        <div className="flex flex-wrap items-center gap-1.5 font-mono text-[11px]">
+          <span className="text-neutral-400">Canvas Boundary:</span>
           {(
             [
-              { id: 'full', label: 'Full-Width Canvas (Auto-Expand)' },
+              { id: 'full', label: 'Full-Width (Auto-Expand)' },
               { id: '1080p-compact', label: '1080p Compact (760×520)' },
-              { id: 'small-squeeze', label: 'Small Screen Compression (520×380)' },
+              { id: 'small-squeeze', label: 'Small Squeeze (520×380)' },
             ] as const
           ).map((preset) => (
             <button
@@ -500,7 +519,7 @@ export const MenuLayerAdaptiveControlDeck: React.FC<
               type="button"
               onClick={() => setContainerPreset(preset.id)}
               className={`px-2 py-1 rounded-lg border cursor-pointer transition-all ${
-                containerPreset === preset.id
+                containerPreset === preset.id && !boundaryLocked
                   ? 'bg-amber-500 text-white border-amber-500 font-bold shadow-2xs'
                   : isLight
                   ? 'bg-neutral-100 border-neutral-200 text-neutral-600 hover:text-neutral-900'
@@ -510,6 +529,84 @@ export const MenuLayerAdaptiveControlDeck: React.FC<
               {preset.label}
             </button>
           ))}
+
+          {/* Live / Manual Canvas Boundary W × H + Lock Toggle */}
+          <div
+            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border ${
+              boundaryLocked
+                ? 'border-sky-500/60 bg-sky-500/10 text-sky-500'
+                : isLight
+                ? 'border-neutral-200 bg-neutral-50 text-neutral-700'
+                : 'border-neutral-800 bg-neutral-950 text-neutral-300'
+            }`}
+            title="Resolved Canvas Boundary (W × H px). Edit or click Lock to freeze the stage boundary while stepping through pages."
+          >
+            <span className="text-[10px] opacity-70">
+              {boundaryLocked ? 'Manual/Locked:' : 'Auto:'}
+            </span>
+            <input
+              type="number"
+              min={320}
+              max={2560}
+              step={10}
+              value={displayBoundaryW}
+              onChange={(e) => {
+                const nextW = Math.max(320, Math.min(2560, Number(e.target.value) || displayBoundaryW));
+                onChangeManualBoundarySize?.({ width: nextW, height: displayBoundaryH });
+              }}
+              className={`w-14 px-1 py-0.5 text-center rounded border font-mono text-[11px] font-bold ${
+                isLight
+                  ? 'bg-white border-neutral-300 text-neutral-900'
+                  : 'bg-neutral-900 border-neutral-700 text-neutral-100'
+              }`}
+            />
+            <span className="opacity-60">×</span>
+            <input
+              type="number"
+              min={260}
+              max={1600}
+              step={10}
+              value={displayBoundaryH}
+              onChange={(e) => {
+                const nextH = Math.max(260, Math.min(1600, Number(e.target.value) || displayBoundaryH));
+                onChangeManualBoundarySize?.({ width: displayBoundaryW, height: nextH });
+              }}
+              className={`w-14 px-1 py-0.5 text-center rounded border font-mono text-[11px] font-bold ${
+                isLight
+                  ? 'bg-white border-neutral-300 text-neutral-900'
+                  : 'bg-neutral-900 border-neutral-700 text-neutral-100'
+              }`}
+            />
+            <span className="text-[10px] opacity-60">px</span>
+            <button
+              type="button"
+              onClick={onToggleBoundaryLock}
+              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-mono font-bold border cursor-pointer transition-all ${
+                boundaryLocked
+                  ? 'bg-sky-500 text-white border-sky-400 shadow-2xs'
+                  : isLight
+                  ? 'bg-white hover:bg-neutral-100 border-neutral-300 text-neutral-700'
+                  : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-700 text-neutral-300'
+              }`}
+              title={
+                boundaryLocked
+                  ? 'Unlock Canvas Boundary (return to auto-adaptive stage bounds)'
+                  : 'Lock current Canvas Boundary W×H so stepping through pages never resizes the stage'
+              }
+            >
+              {boundaryLocked ? (
+                <>
+                  <Lock className="h-3 w-3" />
+                  <span>Locked</span>
+                </>
+              ) : (
+                <>
+                  <Unlock className="h-3 w-3" />
+                  <span>Lock Boundary</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </>

@@ -2,7 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { quickNotification } from '../../ui-core/stores/quickNotificationStore';
 import { createScopedSyncedState } from '../stores/crossClientSync';
 import { readUrlParams, updateUrlParams } from '../stores/urlSync';
-import { AppWindow, X, Eye, Layers, LayoutGrid } from 'lucide-react';
+import { AppWindow, X, Eye, Layers, LayoutGrid, ChevronLeft, ChevronRight, Lock, Unlock } from 'lucide-react';
 import { Button } from '../../ui-core/primitives/Button';
 import { floatingSandboxStore, useFloatingStore } from '../../ui-core/stores/floatingStore';
 import {
@@ -77,6 +77,18 @@ export const FloatingWindowsSimulationPage: React.FC<FloatingWindowsSimulationPa
     'full',
     'containerPreset'
   );
+  const [boundaryLocked, setBoundaryLocked] = useState<boolean>(
+    false,
+    'boundaryLocked'
+  );
+  const [manualBoundarySize, setManualBoundarySize] = useState<{
+    width: number;
+    height: number;
+  }>({ width: 960, height: 700 }, 'manualBoundarySize');
+  const [measuredCanvasSize, setMeasuredCanvasSize] = React.useState<{
+    width: number;
+    height: number;
+  }>({ width: 960, height: 700 });
 
   // Manual minWidth calibration map (strictly 1px integer standard units)
   const [manualMinWidths, setManualMinWidths] = useState<Record<string, number>>(
@@ -87,6 +99,26 @@ export const FloatingWindowsSimulationPage: React.FC<FloatingWindowsSimulationPa
   const [isEditingMinWidth, setIsEditingMinWidth] = React.useState<boolean>(false);
 
   const canvasRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!canvasRef.current) return;
+    const update = () => {
+      if (canvasRef.current) {
+        setMeasuredCanvasSize({
+          width: canvasRef.current.clientWidth || 960,
+          height: canvasRef.current.clientHeight || 700,
+        });
+      }
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(canvasRef.current);
+    window.addEventListener('resize', update);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', update);
+    };
+  }, [fwMode]);
 
   const activeTierWindows = tier === 'user' ? USER_PRESET_WINDOWS : DEV_PRESET_WINDOWS;
   const currentIndex = Math.max(
@@ -311,8 +343,44 @@ export const FloatingWindowsSimulationPage: React.FC<FloatingWindowsSimulationPa
     spawnWithFlight(preset, e.currentTarget, canvasRef.current);
   };
 
+  const autoBoundaryW =
+    containerPreset === '1080p-compact'
+      ? Math.min(measuredCanvasSize.width, 760)
+      : containerPreset === 'small-squeeze'
+      ? Math.min(measuredCanvasSize.width, 520)
+      : measuredCanvasSize.width;
+  const autoBoundaryH =
+    containerPreset === '1080p-compact'
+      ? 520
+      : containerPreset === 'small-squeeze'
+      ? 380
+      : 700;
+  const effectiveBoundaryW = boundaryLocked ? manualBoundarySize.width : autoBoundaryW;
+  const effectiveBoundaryH = boundaryLocked ? manualBoundarySize.height : autoBoundaryH;
+
+  const handleToggleBoundaryLock = () => {
+    if (!boundaryLocked) {
+      const snapW = Math.max(320, Math.round(autoBoundaryW));
+      const snapH = Math.max(260, Math.round(autoBoundaryH));
+      setManualBoundarySize({ width: snapW, height: snapH });
+      setBoundaryLocked(true);
+      quickNotification.info(`Canvas Boundary Locked at ${snapW}×${snapH}px.`);
+    } else {
+      setBoundaryLocked(false);
+      quickNotification.info('Canvas Boundary Unlocked (Auto-Adaptive).');
+    }
+  };
+
+  const handleChangeManualBoundarySize = (next: { width: number; height: number }) => {
+    setManualBoundarySize({
+      width: Math.max(320, Math.min(2560, Math.round(next.width))),
+      height: Math.max(260, Math.min(1600, Math.round(next.height))),
+    });
+    setBoundaryLocked(true);
+  };
+
   return (
-    <div className="flex flex-col gap-6 w-full relative">
+    <div className="flex flex-col gap-5 w-full relative">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-neutral-200/80 dark:border-neutral-800">
         <div className="flex items-center gap-3">
@@ -391,37 +459,182 @@ export const FloatingWindowsSimulationPage: React.FC<FloatingWindowsSimulationPa
         </div>
       </div>
 
-      {/* Strict User vs Developer Control Bar + < Prev Window | Next Window > Scanner */}
-      <FloatingWindowsScannerControlBar
-        isLight={isLight}
-        tier={tier}
-        fwMode={fwMode}
-        currentIndex={currentIndex}
-        activeTierWindows={activeTierWindows}
-        currentPreset={currentPreset}
-        windows={windows}
-        resolvedEffectiveMinW={resolvedEffectiveMinW}
-        resolvedAutoMinW={resolvedAutoMinW}
-        resolvedScrollbarReserve={resolvedScrollbarReserve}
-        activeManualMinW={activeManualMinW}
-        activeWindowInstance={activeWindowInstance}
-        containerPreset={containerPreset}
-        setContainerPreset={setContainerPreset}
-        activeSubTab={activeSubTab}
-        setActiveSubTab={setActiveSubTab}
-        opacity={opacity}
-        setOpacity={setOpacity}
-        minWidthDraft={minWidthDraft}
-        setMinWidthDraft={setMinWidthDraft}
-        setIsEditingMinWidth={setIsEditingMinWidth}
-        applyManualMinWidth={applyManualMinWidth}
-        handleSnapToMinWidth={handleSnapToMinWidth}
-        handleResetAutoMinWidth={handleResetAutoMinWidth}
-        handleCopyCalibratedParams={handleCopyCalibratedParams}
-        handleSwitchTier={handleSwitchTier}
-        handleStepWindow={handleStepWindow}
-        handleSelectPreset={handleSelectPreset}
-      />
+      {/* 1. TOP-PINNED PREVIEW STAGE & LINEAR SCANNER / BOUNDARY LOCK BAR */}
+      {fwMode !== 'matrix' && (
+        <div
+          className={`flex flex-wrap items-center justify-between gap-2.5 px-3.5 py-2 rounded-2xl border text-xs font-mono ${
+            isLight
+              ? 'bg-white border-neutral-200 text-neutral-800 shadow-2xs'
+              : 'bg-neutral-900/90 border-neutral-800 text-neutral-200'
+          }`}
+        >
+          <div className="flex items-center gap-2 flex-wrap">
+            <div
+              className={`inline-flex items-center p-0.5 rounded-lg border ${
+                isLight ? 'bg-neutral-100 border-neutral-200' : 'bg-neutral-950 border-neutral-800'
+              }`}
+            >
+              <button
+                type="button"
+                onClick={() => handleSwitchTier('user')}
+                className={`px-2 py-0.5 rounded-md text-[11px] font-bold cursor-pointer transition-colors ${
+                  tier === 'user'
+                    ? 'bg-emerald-500 text-white'
+                    : 'text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200'
+                }`}
+              >
+                User ({USER_PRESET_WINDOWS.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSwitchTier('developer')}
+                className={`px-2 py-0.5 rounded-md text-[11px] font-bold cursor-pointer transition-colors ${
+                  tier === 'developer'
+                    ? 'bg-amber-500 text-neutral-950'
+                    : 'text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200'
+                }`}
+              >
+                Dev ({DEV_PRESET_WINDOWS.length})
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => handleStepWindow(-1)}
+              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl border font-bold cursor-pointer transition-all active:scale-95 ${
+                isLight
+                  ? 'bg-neutral-100 hover:bg-neutral-200 border-neutral-300 text-neutral-800'
+                  : 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-neutral-100'
+              }`}
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+              <span>Prev (←)</span>
+            </button>
+
+            <span className="px-2.5 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-bold">
+              [{currentIndex + 1}/{activeTierWindows.length}] {currentPreset?.title}
+            </span>
+
+            <button
+              type="button"
+              onClick={() => handleStepWindow(1)}
+              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl border font-bold cursor-pointer transition-all active:scale-95 ${
+                isLight
+                  ? 'bg-neutral-100 hover:bg-neutral-200 border-neutral-300 text-neutral-800'
+                  : 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-neutral-100'
+              }`}
+            >
+              <span>Next (→)</span>
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[11px] text-neutral-400">Canvas Boundary:</span>
+            {(
+              [
+                { id: 'full', label: 'Auto' },
+                { id: '1080p-compact', label: '760×520' },
+                { id: 'small-squeeze', label: '520×380' },
+              ] as const
+            ).map((preset) => (
+              <button
+                key={preset.id}
+                type="button"
+                onClick={() => {
+                  setContainerPreset(preset.id);
+                  if (preset.id === '1080p-compact' && boundaryLocked) {
+                    setManualBoundarySize({ width: 760, height: 520 });
+                  } else if (preset.id === 'small-squeeze' && boundaryLocked) {
+                    setManualBoundarySize({ width: 520, height: 380 });
+                  }
+                }}
+                className={`px-2 py-0.5 rounded-lg border text-[11px] cursor-pointer transition-all ${
+                  containerPreset === preset.id && !boundaryLocked
+                    ? 'bg-amber-500 text-white border-amber-500 font-bold'
+                    : isLight
+                    ? 'bg-neutral-100 border-neutral-200 text-neutral-600 hover:text-neutral-900'
+                    : 'bg-neutral-950 border-neutral-800 text-neutral-400 hover:text-neutral-200'
+                }`}
+              >
+                {preset.label}
+              </button>
+            ))}
+
+            <div
+              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-xl border ${
+                boundaryLocked
+                  ? 'border-sky-500/60 bg-sky-500/10 text-sky-500'
+                  : isLight
+                  ? 'border-neutral-200 bg-neutral-50 text-neutral-700'
+                  : 'border-neutral-800 bg-neutral-950 text-neutral-300'
+              }`}
+            >
+              <input
+                type="number"
+                min={320}
+                max={2560}
+                step={10}
+                value={Math.round(effectiveBoundaryW)}
+                onChange={(e) =>
+                  handleChangeManualBoundarySize({
+                    width: Number(e.target.value) || effectiveBoundaryW,
+                    height: effectiveBoundaryH,
+                  })
+                }
+                className={`w-14 px-1 py-0.5 text-center rounded border font-mono text-[11px] font-bold ${
+                  isLight
+                    ? 'bg-white border-neutral-300 text-neutral-900'
+                    : 'bg-neutral-900 border-neutral-700 text-neutral-100'
+                }`}
+              />
+              <span className="opacity-60">×</span>
+              <input
+                type="number"
+                min={260}
+                max={1600}
+                step={10}
+                value={Math.round(effectiveBoundaryH)}
+                onChange={(e) =>
+                  handleChangeManualBoundarySize({
+                    width: effectiveBoundaryW,
+                    height: Number(e.target.value) || effectiveBoundaryH,
+                  })
+                }
+                className={`w-14 px-1 py-0.5 text-center rounded border font-mono text-[11px] font-bold ${
+                  isLight
+                    ? 'bg-white border-neutral-300 text-neutral-900'
+                    : 'bg-neutral-900 border-neutral-700 text-neutral-100'
+                }`}
+              />
+              <span className="text-[10px] opacity-60">px</span>
+              <button
+                type="button"
+                onClick={handleToggleBoundaryLock}
+                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-bold border cursor-pointer transition-all ${
+                  boundaryLocked
+                    ? 'bg-sky-500 text-white border-sky-400 shadow-2xs'
+                    : isLight
+                    ? 'bg-white hover:bg-neutral-100 border-neutral-300 text-neutral-700'
+                    : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-700 text-neutral-300'
+                }`}
+              >
+                {boundaryLocked ? (
+                  <>
+                    <Lock className="h-3 w-3" />
+                    <span>Locked</span>
+                  </>
+                ) : (
+                  <>
+                    <Unlock className="h-3 w-3" />
+                    <span>Lock W×H</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Quick-Copy Audit Header in Direct Inspector Mode */}
       {fwMode !== 'matrix' && currentPreset && (
@@ -467,7 +680,7 @@ export const FloatingWindowsSimulationPage: React.FC<FloatingWindowsSimulationPa
         </div>
       )}
 
-      {/* Stage Area: Flat Matrix Audit Wall vs Interactive Canvas Stage */}
+      {/* Stage Area: Flat Matrix Audit Wall vs Interactive Canvas Stage (At the top so control bar layout changes below never push the stage) */}
       {fwMode === 'matrix' ? (
         <FloatingWindowsFlatMatrixWall
           isLight={isLight}
@@ -479,6 +692,8 @@ export const FloatingWindowsSimulationPage: React.FC<FloatingWindowsSimulationPa
           isLight={isLight}
           canvasRef={canvasRef}
           containerPreset={containerPreset}
+          boundaryLocked={boundaryLocked}
+          manualBoundarySize={manualBoundarySize}
           opacity={opacity}
           totalCount={totalCount}
           minimizedCount={minimizedCount}
@@ -493,6 +708,38 @@ export const FloatingWindowsSimulationPage: React.FC<FloatingWindowsSimulationPa
           handleAddPresetToStack={handleAddPresetToStack}
         />
       )}
+
+      {/* Strict User vs Developer Control Bar + Window Pill Grid & Calibration (Below the preview stage) */}
+      <FloatingWindowsScannerControlBar
+        isLight={isLight}
+        tier={tier}
+        fwMode={fwMode}
+        currentIndex={currentIndex}
+        activeTierWindows={activeTierWindows}
+        currentPreset={currentPreset}
+        windows={windows}
+        resolvedEffectiveMinW={resolvedEffectiveMinW}
+        resolvedAutoMinW={resolvedAutoMinW}
+        resolvedScrollbarReserve={resolvedScrollbarReserve}
+        activeManualMinW={activeManualMinW}
+        activeWindowInstance={activeWindowInstance}
+        containerPreset={containerPreset}
+        setContainerPreset={setContainerPreset}
+        activeSubTab={activeSubTab}
+        setActiveSubTab={setActiveSubTab}
+        opacity={opacity}
+        setOpacity={setOpacity}
+        minWidthDraft={minWidthDraft}
+        setMinWidthDraft={setMinWidthDraft}
+        setIsEditingMinWidth={setIsEditingMinWidth}
+        applyManualMinWidth={applyManualMinWidth}
+        handleSnapToMinWidth={handleSnapToMinWidth}
+        handleResetAutoMinWidth={handleResetAutoMinWidth}
+        handleCopyCalibratedParams={handleCopyCalibratedParams}
+        handleSwitchTier={handleSwitchTier}
+        handleStepWindow={handleStepWindow}
+        handleSelectPreset={handleSelectPreset}
+      />
     </div>
   );
 };

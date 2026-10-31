@@ -44,91 +44,91 @@ import { TakeoverTunerSection } from './takeover/TakeoverTunerSection';
 import type { StageBgMode } from './center-upper-info/CenterUpperArchetypesAndBackdrop';
 
 export const TakeoverPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }) => {
-  const [stageBgMode, setStageBgMode] = useSyncedState<StageBgMode>('5g:stageBgMode', 'arena');
-  const [stageBgColor, setStageBgColor] = useSyncedState<string>('5g:stageBgColor', '#090D16');
+  const [stageBgMode, setStageBgMode] = useSyncedState<StageBgMode>('5g-v2:stageBgMode', 'arena');
+  const [stageBgColor, setStageBgColor] = useSyncedState<string>('5g-v2:stageBgColor', '#090D16');
   const [stageBgSecondaryColor, setStageBgSecondaryColor] = useSyncedState<string>(
-    '5g:stageBgSecondaryColor',
+    '5g-v2:stageBgSecondaryColor',
     '#1E293B'
   );
   const [arenaPreset, setArenaPreset] = useSyncedState<ArenaLightingPreset>(
-    '5g:arenaPreset',
+    '5g-v2:arenaPreset',
     'daylight'
   );
-  const [stageBrightness, setStageBrightness] = useSyncedState<number>('5g:stageBrightness', 100);
-  const [showPitchLines, setShowPitchLines] = useSyncedState<boolean>('5g:showPitchLines', true);
+  const [stageBrightness, setStageBrightness] = useSyncedState<number>('5g-v2:stageBrightness', 100);
+  const [showPitchLines, setShowPitchLines] = useSyncedState<boolean>('5g-v2:showPitchLines', true);
   const [showAnchorGuides, setShowAnchorGuides] = useSyncedState<boolean>(
-    '5g:showAnchorGuides',
+    '5g-v2:showAnchorGuides',
     true
   );
 
   // Upward offset relative to bottom-center (NOT global center)
   const [bottomOffsetPx, setBottomOffsetPx] = useSyncedState<number>(
-    '5g:bottomOffsetPx',
+    '5g-v2:bottomOffsetPx',
     DEFAULT_TAKEOVER_LAYOUT.bottomOffsetPx
   );
 
   // Team roster & Scoreboard configuration ('blue' vs 'orange' also drives Top Regular team color)
-  const [myTeamSide, setMyTeamSide] = useSyncedState<'blue' | 'orange'>('5g:myTeamSide', 'blue');
+  const [myTeamSide, setMyTeamSide] = useSyncedState<'blue' | 'orange'>('5g-v2:myTeamSide', 'blue');
 
   // Takeover signal ('replacing-in' retracts BallCam, Speedometer, FlipIndicator, BoostMeter; 'takeover-complete' deploys them)
   const [activeSignal, setActiveSignal] = useSyncedState<TakeoverSignal>(
-    '5g:activeSignal',
+    '5g-v2:activeSignal',
     'replacing-in'
   );
   const [countdownStep, setCountdownStep] = useSyncedState<'3' | '2' | '1'>(
-    '5g:countdownStep',
+    '5g-v2:countdownStep',
     '3'
   );
   const [topLabelText, setTopLabelText] = useSyncedState<string>(
-    '5g:topLabelText',
+    '5g-v2:topLabelText',
     'Takeover in...'
   );
-  const [subCaptionText, setSubCaptionText] = useSyncedState<string>('5g:subCaptionText', '');
+  const [subCaptionText, setSubCaptionText] = useSyncedState<string>('5g-v2:subCaptionText', '');
   const [countdownIntervalMs, setCountdownIntervalMs] = useSyncedState<number>(
-    '5g:countdownIntervalMs',
+    '5g-v2:countdownIntervalMs',
     1000
   );
   const [isSequencePlaying, setIsSequencePlaying] = useSyncedState<boolean>(
-    '5g:isSequencePlaying',
+    '5g-v2:isSequencePlaying',
     false
   );
-  const [loopSequence, setLoopSequence] = useSyncedState<boolean>('5g:loopSequence', false);
+  const [loopSequence, setLoopSequence] = useSyncedState<boolean>('5g-v2:loopSequence', false);
   const sequenceTimerRef = useRef<number | null>(null);
 
   // Glow, Typography (`uppercase: false` by default), Timing, and Rounded-Rect 4-Edge Vignette
-  const [glowConfig, setGlowConfig] = useSyncedState<TakeoverGlowConfig>('5g:glowConfig', {
+  const [glowConfig, setGlowConfig] = useSyncedState<TakeoverGlowConfig>('5g-v2:glowConfig', {
     ...DEFAULT_TAKEOVER_GLOW,
   });
   const [syncGlowWithText, setSyncGlowWithText] = useSyncedState<boolean>(
-    '5g:syncGlowWithText',
-    false
+    '5g-v2:syncGlowWithText',
+    true
   );
   const [typoConfig, setTypoConfig] = useSyncedState<CenterUpperTypographyConfig>(
-    '5g:typoConfig',
+    '5g-v2:typoConfig',
     {
       ...DEFAULT_TAKEOVER_TYPOGRAPHY,
     }
   );
   const [timingConfig, setTimingConfig] = useSyncedState<CenterUpperTimingConfig>(
-    '5g:timingConfig',
+    '5g-v2:timingConfig',
     {
       ...DEFAULT_TAKEOVER_TIMING,
     }
   );
   const [vignetteConfig, setVignetteConfig] = useSyncedState<TakeoverVignetteConfig>(
-    '5g:vignetteConfig',
+    '5g-v2:vignetteConfig',
     {
       ...DEFAULT_TAKEOVER_VIGNETTE,
     }
   );
   const [alwaysPreviewVignette, setAlwaysPreviewVignette] = useSyncedState<boolean>(
-    '5g:alwaysPreviewVignette',
+    '5g-v2:alwaysPreviewVignette',
     false
   );
 
-  const [triggerNonce, setTriggerNonce] = useSyncedState<number>('5g:triggerNonce', 1);
+  const [triggerNonce, setTriggerNonce] = useSyncedState<number>('5g-v2:triggerNonce', 1);
   const [isVisibleOnStage, setIsVisibleOnStage] = useSyncedState<boolean>(
-    '5g:isVisibleOnStage',
+    '5g-v2:isVisibleOnStage',
     true
   );
 
@@ -255,7 +255,7 @@ export const DEFAULT_5G_TAKEOVER_CONFIG = ${JSON.stringify(snapshot, null, 2)};`
   }, [buildExportCode]);
 
   const handleResetDefaults = useCallback(() => {
-    crossClientSync.resetAll({ scopePrefix: '5g:' });
+    crossClientSync.resetAll({ scopePrefix: '5g-v2:' });
   }, []);
 
   const stopTakeoverSequence = useCallback(() => {

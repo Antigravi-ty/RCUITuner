@@ -10,6 +10,7 @@ import {
   Code2,
   Eye,
   Users,
+  ArrowLeftRight,
 } from 'lucide-react';
 import {
   CenterUpperTypographyConfig,
@@ -25,6 +26,7 @@ import {
   DEFAULT_TAKEOVER_TIMING,
   DEFAULT_TAKEOVER_VIGNETTE,
   DEFAULT_TAKEOVER_LAYOUT,
+  formatVignetteEndpointRgba,
 } from '../../../ui-core/hud/TakeoverCountdownHUD';
 import {
   CubicBezierCurveEditor,
@@ -40,6 +42,7 @@ import { RL_GLOW_SWATCHES } from '../center-upper-info/CenterUpperArchetypesAndB
 
 export const VIGNETTE_BEZIER_PRESETS: CubicBezierPreset[] = [
   { name: 'Calibrated Rect (Default)', value: { p1x: 0.28, p1y: 0.01, p2x: 0.0, p2y: 1.01 } },
+  { name: 'Sharp Outer Pinch', value: { p1x: 1.0, p1y: -5.0, p2x: 0.0, p2y: 1.01 } },
   { name: 'Smooth Edge', value: { p1x: 0.42, p1y: 0.0, p2x: 0.22, p2y: 1.0 } },
   { name: 'Deep Corner Pinch', value: { p1x: 0.68, p1y: 0.0, p2x: 0.88, p2y: 0.35 } },
   { name: 'Linear Falloff', value: { p1x: 0.33, p1y: 0.33, p2x: 0.67, p2y: 0.67 } },
@@ -254,7 +257,7 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
         )}
       </div>
 
-      {/* Card 1: Rounded-Rectangle 4-Edge Vignette Tuner */}
+      {/* Card 1: Rounded-Rectangle 4-Edge Vignette Tuner (Dual RGBA Endpoints) */}
       <div
         className={`p-5 rounded-3xl border flex flex-col gap-4 ${
           isLight
@@ -262,21 +265,40 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
             : 'bg-neutral-900/80 border-neutral-800 text-neutral-100 shadow-lg'
         }`}
       >
-        <div className="flex items-center justify-between border-b pb-2.5 border-neutral-200 dark:border-neutral-800">
+        <div className="flex items-center justify-between border-b pb-2.5 border-neutral-200 dark:border-neutral-800 flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <Eye className="h-4 w-4 text-sky-500" />
             <h3 className="text-sm font-bold font-mono">
-              1. Rounded-Rect 4-Edge Vignette Mask (Intensity · Distance · Curve)
+              1. Rounded-Rect 4-Edge Vignette (Dual RGBA Endpoints · Distance · Curve)
             </h3>
           </div>
-          <button
-            type="button"
-            onClick={() => setVignetteConfig({ ...DEFAULT_TAKEOVER_VIGNETTE })}
-            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-mono border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer"
-          >
-            <RotateCcw className="h-3 w-3" />
-            <span>Vignette Default</span>
-          </button>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() =>
+                setVignetteConfig((prev) => ({
+                  ...prev,
+                  innerColor: prev.color,
+                  innerIntensityPct: prev.intensityPct,
+                  color: prev.innerColor ?? '#000000',
+                  intensityPct: prev.innerIntensityPct ?? 0,
+                }))
+              }
+              title="Swap Inner Opening RGBA (t=0) and Outer Edge RGBA (t=1)"
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-mono font-bold border border-sky-500/40 bg-sky-500/10 text-sky-400 hover:bg-sky-500/20 cursor-pointer transition-colors"
+            >
+              <ArrowLeftRight className="h-3 w-3" />
+              <span>Swap Inner ↔ Outer RGBA</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setVignetteConfig({ ...DEFAULT_TAKEOVER_VIGNETTE })}
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-mono border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer"
+            >
+              <RotateCcw className="h-3 w-3" />
+              <span>Vignette Default</span>
+            </button>
+          </div>
         </div>
 
         <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -294,33 +316,100 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
           />
         </div>
 
-        <ColorSwatchInput
-          label="Vignette Edge Tint Color"
-          description="Rendered at z-10 underneath the z-20 HUD layer as a concentric rounded-rectangle mask"
-          value={vignetteConfig.color}
-          onChange={(hex) => setVignetteConfig((prev) => ({ ...prev, color: hex }))}
-          presets={VIGNETTE_COLOR_SWATCHES}
-          isLight={isLight}
-        />
+        {/* Dual RGBA Endpoint Cards: Endpoint A (t=0 Inner Opening) -> Endpoint B (t=1 Outer Edge) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Endpoint A: Inner Opening RGBA (t = 0) */}
+          <div
+            className={`p-3 rounded-2xl border flex flex-col gap-2.5 ${
+              isLight
+                ? 'bg-neutral-50 border-neutral-200'
+                : 'bg-neutral-950/60 border-neutral-800'
+            }`}
+          >
+            <div className="flex items-center justify-between gap-1">
+              <span className="text-[11px] font-mono font-bold text-emerald-500">
+                Endpoint A · Inner Opening RGBA (t=0)
+              </span>
+              <span className="text-[10px] font-mono opacity-75">
+                {formatVignetteEndpointRgba(
+                  vignetteConfig.innerColor ?? '#000000',
+                  vignetteConfig.innerIntensityPct ?? 0
+                )}
+              </span>
+            </div>
+            <ColorSwatchInput
+              label="Inner RGB Color (t=0)"
+              description="Color inside the center opening rectangle"
+              value={vignetteConfig.innerColor ?? '#000000'}
+              onChange={(hex) =>
+                setVignetteConfig((prev) => ({ ...prev, innerColor: hex }))
+              }
+              presets={VIGNETTE_COLOR_SWATCHES}
+              isLight={isLight}
+            />
+            <SliderControl
+              label="Inner Alpha / Opacity (t=0)"
+              description="Default 0% (100% transparent center)"
+              value={vignetteConfig.innerIntensityPct ?? 0}
+              min={0}
+              max={100}
+              step={1}
+              unit="%"
+              editable
+              allowOutOfBoundsInput
+              onChange={(v) =>
+                setVignetteConfig((prev) => ({ ...prev, innerIntensityPct: v }))
+              }
+              isLight={isLight}
+            />
+          </div>
+
+          {/* Endpoint B: Outer Screen Edge RGBA (t = 1) */}
+          <div
+            className={`p-3 rounded-2xl border flex flex-col gap-2.5 ${
+              isLight
+                ? 'bg-neutral-50 border-neutral-200'
+                : 'bg-neutral-950/60 border-neutral-800'
+            }`}
+          >
+            <div className="flex items-center justify-between gap-1">
+              <span className="text-[11px] font-mono font-bold text-amber-500">
+                Endpoint B · Outer Edge RGBA (t=1)
+              </span>
+              <span className="text-[10px] font-mono opacity-75">
+                {formatVignetteEndpointRgba(vignetteConfig.color, vignetteConfig.intensityPct)}
+              </span>
+            </div>
+            <ColorSwatchInput
+              label="Outer Edge RGB Color (t=1)"
+              description="Color at the 4 screen edges"
+              value={vignetteConfig.color}
+              onChange={(hex) => setVignetteConfig((prev) => ({ ...prev, color: hex }))}
+              presets={VIGNETTE_COLOR_SWATCHES}
+              isLight={isLight}
+            />
+            <SliderControl
+              label="Outer Edge Alpha / Intensity (t=1)"
+              description="Default 50% darkening at screen perimeter"
+              value={vignetteConfig.intensityPct}
+              min={0}
+              max={100}
+              step={1}
+              unit="%"
+              editable
+              allowOutOfBoundsInput
+              colorScheme="amber"
+              onChange={(v) =>
+                setVignetteConfig((prev) => ({ ...prev, intensityPct: v }))
+              }
+              isLight={isLight}
+            />
+          </div>
+        </div>
 
         <SliderControl
-          label="Vignette Edge Intensity (Peak Opacity)"
-          description="Controls maximum darkening strength at the 4 screen edges during Takeover (default 50%)"
-          value={vignetteConfig.intensityPct}
-          min={0}
-          max={100}
-          step={1}
-          unit="%"
-          editable
-          allowOutOfBoundsInput
-          colorScheme="amber"
-          onChange={(v) => setVignetteConfig((prev) => ({ ...prev, intensityPct: v }))}
-          isLight={isLight}
-        />
-
-        <SliderControl
-          label="Clear Center Rect Distance (Inner Opening)"
-          description="Rectangular distance from center (0%–95%, default 40%) that stays 100% clear before edge falloff"
+          label="Clear Center Rect Distance (Inner Opening t=0 Boundary)"
+          description="Rectangular distance from center (0%–95%, default 60%) where t=0 begins transitioning toward t=1"
           value={vignetteConfig.distancePct}
           min={0}
           max={95}
@@ -334,11 +423,11 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
 
         <div className="grid grid-cols-2 gap-3">
           <SliderControl
-            label="Outer Full-Density Reach"
-            description="Default 120%"
+            label="Outer Full-Density Reach (t=1)"
+            description="Default 140%"
             value={vignetteConfig.outerReachPct}
             min={35}
-            max={140}
+            max={160}
             step={1}
             unit="%"
             editable
@@ -348,8 +437,8 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
           />
           <SliderControl
             label="Rect Corner Radius"
-            description="Rounded-rect mask corner radius"
-            value={vignetteConfig.cornerRadiusPx ?? 36}
+            description="Default 12px"
+            value={vignetteConfig.cornerRadiusPx ?? 12}
             min={0}
             max={160}
             step={2}
@@ -362,7 +451,7 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
         </div>
 
         <CubicBezierCurveEditor
-          title="Rounded-Rect Vignette Falloff Curve (Inner Clear Rect -> Outer Edge)"
+          title="Rounded-Rect Vignette Falloff Curve (t=0 Inner RGBA -> t=1 Outer RGBA)"
           p1x={vignetteConfig.curve.p1x}
           p1y={vignetteConfig.curve.p1y}
           p2x={vignetteConfig.curve.p2x}
@@ -441,7 +530,7 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
 
         <div className="p-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 flex flex-col gap-2">
           <span className="text-xs font-mono font-bold text-emerald-500">
-            Anchor Reference: Bottom-Center Upward Offset (`anchor=&quot;bottom-center&quot;`, Default 24px)
+            Anchor Reference: Bottom-Center Upward Offset (`anchor=&quot;bottom-center&quot;`, Default 0px)
           </span>
           <SliderControl
             label="Upward Offset from Bottom-Center (Bottom Offset px)"
@@ -557,7 +646,7 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
         </div>
       </div>
 
-      {/* Card 3: Team-Colored Top Label + White Glowing Stroke & Countdown Glow Tuner */}
+      {/* Card 3: Team-Colored Top Label + Stroke/Glow & Countdown Glow Tuner */}
       <div
         className={`p-5 rounded-3xl border flex flex-col gap-4 ${
           isLight
@@ -569,7 +658,7 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
           <div className="flex items-center gap-2">
             <Palette className="h-4 w-4 text-amber-500" />
             <h3 className="text-sm font-bold font-mono">
-              3. Team-Colored `Takeover in...` + White Glowing Stroke &amp; Digit Glow
+              3. Team-Colored `Takeover in...` + Stroke/Glow &amp; Digit Glow
             </h3>
           </div>
           <button
@@ -590,7 +679,7 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <span className="text-xs font-mono font-bold text-sky-400 flex items-center gap-1.5">
               <Users className="h-3.5 w-3.5" />
-              <span>Top Label (`Takeover in...`): Team Color + White Glowing Stroke</span>
+              <span>Top Label (`Takeover in...`): Team Color + Stroke &amp; Glow</span>
             </span>
             <ToggleSwitch
               label="Use Team Color"
@@ -641,17 +730,17 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <ColorSwatchInput
               label="Top Label Stroke & Glow Color"
-              description="Default #FFFFFF white glowing stroke"
+              description="Default #000000 shadow/stroke"
               value={resolvedTopStyle.strokeColor}
               onChange={(hex) =>
                 updateTopLabelStyle({ strokeColor: hex, glowColor: hex })
               }
-              presets={['#FFFFFF', '#F8FAFC', '#E0F2FE', '#FFFBEB', '#FEF08A']}
+              presets={['#000000', '#FFFFFF', '#F8FAFC', '#E0F2FE', '#FFFBEB', '#FEF08A']}
               isLight={isLight}
             />
-            <div className="flex flex-col gap-2">
+            <div className="grid grid-cols-2 gap-2">
               <SliderControl
-                label="White Stroke Width"
+                label="Stroke Width"
                 value={resolvedTopStyle.strokeWidthPx}
                 min={0}
                 max={3}
@@ -666,7 +755,19 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
                 isLight={isLight}
               />
               <SliderControl
-                label="White Outer Glow Blur"
+                label="Inner Blur"
+                value={resolvedTopStyle.innerBlurPx}
+                min={0}
+                max={32}
+                step={1}
+                unit="px"
+                editable
+                allowOutOfBoundsInput
+                onChange={(v) => updateTopLabelStyle({ innerBlurPx: v })}
+                isLight={isLight}
+              />
+              <SliderControl
+                label="Outer Blur"
                 value={resolvedTopStyle.outerBlurPx}
                 min={0}
                 max={48}
@@ -675,6 +776,18 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
                 editable
                 allowOutOfBoundsInput
                 onChange={(v) => updateTopLabelStyle({ outerBlurPx: v })}
+                isLight={isLight}
+              />
+              <SliderControl
+                label="Ambient Blur"
+                value={resolvedTopStyle.ambientBlurPx}
+                min={0}
+                max={64}
+                step={1}
+                unit="px"
+                editable
+                allowOutOfBoundsInput
+                onChange={(v) => updateTopLabelStyle({ ambientBlurPx: v })}
                 isLight={isLight}
               />
             </div>

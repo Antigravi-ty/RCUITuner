@@ -418,8 +418,8 @@ export const EdgeSkipReplayInspectorSection: React.FC<EdgeSkipReplayInspectorSec
                         glowIntensityPct={skipCfg.glowIntensityPct}
                         style={{
                           transform:
-                            skipCfg.iconOffsetXPx !== 0
-                              ? `translate3d(${skipCfg.iconOffsetXPx}px, 0, 0)`
+                            skipCfg.iconOffsetXPx !== 0 || skipCfg.iconOffsetYPx !== 0
+                              ? `translate3d(${skipCfg.iconOffsetXPx}px, ${skipCfg.iconOffsetYPx}px, 0)`
                               : undefined,
                         }}
                       />
@@ -440,6 +440,12 @@ export const EdgeSkipReplayInspectorSection: React.FC<EdgeSkipReplayInspectorSec
                     glowColor={skipCfg.glowColor}
                     glowBlurPx={skipCfg.glowBlurPx}
                     glowIntensityPct={skipCfg.glowIntensityPct}
+                    style={{
+                      transform:
+                        skipCfg.iconOffsetXPx !== 0 || skipCfg.iconOffsetYPx !== 0
+                          ? `translate3d(${skipCfg.iconOffsetXPx}px, ${skipCfg.iconOffsetYPx}px, 0)`
+                          : undefined,
+                    }}
                   />
                 </div>
               </div>
@@ -467,7 +473,7 @@ export const EdgeSkipReplayInspectorSection: React.FC<EdgeSkipReplayInspectorSec
                 </button>
               </div>
               <pre className="overflow-x-auto whitespace-pre-wrap break-all leading-relaxed opacity-85 select-all">
-                {`color: "${skipCfg.color}" | sizePx: ${skipCfg.sizePx} | weight: ${skipCfg.strokeWidth.toFixed(1)} | glow: ${skipCfg.glowBlurPx}px (${skipCfg.glowIntensityPct}%) | protrude: ${skipCfg.protrudeWidthPx}px | underlap: ${skipCfg.underlapPx}px | radius: ${skipCfg.cardRadiusPx}px | enter: ${skipCfg.enterDurationMs}ms | exit: ${skipCfg.exitDurationMs}ms | variant: "${skipCfg.variant}"`}
+                {`color: "${skipCfg.color}" | sizePx: ${skipCfg.sizePx} | weight: ${skipCfg.strokeWidth.toFixed(1)} | glow: ${skipCfg.glowBlurPx}px (${skipCfg.glowIntensityPct}%) | protrude: ${skipCfg.protrudeWidthPx}px | underlap: ${skipCfg.underlapPx}px | radius: ${skipCfg.cardRadiusPx}px | offsetX: ${skipCfg.iconOffsetXPx}px | offsetY: ${skipCfg.iconOffsetYPx}px | enter: ${skipCfg.enterDurationMs}ms | exit: ${skipCfg.exitDurationMs}ms | variant: "${skipCfg.variant}"`}
               </pre>
             </div>
           </div>
@@ -687,15 +693,15 @@ export const EdgeSkipReplayInspectorSection: React.FC<EdgeSkipReplayInspectorSec
                 </div>
               </div>
 
-              {/* Row 4: Card Protrude Length, Under-Card Tuck, Corner Radius, Icon X Offset */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-neutral-100 dark:border-neutral-800/60">
+              {/* Row 4: Card Protrude Length, Under-Card Tuck, Corner Radius, Icon X & Y Offset */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-neutral-100 dark:border-neutral-800/60">
                 <SliderControl
                   label="Card Protrude Length (protrudeWidthPx)"
                   value={skipCfg.protrudeWidthPx}
                   min={24}
                   max={72}
                   step={1}
-                  defaultValue={38}
+                  defaultValue={34}
                   unit="px"
                   colorScheme="emerald"
                   isLight={isLight}
@@ -708,7 +714,7 @@ export const EdgeSkipReplayInspectorSection: React.FC<EdgeSkipReplayInspectorSec
                   min={0}
                   max={28}
                   step={1}
-                  defaultValue={12}
+                  defaultValue={20}
                   unit="px"
                   colorScheme="emerald"
                   isLight={isLight}
@@ -727,19 +733,39 @@ export const EdgeSkipReplayInspectorSection: React.FC<EdgeSkipReplayInspectorSec
                   isLight={isLight}
                   onChange={(v) => updateSkipCfg({ cardRadiusPx: v })}
                 />
+              </div>
 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-neutral-100 dark:border-neutral-800/60">
                 <SliderControl
                   label="Icon Horizontal Offset (iconOffsetXPx)"
+                  description="Horizontal fine-tuning inside protruding drawer"
                   value={skipCfg.iconOffsetXPx}
                   min={-12}
                   max={12}
-                  step={1}
-                   origin={0}
+                  step={0.5}
+                  origin={0}
+                  defaultValue={0}
                   variation="centered"
                   unit="px"
                   colorScheme="neutral"
                   isLight={isLight}
                   onChange={(v) => updateSkipCfg({ iconOffsetXPx: v })}
+                />
+
+                <SliderControl
+                  label="Icon Vertical Offset (iconOffsetYPx)"
+                  description="Optical vs mathematical center balance (negative shifts upward)"
+                  value={skipCfg.iconOffsetYPx}
+                  min={-12}
+                  max={12}
+                  step={0.5}
+                  origin={0}
+                  defaultValue={-1}
+                  variation="centered"
+                  unit="px"
+                  colorScheme="emerald"
+                  isLight={isLight}
+                  onChange={(v) => updateSkipCfg({ iconOffsetYPx: v })}
                 />
               </div>
 

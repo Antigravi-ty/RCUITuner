@@ -174,7 +174,7 @@ export const App: React.FC = () => {
 
   return (
     <div
-      className={`relative h-screen w-screen overflow-hidden select-none transition-colors duration-150 ${
+      className={`relative h-screen w-screen overflow-hidden transition-colors duration-150 ${
         isLight ? 'bg-neutral-800' : 'bg-black'
       }`}
     >
@@ -218,7 +218,7 @@ export const App: React.FC = () => {
       >
         {/* Top Header Bar: Always Fixed At UI Directly Above Frame */}
         <header
-          className={`h-16 px-6 md:px-8 border-b flex items-center justify-between shrink-0 select-none z-20 transition-colors ${
+          className={`h-16 px-6 md:px-8 border-b flex items-center justify-between shrink-0 z-20 transition-colors ${
             isLight
               ? 'bg-white border-neutral-200/90 shadow-2xs'
               : 'bg-neutral-950 border-neutral-800'
@@ -247,7 +247,7 @@ export const App: React.FC = () => {
           />
 
           {/* Main Content Viewport: Independent Scroll Area, Scaling applies only here!  */}
-          <main className="flex-1 h-full overflow-y-auto overflow-x-auto [overflow-anchor:none] min-w-0 relative bg-white dark:bg-neutral-950">
+          <main className="flex-1 h-full overflow-y-auto overflow-x-auto [overflow-anchor:none] min-w-0 relative select-text bg-white dark:bg-neutral-950">
             {lastJumpOrigin && lastJumpOrigin.toTab === activeTab && (
               <div
                 className={`sticky top-0 z-40 px-6 py-2 border-b flex items-center justify-between gap-3 text-xs font-mono backdrop-blur-md ${

@@ -228,7 +228,7 @@ export const PageJumpDirectory: React.FC<PageJumpDirectoryProps> = React.memo(({
     <nav
       aria-label={title}
       data-ui-element="page-jump-directory"
-      className={`p-4 rounded-2xl border select-none transition-colors ${
+      className={`p-4 rounded-2xl border transition-colors ${
         isLight
           ? 'bg-neutral-50/90 border-neutral-200/90 text-neutral-800 shadow-2xs'
           : 'bg-neutral-900/70 border-neutral-800 text-neutral-200 shadow-md'
