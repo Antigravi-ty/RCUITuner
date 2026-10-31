@@ -218,12 +218,6 @@ export const MenuLayerStageCanvas: React.FC<MenuLayerStageCanvasProps> = ({
         }}
       />
 
-      <QuickNotificationSystem
-        isLight={isLight}
-        absolute={true}
-        className={hasStackIcon ? '!right-16' : '!right-4'}
-      />
-
       <FloatingStackIcon
         isLight={isLight}
         absolute={true}
