@@ -170,16 +170,19 @@ export function MatchTakeoverOverlay({
         config={{
           enabled: ${vignetteConfig.enabled},
           renderMode: '${vignetteConfig.renderMode ?? 'sdf-smooth'}',
-          depthYPct: ${vignetteConfig.depthYPct ?? 85},
-          depthXPct: ${vignetteConfig.depthXPct ?? 25},
-          blurPx: ${vignetteConfig.blurPx ?? 160},
+          depthYPct: ${vignetteConfig.depthYPct ?? 58},
+          depthTopPct: ${vignetteConfig.depthTopPct ?? vignetteConfig.depthYPct ?? 58},
+          depthBottomPct: ${vignetteConfig.depthBottomPct ?? vignetteConfig.depthYPct ?? 58},
+          verticalOffsetPx: ${vignetteConfig.verticalOffsetPx ?? 0},
+          depthXPct: ${vignetteConfig.depthXPct ?? 17},
+          blurPx: ${vignetteConfig.blurPx ?? 164},
           innerColor: '${vignetteConfig.innerColor ?? '#000000'}',
           innerIntensityPct: ${vignetteConfig.innerIntensityPct ?? 0},
           color: '${vignetteConfig.color}',
           intensityPct: ${vignetteConfig.intensityPct},
           distancePct: ${vignetteConfig.distancePct},
           outerReachPct: ${vignetteConfig.outerReachPct},
-          cornerRadiusPx: ${vignetteConfig.cornerRadiusPx ?? 12},
+          cornerRadiusPx: ${vignetteConfig.cornerRadiusPx ?? 0},
           curve: {
             p1x: ${vignetteConfig.curve.p1x},
             p1y: ${vignetteConfig.curve.p1y},
@@ -200,11 +203,11 @@ export function MatchTakeoverOverlay({
           zIndexClassName="z-40"
           style={{ bottom: '${bottomOffsetPx}px' }}
         >
-          <HudSlot visible={isReplacingIn} mode="reserve">
+          <HudSlot visible={isReplacingIn && Boolean(countdownDigit)} mode="reserve">
             <TakeoverCountdownHUD
               teamSide={teamSide}
               payload={
-                countdownDigit
+                isReplacingIn && countdownDigit
                   ? {
                       topText: '${topLabelText}', // JetBrains Mono Regular (400) - Team Color + Glowing Stroke
                       mainText: countdownDigit, // JetBrains Mono Thin (100) - Scales 3 -> 2 -> 1

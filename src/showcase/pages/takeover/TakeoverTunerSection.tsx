@@ -43,37 +43,19 @@ export interface TakeoverTunerSectionProps {
   handleResetDefaults: () => void;
   buildExportCode: () => string;
   myTeamSide: 'blue' | 'orange';
-  setMyTeamSide: (
-    val: 'blue' | 'orange' | ((prev: 'blue' | 'orange') => 'blue' | 'orange')
-  ) => void;
+  setMyTeamSide: (val: 'blue' | 'orange' | ((prev: 'blue' | 'orange') => 'blue' | 'orange')) => void;
   vignetteConfig: TakeoverVignetteConfig;
-  setVignetteConfig: (
-    val:
-      | TakeoverVignetteConfig
-      | ((prev: TakeoverVignetteConfig) => TakeoverVignetteConfig)
-  ) => void;
+  setVignetteConfig: (val: TakeoverVignetteConfig | ((prev: TakeoverVignetteConfig) => TakeoverVignetteConfig)) => void;
   alwaysPreviewVignette: boolean;
   setAlwaysPreviewVignette: (val: boolean | ((prev: boolean) => boolean)) => void;
   glowConfig: TakeoverGlowConfig;
-  setGlowConfig: (
-    val:
-      | TakeoverGlowConfig
-      | ((prev: TakeoverGlowConfig) => TakeoverGlowConfig)
-  ) => void;
+  setGlowConfig: (val: TakeoverGlowConfig | ((prev: TakeoverGlowConfig) => TakeoverGlowConfig)) => void;
   syncGlowWithText: boolean;
   setSyncGlowWithText: (val: boolean | ((prev: boolean) => boolean)) => void;
   timingConfig: CenterUpperTimingConfig;
-  setTimingConfig: (
-    val:
-      | CenterUpperTimingConfig
-      | ((prev: CenterUpperTimingConfig) => CenterUpperTimingConfig)
-  ) => void;
+  setTimingConfig: (val: CenterUpperTimingConfig | ((prev: CenterUpperTimingConfig) => CenterUpperTimingConfig)) => void;
   typoConfig: CenterUpperTypographyConfig;
-  setTypoConfig: (
-    val:
-      | CenterUpperTypographyConfig
-      | ((prev: CenterUpperTypographyConfig) => CenterUpperTypographyConfig)
-  ) => void;
+  setTypoConfig: (val: CenterUpperTypographyConfig | ((prev: CenterUpperTypographyConfig) => CenterUpperTypographyConfig)) => void;
   countdownIntervalMs: number;
   setCountdownIntervalMs: (val: number | ((prev: number) => number)) => void;
   bottomOffsetPx: number;
@@ -269,7 +251,7 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
               Vignette Compositing Engine (Zero Staircase Steps)
             </span>
             <span className="text-[10px] font-mono opacity-65">
-              offsetX: -{axisGeo.offsetX.toFixed(0)}px | offsetY: -{axisGeo.offsetY.toFixed(0)}px
+              X: -{axisGeo.offsetX.toFixed(0)}px | Top: -{axisGeo.offsetTop.toFixed(0)}px | Bot: -{axisGeo.offsetBottom.toFixed(0)}px | vOffset: {axisGeo.verticalOffsetPx > 0 ? `+${axisGeo.verticalOffsetPx}` : axisGeo.verticalOffsetPx}px
             </span>
           </div>
           <SegmentedSwitch
@@ -284,69 +266,116 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
               }))
             }
             options={[
-              {
-                value: 'sdf-smooth',
-                label: 'SDF + Dither (Safe)',
-              },
-              {
-                value: 'css-inset',
-                label: 'CSS Inset (Ref)',
-              },
-              {
-                value: 'hybrid',
-                label: 'Hybrid (SDF + CSS)',
-              },
+              { value: 'sdf-smooth', label: 'SDF + Dither (Safe)' },
+              { value: 'css-inset', label: 'CSS Inset (Ref)' },
+              { value: 'hybrid', label: 'Hybrid (SDF + CSS)' },
             ]}
           />
         </div>
 
-        {/* Reference HTML Independent Narrowing Controls (No Corner Creases) */}
+        {/* Asymmetric Top/Bottom + Vertical Offset + Feather Controls */}
         <div
           className={`p-3.5 rounded-2xl border flex flex-col gap-3 ${
-            isLight
-              ? 'bg-neutral-50 border-neutral-200'
-              : 'bg-neutral-950/60 border-neutral-800'
+            isLight ? 'bg-neutral-50 border-neutral-200' : 'bg-neutral-950/60 border-neutral-800'
           }`}
         >
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
             <span className="text-xs font-mono font-bold text-amber-500">
-              Independent Narrowing &amp; Feather Morphology (Zero Crease / Pure Smooth Corners)
+              Symmetric X &amp; Asymmetric Top/Bottom Y Depth + Vertical Offset
             </span>
-            <span className="text-[10px] font-mono opacity-70">
-              offset = (100 - depth) * (blur * 0.012)
-            </span>
+            <button
+              type="button"
+              onClick={() =>
+                setVignetteConfig((prev) => ({
+                  ...prev,
+                  depthTopPct: prev.depthYPct ?? 58,
+                  depthBottomPct: prev.depthYPct ?? 58,
+                  verticalOffsetPx: 0,
+                }))
+              }
+              className="px-2 py-0.5 rounded text-[10px] font-mono border border-amber-500/40 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 cursor-pointer"
+            >
+              Sync Top/Bottom &amp; Zero Offset
+            </button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <SliderControl
-              label="Vertical Depth (Y - Top/Bottom)"
-              description="Default 85% (pushes top/bottom edge inward)"
-              value={vignetteConfig.depthYPct ?? 85}
+              label="Vertical Depth (Y - Linked Master)"
+              description="Default 58% (links Top & Bottom depth)"
+              value={vignetteConfig.depthYPct ?? 58}
               min={0}
-              max={100}
+              max={140}
               step={1}
               unit="%"
               editable
               allowOutOfBoundsInput
               colorScheme="amber"
               onChange={(v) =>
-                setVignetteConfig((prev) => ({ ...prev, depthYPct: v }))
+                setVignetteConfig((prev) => ({
+                  ...prev,
+                  depthYPct: v,
+                  depthTopPct: v,
+                  depthBottomPct: v,
+                }))
               }
               isLight={isLight}
             />
             <SliderControl
               label="Horizontal Depth (X - Left/Right)"
-              description="Default 25% (gentle side edge feathering)"
-              value={vignetteConfig.depthXPct ?? 25}
+              description="Default 17% (symmetric side feathering)"
+              value={vignetteConfig.depthXPct ?? 17}
               min={0}
               max={100}
               step={1}
               unit="%"
               editable
               allowOutOfBoundsInput
-              onChange={(v) =>
-                setVignetteConfig((prev) => ({ ...prev, depthXPct: v }))
-              }
+              onChange={(v) => setVignetteConfig((prev) => ({ ...prev, depthXPct: v }))}
+              isLight={isLight}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <SliderControl
+              label="Top Edge Depth (Y-Top)"
+              description="Lower = shorter top shadow"
+              value={vignetteConfig.depthTopPct ?? vignetteConfig.depthYPct ?? 58}
+              min={0}
+              max={140}
+              step={1}
+              unit="%"
+              editable
+              allowOutOfBoundsInput
+              onChange={(v) => setVignetteConfig((prev) => ({ ...prev, depthTopPct: v }))}
+              isLight={isLight}
+            />
+            <SliderControl
+              label="Bottom Edge Depth (Y-Bottom)"
+              description="Higher = taller bottom shadow"
+              value={vignetteConfig.depthBottomPct ?? vignetteConfig.depthYPct ?? 58}
+              min={0}
+              max={140}
+              step={1}
+              unit="%"
+              editable
+              allowOutOfBoundsInput
+              colorScheme="amber"
+              onChange={(v) => setVignetteConfig((prev) => ({ ...prev, depthBottomPct: v }))}
+              isLight={isLight}
+            />
+            <SliderControl
+              label="Vertical Offset (Y Shift)"
+              description="+px: shorter top & taller bottom"
+              value={vignetteConfig.verticalOffsetPx ?? 0}
+              min={-200}
+              max={200}
+              step={2}
+              unit="px"
+              editable
+              allowOutOfBoundsInput
+              colorScheme="amber"
+              onChange={(v) => setVignetteConfig((prev) => ({ ...prev, verticalOffsetPx: v }))}
               isLight={isLight}
             />
           </div>
@@ -354,32 +383,28 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <SliderControl
               label="Feather Range (Blur)"
-              description="Default 160px continuous transition span"
-              value={vignetteConfig.blurPx ?? 160}
+              description="Default 164px continuous transition span"
+              value={vignetteConfig.blurPx ?? 164}
               min={20}
               max={350}
               step={2}
               unit="px"
               editable
               allowOutOfBoundsInput
-              onChange={(v) =>
-                setVignetteConfig((prev) => ({ ...prev, blurPx: v }))
-              }
+              onChange={(v) => setVignetteConfig((prev) => ({ ...prev, blurPx: v }))}
               isLight={isLight}
             />
             <SliderControl
               label="Corner Smoothness (Radius)"
-              description="Default 12px rounded corner contour"
-              value={vignetteConfig.cornerRadiusPx ?? 12}
+              description="Default 0px rounded corner contour"
+              value={vignetteConfig.cornerRadiusPx ?? 0}
               min={0}
               max={150}
               step={2}
               unit="px"
               editable
               allowOutOfBoundsInput
-              onChange={(v) =>
-                setVignetteConfig((prev) => ({ ...prev, cornerRadiusPx: v }))
-              }
+              onChange={(v) => setVignetteConfig((prev) => ({ ...prev, cornerRadiusPx: v }))}
               isLight={isLight}
             />
           </div>
@@ -390,9 +415,7 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
           {/* Endpoint A: Inner Opening RGBA (t = 0) */}
           <div
             className={`p-3 rounded-2xl border flex flex-col gap-2.5 ${
-              isLight
-                ? 'bg-neutral-50 border-neutral-200'
-                : 'bg-neutral-950/60 border-neutral-800'
+              isLight ? 'bg-neutral-50 border-neutral-200' : 'bg-neutral-950/60 border-neutral-800'
             }`}
           >
             <div className="flex items-center justify-between gap-1">
@@ -410,9 +433,7 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
               label="Inner RGB Color (t=0)"
               description="Color inside the center opening rectangle"
               value={vignetteConfig.innerColor ?? '#000000'}
-              onChange={(hex) =>
-                setVignetteConfig((prev) => ({ ...prev, innerColor: hex }))
-              }
+              onChange={(hex) => setVignetteConfig((prev) => ({ ...prev, innerColor: hex }))}
               presets={VIGNETTE_COLOR_SWATCHES}
               isLight={isLight}
             />
@@ -426,9 +447,7 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
               unit="%"
               editable
               allowOutOfBoundsInput
-              onChange={(v) =>
-                setVignetteConfig((prev) => ({ ...prev, innerIntensityPct: v }))
-              }
+              onChange={(v) => setVignetteConfig((prev) => ({ ...prev, innerIntensityPct: v }))}
               isLight={isLight}
             />
           </div>
@@ -436,9 +455,7 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
           {/* Endpoint B: Outer Screen Edge RGBA (t = 1) */}
           <div
             className={`p-3 rounded-2xl border flex flex-col gap-2.5 ${
-              isLight
-                ? 'bg-neutral-50 border-neutral-200'
-                : 'bg-neutral-950/60 border-neutral-800'
+              isLight ? 'bg-neutral-50 border-neutral-200' : 'bg-neutral-950/60 border-neutral-800'
             }`}
           >
             <div className="flex items-center justify-between gap-1">
@@ -459,7 +476,7 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
             />
             <SliderControl
               label="Vignette Density / Opacity (t=1)"
-              description="Default 85% darkening at outer perimeter"
+              description="Default 100% darkening at outer perimeter"
               value={vignetteConfig.intensityPct}
               min={0}
               max={100}
@@ -468,9 +485,7 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
               editable
               allowOutOfBoundsInput
               colorScheme="amber"
-              onChange={(v) =>
-                setVignetteConfig((prev) => ({ ...prev, intensityPct: v }))
-              }
+              onChange={(v) => setVignetteConfig((prev) => ({ ...prev, intensityPct: v }))}
               isLight={isLight}
             />
           </div>
@@ -479,7 +494,7 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <SliderControl
             label="Clear Center Rect Distance (t=0)"
-            description="Default 60% clear center opening scale"
+            description="Default 40% clear center opening scale"
             value={vignetteConfig.distancePct}
             min={0}
             max={95}
@@ -492,7 +507,7 @@ export const TakeoverTunerSection: React.FC<TakeoverTunerSectionProps> = ({
           />
           <SliderControl
             label="Outer Full-Density Reach (t=1)"
-            description="Default 100% feather reach factor"
+            description="Default 160% feather reach factor"
             value={vignetteConfig.outerReachPct}
             min={35}
             max={160}

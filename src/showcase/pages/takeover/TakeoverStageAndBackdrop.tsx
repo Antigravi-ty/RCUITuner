@@ -268,7 +268,7 @@ export const TakeoverStageCanvas: React.FC<TakeoverStageCanvasProps> = ({
           zIndexClassName="z-40"
           style={{ bottom: `${bottomOffsetPx}px` }}
         >
-          <HudSlot visible={true} mode="reserve">
+          <HudSlot visible={Boolean(activePayload)} mode="reserve">
             <TakeoverCountdownHUD
               payload={activePayload}
               teamSide={myTeamSide}
@@ -302,7 +302,7 @@ export const TakeoverStageCanvas: React.FC<TakeoverStageCanvasProps> = ({
         <span className="opacity-30">|</span>
         <strong className="text-sky-400">
           {vignettePreviewActive
-            ? `Vignette ${vignetteConfig.intensityPct}% (Y:${vignetteConfig.depthYPct ?? 85}/X:${vignetteConfig.depthXPct ?? 25})`
+            ? `Vignette ${vignetteConfig.intensityPct}% (T:${vignetteConfig.depthTopPct ?? vignetteConfig.depthYPct ?? 58}/B:${vignetteConfig.depthBottomPct ?? vignetteConfig.depthYPct ?? 58}/X:${vignetteConfig.depthXPct ?? 17}${vignetteConfig.verticalOffsetPx ? ` dY:${vignetteConfig.verticalOffsetPx > 0 ? '+' : ''}${vignetteConfig.verticalOffsetPx}px` : ''})`
             : 'Vignette OFF'}
         </strong>
         {isFlowBackdrop && (

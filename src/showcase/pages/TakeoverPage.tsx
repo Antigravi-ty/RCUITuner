@@ -41,8 +41,8 @@ export const TakeoverPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }
     '#1E293B'
   );
   const [arenaPreset, setArenaPreset] = useSyncedState<ArenaLightingPreset>(
-    '5g-v2:arenaPreset',
-    'daylight'
+    '5g-v4:arenaPreset',
+    'flow'
   );
   const [stageBrightness, setStageBrightness] = useSyncedState<number>('5g-v2:stageBrightness', 100);
   const [showPitchLines, setShowPitchLines] = useSyncedState<boolean>('5g-v2:showPitchLines', true);
@@ -53,7 +53,7 @@ export const TakeoverPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }
 
   // Upward offset relative to bottom-center (NOT global center)
   const [bottomOffsetPx, setBottomOffsetPx] = useSyncedState<number>(
-    '5g-v2:bottomOffsetPx',
+    '5g-v4:bottomOffsetPx',
     DEFAULT_TAKEOVER_LAYOUT.bottomOffsetPx
   );
 
@@ -86,7 +86,7 @@ export const TakeoverPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }
   const sequenceTimerRef = useRef<number | null>(null);
 
   // Glow, Typography (uppercase: false by default), Timing, and Seamless Rounded-Rect 4-Edge Vignette
-  const [glowConfig, setGlowConfig] = useSyncedState<TakeoverGlowConfig>('5g-v2:glowConfig', {
+  const [glowConfig, setGlowConfig] = useSyncedState<TakeoverGlowConfig>('5g-v4:glowConfig', {
     ...DEFAULT_TAKEOVER_GLOW,
   });
   const [syncGlowWithText, setSyncGlowWithText] = useSyncedState<boolean>(
@@ -94,20 +94,20 @@ export const TakeoverPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }
     true
   );
   const [typoConfig, setTypoConfig] = useSyncedState<CenterUpperTypographyConfig>(
-    '5g-v2:typoConfig',
+    '5g-v4:typoConfig',
     {
       ...DEFAULT_TAKEOVER_TYPOGRAPHY,
     }
   );
   const [timingConfig, setTimingConfig] = useSyncedState<CenterUpperTimingConfig>(
-    '5g-v3:timingConfig',
+    '5g-v4:timingConfig',
     {
       ...DEFAULT_TAKEOVER_TIMING,
       persistentInspect: true,
     }
   );
   const [rawVignetteConfig, setVignetteConfig] = useSyncedState<TakeoverVignetteConfig>(
-    '5g-v3:vignetteConfig',
+    '5g-v4:vignetteConfig',
     {
       ...DEFAULT_TAKEOVER_VIGNETTE,
     }
@@ -260,7 +260,21 @@ export const DEFAULT_5G_TAKEOVER_CONFIG = ${JSON.stringify(snapshot, null, 2)};`
   const handleResetDefaults = useCallback(() => {
     crossClientSync.resetAll({ scopePrefix: '5g-v2:' });
     crossClientSync.resetAll({ scopePrefix: '5g-v3:' });
+    crossClientSync.resetAll({ scopePrefix: '5g-v4:' });
   }, []);
+
+  const handleSetVisibleOnStage = useCallback(
+    (val: boolean | ((prev: boolean) => boolean)) => {
+      setIsVisibleOnStage((prev) => {
+        const next = typeof val === 'function' ? val(prev) : val;
+        if (next) {
+          setActiveSignal('replacing-in');
+        }
+        return next;
+      });
+    },
+    [setIsVisibleOnStage, setActiveSignal]
+  );
 
   const stopTakeoverSequence = useCallback(() => {
     if (sequenceTimerRef.current !== null) {
@@ -310,9 +324,7 @@ export const DEFAULT_5G_TAKEOVER_CONFIG = ${JSON.stringify(snapshot, null, 2)};`
         } else {
           sequenceTimerRef.current = window.setTimeout(() => {
             setActiveSignal('takeover-complete');
-            if (!timingConfig.persistentInspect) {
-              setIsVisibleOnStage(false);
-            }
+            setIsVisibleOnStage(false);
 
             if (loopSequence) {
               sequenceTimerRef.current = window.setTimeout(() => {
@@ -331,7 +343,6 @@ export const DEFAULT_5G_TAKEOVER_CONFIG = ${JSON.stringify(snapshot, null, 2)};`
     [
       stopTakeoverSequence,
       countdownIntervalMs,
-      timingConfig.persistentInspect,
       loopSequence,
       setActiveSignal,
       setIsSequencePlaying,
@@ -348,9 +359,7 @@ export const DEFAULT_5G_TAKEOVER_CONFIG = ${JSON.stringify(snapshot, null, 2)};`
       setIsVisibleOnStage(true);
       setTriggerNonce((n) => n + 1);
     } else {
-      if (!timingConfig.persistentInspect) {
-        setIsVisibleOnStage(false);
-      }
+      setIsVisibleOnStage(false);
     }
   };
 
@@ -363,13 +372,11 @@ export const DEFAULT_5G_TAKEOVER_CONFIG = ${JSON.stringify(snapshot, null, 2)};`
 
   const isCockpitVisible = activeSignal === 'takeover-complete';
   const vignettePreviewActive =
-    activeSignal === 'replacing-in' ||
-    alwaysPreviewVignette ||
-    Boolean(timingConfig.persistentInspect);
+    activeSignal === 'replacing-in' || alwaysPreviewVignette;
 
   const shouldRenderTakeoverBanner =
-    isVisibleOnStage &&
-    (activeSignal === 'replacing-in' || Boolean(timingConfig.persistentInspect));
+    activeSignal === 'replacing-in' &&
+    (isVisibleOnStage || Boolean(timingConfig.persistentInspect));
 
   const activePayload: TakeoverHudPayload | null = shouldRenderTakeoverBanner
     ? {
@@ -448,7 +455,7 @@ export const DEFAULT_5G_TAKEOVER_CONFIG = ${JSON.stringify(snapshot, null, 2)};`
           countdownStep={countdownStep}
           setCountdownStep={setCountdownStep}
           setActiveSignal={setActiveSignal}
-          setIsVisibleOnStage={setIsVisibleOnStage}
+          setIsVisibleOnStage={handleSetVisibleOnStage}
           setTriggerNonce={setTriggerNonce}
           topLabelText={topLabelText}
           setTopLabelText={setTopLabelText}
@@ -523,7 +530,7 @@ export const DEFAULT_5G_TAKEOVER_CONFIG = ${JSON.stringify(snapshot, null, 2)};`
         setCountdownIntervalMs={setCountdownIntervalMs}
         bottomOffsetPx={bottomOffsetPx}
         setBottomOffsetPx={setBottomOffsetPx}
-        setIsVisibleOnStage={setIsVisibleOnStage}
+        setIsVisibleOnStage={handleSetVisibleOnStage}
         setTriggerNonce={setTriggerNonce}
       />
 
