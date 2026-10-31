@@ -2,7 +2,8 @@ import React, { useEffect, useRef } from 'react';
 import { createScopedSyncedState } from '../../stores/crossClientSync';
 const useState = createScopedSyncedState('hud-spatial-sandbox');
 import {
-  createHudTransientChannel, DEFAULT_DEMO_INDICATOR_CONFIG, DEFAULT_INITIAL_ROSTER, EdgeDemoIndicatorConfig,
+  createHudTransientChannel, DEFAULT_DEMO_INDICATOR_CONFIG, DEFAULT_INITIAL_ROSTER,
+  DEFAULT_SKIP_INDICATOR_CONFIG, EdgeDemoIndicatorConfig, EdgeSkipIndicatorConfig,
   HudRosterViewMode, MatchHudChoreographySignal,
 } from '../../../ui-core/stores/hudTransientChannel';
 import { FLIP_WINDOW_SECONDS } from '../../../ui-core/hud/FlipIndicatorPillHUD';
@@ -32,50 +33,65 @@ export const HudSpatialChoreographySandbox: React.FC<{ isLight?: boolean }> = Re
           remainingSeconds: 0, totalSeconds: 3.0,
           active: false, },
       }) );
-    const [viewMode, setViewMode] = useState<HudRosterViewMode>('player-live');
-    const [activeSignal, setActiveSignal] = useState<MatchHudChoreographySignal>('kickoff-will-start');
-    const [bottomHudRetracted, setBottomHudRetracted] = useState<boolean>(false);
-    const [instantCockpitTransition, setInstantCockpitTransition] = useState<boolean>(false);
-    const [myTeamSide, setMyTeamSide] = useState<'blue' | 'orange'>('blue');
+    const [viewMode, setViewMode] = useState<HudRosterViewMode>('player-live', 'viewMode');
+    const [activeSignal, setActiveSignal] = useState<MatchHudChoreographySignal>('kickoff-will-start', 'activeSignal');
+    const [bottomHudRetracted, setBottomHudRetracted] = useState<boolean>(false, 'bottomHudRetracted');
+    const [instantCockpitTransition, setInstantCockpitTransition] = useState<boolean>(false, 'instantCockpitTransition');
+    const [myTeamSide, setMyTeamSide] = useState<'blue' | 'orange'>('blue', 'myTeamSide');
     const [slotExists, setSlotExists] = useState<Record<1 | 2 | 3 | 4 | 5 | 6, boolean>>({
       1: true, 2: true,
       3: true, 4: true,
       5: true, 6: true,
-    });
+    }, 'slotExists');
     const [replaySkipReady, setReplaySkipReady] = useState<Record<1 | 2 | 3 | 4 | 5 | 6, boolean>>({
       1: false, 2: false,
       3: false, 4: false,
       5: false, 6: false,
-    });
-    const [opponentDemoCompact, setOpponentDemoCompact] = useState<boolean>(true);
-    const [persistentDemo, setPersistentDemo] = useState<boolean>(false);
+    }, 'replaySkipReady');
+    const [opponentDemoCompact, setOpponentDemoCompact] = useState<boolean>(true, 'opponentDemoCompact');
+    const [persistentDemo, setPersistentDemo] = useState<boolean>(false, 'persistentDemo');
     const persistentDemoRef = useRef<boolean>(false);
     persistentDemoRef.current = persistentDemo;
     const [demoIndicatorConfig, setDemoIndicatorConfig] = useState<EdgeDemoIndicatorConfig>({
-      ...DEFAULT_DEMO_INDICATOR_CONFIG, });
-    const [focusedSlot, setFocusedSlot] = useState<1 | 2 | 3 | 4 | 5 | 6 | null>(1);
-    const [scorePreset, setScorePreset] = useState<ScorePresetKey>('1digit');
-    const [overtimeChinOpen, setOvertimeChinOpen] = useState<boolean>(false);
-    const [bestOf, setBestOf] = useState<0 | 3 | 5 | 7>(5);
-    const [leftWins, setLeftWins] = useState<number>(2);
-    const [rightWins, setRightWins] = useState<number>(1);
-    const [hudThemeLight, setHudThemeLight] = useState<boolean>(isLight);
+      ...DEFAULT_DEMO_INDICATOR_CONFIG, }, 'demoIndicatorConfig');
+    const [skipIndicatorConfig, setSkipIndicatorConfig] = useState<EdgeSkipIndicatorConfig>({
+      ...DEFAULT_SKIP_INDICATOR_CONFIG, }, 'skipIndicatorConfig');
+    const [focusedSlot, setFocusedSlot] = useState<1 | 2 | 3 | 4 | 5 | 6 | null>(1, 'focusedSlot');
+    const [scorePreset, setScorePreset] = useState<ScorePresetKey>('1digit', 'scorePreset');
+    const [overtimeChinOpen, setOvertimeChinOpen] = useState<boolean>(false, 'overtimeChinOpen');
+    const [bestOf, setBestOf] = useState<0 | 3 | 5 | 7>(5, 'bestOf');
+    const [leftWins, setLeftWins] = useState<number>(2, 'leftWins');
+    const [rightWins, setRightWins] = useState<number>(1, 'rightWins');
+    const [hudThemeLight, setHudThemeLight] = useState<boolean>(isLight, 'hudThemeLight');
     useEffect(() => {
       setHudThemeLight(isLight);
     }, [isLight]);
-    const [layoutStrategy, setLayoutStrategy] = useState<HudLayoutStrategy>('reserve');
-    const [jumpPlacement, setJumpPlacement] = useState<JumpPlacementOption>('top-left');
-    const [flipSimMode, setFlipSimMode] = useState<FlipSimMode>('auto-drain');
+    const [layoutStrategy, setLayoutStrategy] = useState<HudLayoutStrategy>('reserve', 'layoutStrategy');
+    const [jumpPlacement, setJumpPlacement] = useState<JumpPlacementOption>('top-left', 'jumpPlacement');
+    const [flipSimMode, setFlipSimMode] = useState<FlipSimMode>('auto-drain', 'flipSimMode');
     const flipSimModeRef = useRef<FlipSimMode>('auto-drain');
-    const [showTelemetryTopLeft, setShowTelemetryTopLeft] = useState<boolean>(true);
-    const [showStackTopRight, setShowStackTopRight] = useState<boolean>(true);
-    const [stackTrayOpen, setStackTrayOpen] = useState<boolean>(false);
-    const [showBallCam, setShowBallCam] = useState<boolean>(true);
-    const [notifSlideOpen, setNotifSlideOpen] = useState<boolean>(true);
-    const [selfDemoActive, setSelfDemoActive] = useState<boolean>(false);
+    const [showTelemetryTopLeft, setShowTelemetryTopLeft] = useState<boolean>(true, 'showTelemetryTopLeft');
+    const [showBallCam, setShowBallCam] = useState<boolean>(true, 'showBallCam');
+    const [selfDemoActive, setSelfDemoActive] = useState<boolean>(false, 'selfDemoActive');
     const sandboxSectionRef = useRef<HTMLElement | null>(null);
     const selfDemoPillTextRef = useRef<HTMLSpanElement | null>(null);
     const demoEndTimestampsRef = useRef<Record<number, number>>({});
+    useEffect(() => {
+      const ch = channelRef.current;
+      ch.setRoster({
+        viewMode,
+        focusedSlotKey: focusedSlot,
+        opponentDemoCompact,
+        demoIndicatorConfig,
+        skipIndicatorConfig,
+      });
+      ([1, 2, 3, 4, 5, 6] as const).forEach((k) => {
+        ch.updatePlayerSlot(k, {
+          exists: Boolean(slotExists?.[k] ?? true),
+          replaySkipReady: Boolean(replaySkipReady?.[k] ?? false),
+        });
+      });
+    }, [viewMode, focusedSlot, opponentDemoCompact, demoIndicatorConfig, skipIndicatorConfig, slotExists, replaySkipReady]);
     useEffect(() => {
       const ch = channelRef.current;
       let rafId = 0;
@@ -309,6 +325,13 @@ export const HudSpatialChoreographySandbox: React.FC<{ isLight?: boolean }> = Re
         return next;
       });
     };
+    const handleUpdateSkipIndicatorConfig = (patch: Partial<EdgeSkipIndicatorConfig>) => {
+      setSkipIndicatorConfig((prev) => {
+        const next = { ...prev, ...patch };
+        channelRef.current.setRoster({ skipIndicatorConfig: next });
+        return next;
+      });
+    };
     const handleTriggerDemo = (slotKey: 1 | 2 | 3 | 4 | 5 | 6) => {
       const now = performance.now();
       const wasAlreadyDemo = Boolean(demoEndTimestampsRef.current[slotKey]);
@@ -444,12 +467,9 @@ export const HudSpatialChoreographySandbox: React.FC<{ isLight?: boolean }> = Re
       handleFlipSimModeChange(next);
     };
     const winsNeededForBo = bestOf > 0 ? Math.ceil(bestOf / 2) : 0;
-    const leftTopBandVisible =
-      layoutStrategy === 'collapse-symmetric' ? showTelemetryTopLeft && showStackTopRight
-        : showTelemetryTopLeft;
+    const leftTopBandVisible = showTelemetryTopLeft;
     const rightTopBandVisible =
-      layoutStrategy === 'collapse-symmetric' ? showTelemetryTopLeft && showStackTopRight
-        : showStackTopRight;
+      layoutStrategy === 'collapse-symmetric' ? showTelemetryTopLeft : false;
     const topBandSlotMode: HudSlotMode = layoutStrategy === 'reserve' ? 'reserve' : 'collapse';
     const isSpectatorFreeCam = viewMode === 'spectator' && focusedSlot === null;
     const isCockpitVisible = !bottomHudRetracted && !isSpectatorFreeCam;
@@ -484,30 +504,30 @@ export const HudSpatialChoreographySandbox: React.FC<{ isLight?: boolean }> = Re
           handleDispatchSignal={handleDispatchSignal} myTeamSide={myTeamSide}
           handleToggleTeamSide={handleToggleTeamSide} slotExists={slotExists}
           handleToggleSlotExists={handleToggleSlotExists} replaySkipReady={replaySkipReady}
-          handleToggleReplaySkipReady={handleToggleReplaySkipReady} handleApplyTeamSizePreset={handleApplyTeamSizePreset}
+          handleToggleReplaySkipReady={handleToggleReplaySkipReady}
+          skipIndicatorConfig={skipIndicatorConfig}
+          onUpdateSkipIndicatorConfig={handleUpdateSkipIndicatorConfig}
+          handleApplyTeamSizePreset={handleApplyTeamSizePreset}
           opponentDemoCompact={opponentDemoCompact}
           handleToggleOpponentDemoCompact={handleToggleOpponentDemoCompact} persistentDemo={persistentDemo}
           onTogglePersistentDemo={handleTogglePersistentDemo} demoIndicatorConfig={demoIndicatorConfig}
           onUpdateDemoIndicatorConfig={handleUpdateDemoIndicatorConfig} focusedSlot={focusedSlot}
           handleSelectPov={handleSelectPov} handleTriggerDemo={handleTriggerDemo} layoutStrategy={layoutStrategy}
           setLayoutStrategy={setLayoutStrategy} showTelemetryTopLeft={showTelemetryTopLeft}
-          setShowTelemetryTopLeft={setShowTelemetryTopLeft} showStackTopRight={showStackTopRight}
-          setShowStackTopRight={setShowStackTopRight} stackTrayOpen={stackTrayOpen}
-          setStackTrayOpen={setStackTrayOpen} flipSimMode={flipSimMode}
+          setShowTelemetryTopLeft={setShowTelemetryTopLeft} flipSimMode={flipSimMode}
           onFlipSimModeChange={handleFlipSimModeChange} jumpPlacement={jumpPlacement}
-          setJumpPlacement={setJumpPlacement} showBallCam={showBallCam} setShowBallCam={setShowBallCam}
-          notifSlideOpen={notifSlideOpen} setNotifSlideOpen={setNotifSlideOpen} />
+          setJumpPlacement={setJumpPlacement} showBallCam={showBallCam} setShowBallCam={setShowBallCam} />
         {/* FULL-VIEWPORT 16:9 HUD SPATIAL STAGE */}
         <HudSpatialChoreographyStageCanvas hudThemeLight={hudThemeLight} layoutStrategy={layoutStrategy}
           leftTopBandVisible={leftTopBandVisible} rightTopBandVisible={rightTopBandVisible}
           topBandSlotMode={topBandSlotMode} showTelemetryTopLeft={showTelemetryTopLeft}
-          showStackTopRight={showStackTopRight} stackTrayOpen={stackTrayOpen} setStackTrayOpen={setStackTrayOpen}
           leftTeamColor={leftTeamColor} leftBarColor={leftBarColor} rightTeamColor={rightTeamColor}
-          rightBarColor={rightBarColor} demoIndicatorConfig={demoIndicatorConfig} handleSelectPov={handleSelectPov}
+          rightBarColor={rightBarColor} demoIndicatorConfig={demoIndicatorConfig}
+          skipIndicatorConfig={skipIndicatorConfig} handleSelectPov={handleSelectPov}
           selfDemoActive={selfDemoActive} selfDemoPillTextRef={selfDemoPillTextRef} showBallCam={showBallCam}
           isCockpitVisible={isCockpitVisible} instantCockpitTransition={instantCockpitTransition}
           jumpPlacement={jumpPlacement} handleCycleFlipSimMode={handleCycleFlipSimMode}
-          notifSlideOpen={notifSlideOpen} channel={channelRef.current} />
+          channel={channelRef.current} />
       </section>
     );
   }

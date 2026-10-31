@@ -1,8 +1,8 @@
 import React from 'react';
-import { Layers, Zap, Cpu, Target, Activity, Sliders, X } from 'lucide-react';
 import {
   createHudTransientChannel,
   EdgeDemoIndicatorConfig,
+  EdgeSkipIndicatorConfig,
 } from '../../../ui-core/stores/hudTransientChannel';
 import { StepperScoreboardHUD } from '../../../ui-core/hud/StepperScoreboardHUD';
 import { EdgePlayerHudStrip } from '../../../ui-core/hud/EdgePlayerHudStrip';
@@ -24,13 +24,6 @@ import {
   HudSlotMode,
 } from '../../../ui-core/layout/HudAnchorStage';
 
-const DIAGNOSTIC_STACK_ITEMS = [
-  { id: 'simd', title: 'Kernel Physics SIMD', tag: '120Hz', icon: Cpu },
-  { id: 'hitbox', title: 'Octane Hitbox Wireframe', tag: 'AABB', icon: Target },
-  { id: 'pacing', title: 'Sub-Tick Frame Pacing', tag: '0.1ms', icon: Activity },
-  { id: 'audio', title: 'Engine Audio DSP EQ', tag: '8-Band', icon: Sliders },
-] as const;
-
 export interface HudSpatialChoreographyStageCanvasProps {
   hudThemeLight: boolean;
   layoutStrategy: HudLayoutStrategy;
@@ -38,14 +31,12 @@ export interface HudSpatialChoreographyStageCanvasProps {
   rightTopBandVisible: boolean;
   topBandSlotMode: HudSlotMode;
   showTelemetryTopLeft: boolean;
-  showStackTopRight: boolean;
-  stackTrayOpen: boolean;
-  setStackTrayOpen: React.Dispatch<React.SetStateAction<boolean>>;
   leftTeamColor: string;
   leftBarColor: string;
   rightTeamColor: string;
   rightBarColor: string;
   demoIndicatorConfig: EdgeDemoIndicatorConfig;
+  skipIndicatorConfig?: EdgeSkipIndicatorConfig;
   handleSelectPov: (slotKey: 1 | 2 | 3 | 4 | 5 | 6 | null) => void;
   selfDemoActive: boolean;
   selfDemoPillTextRef: React.RefObject<HTMLSpanElement | null>;
@@ -54,7 +45,6 @@ export interface HudSpatialChoreographyStageCanvasProps {
   instantCockpitTransition: boolean;
   jumpPlacement: JumpPlacementOption;
   handleCycleFlipSimMode: () => void;
-  notifSlideOpen: boolean;
   channel: ReturnType<typeof createHudTransientChannel>;
 }
 
@@ -67,14 +57,12 @@ export const HudSpatialChoreographyStageCanvas: React.FC<
   rightTopBandVisible,
   topBandSlotMode,
   showTelemetryTopLeft,
-  showStackTopRight,
-  stackTrayOpen,
-  setStackTrayOpen,
   leftTeamColor,
   leftBarColor,
   rightTeamColor,
   rightBarColor,
   demoIndicatorConfig,
+  skipIndicatorConfig,
   handleSelectPov,
   selfDemoActive,
   selfDemoPillTextRef,
@@ -83,7 +71,6 @@ export const HudSpatialChoreographyStageCanvas: React.FC<
   instantCockpitTransition,
   jumpPlacement,
   handleCycleFlipSimMode,
-  notifSlideOpen,
   channel,
 }) => {
   return (
@@ -99,7 +86,7 @@ export const HudSpatialChoreographyStageCanvas: React.FC<
         style={{ fontFamily: 'var(--font-jetbrains)' }}
       >
         {/* 1. TOP-LEFT ZONE:
-               - Top Container (`56px` shared vertical space with Top-Right Stack Icon + Bubble)
+               - Top Container (`56px` shared vertical space)
                - Below (`y = 56px`): My Team `[1, 2, 3]` `EdgePlayerHudStrip` */}
         <HudZone anchor="top-left" flush>
           <HudSlot
@@ -124,6 +111,7 @@ export const HudSpatialChoreographyStageCanvas: React.FC<
               barColor={leftBarColor}
               isLight={hudThemeLight}
               demoIndicatorConfig={demoIndicatorConfig}
+              skipIndicatorConfig={skipIndicatorConfig}
               onSelectSlot={handleSelectPov}
               subscribeRoster={channel.subscribeRoster}
             />
@@ -170,89 +158,15 @@ export const HudSpatialChoreographyStageCanvas: React.FC<
         </HudZone>
 
         {/* 3. TOP-RIGHT ZONE:
-               - Top Container (`56px` shared vertical space with Top-Left Telemetry)
+               - Top Container (`56px` shared vertical space aligned with Top-Left Telemetry)
                - Below (`y = 56px`): Opponent Team `[4, 5, 6]` `EdgePlayerHudStrip` */}
-        <HudZone anchor="top-right" flush zIndexClassName="z-50">
+        <HudZone anchor="top-right" flush>
           <HudSlot
             visible={rightTopBandVisible}
             mode={topBandSlotMode}
             reservedHeight={56}
-            innerClassName="h-[56px] flex items-center justify-end pr-3 relative z-50"
-          >
-            {showStackTopRight && (
-              <div className="relative pointer-events-auto">
-                {/* 6D Diagnostic Stack 40x40 Icon + Counter Bubble */}
-                <button
-                  type="button"
-                  onClick={() => setStackTrayOpen((v) => !v)}
-                  title="6D Diagnostic Floating Window Stack (Click to Expand/Collapse tuner window stack, Overlay below when expanded 4-6 Region)"
-                  className={`relative w-10 h-10 rounded-xl border flex items-center justify-center transition-all cursor-pointer active:scale-95 shadow-md ${
-                    hudThemeLight
-                      ? 'bg-white/95 border-neutral-300 text-neutral-900 hover:bg-neutral-100'
-                      : 'bg-neutral-900/95 border-neutral-700 text-neutral-100 hover:bg-neutral-800'
-                  } ${stackTrayOpen ? 'ring-2 ring-amber-500/70' : ''}`}
-                >
-                  <Layers className="h-4 w-4 text-amber-500" />
-                  {/* Counter Bubble */}
-                  <span
-                    className={`absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-mono font-extrabold flex items-center justify-center border shadow-xs ${
-                      hudThemeLight
-                        ? 'bg-neutral-900 text-white border-white'
-                        : 'bg-amber-500 text-neutral-950 border-neutral-900'
-                    }`}
-                  >
-                    4
-                  </span>
-                </button>
-
-                {/* Expandable Diagnostic Window Stack Tray (`z-50` overlays Right [4-6] strip when opened) */}
-                {stackTrayOpen && (
-                  <div
-                    className={`absolute top-[46px] right-0 z-50 w-[236px] rounded-xl border p-2 shadow-lg flex flex-col gap-1.5 ${
-                      hudThemeLight
-                        ? 'bg-white/96 border-neutral-300 text-neutral-900'
-                        : 'bg-neutral-950/96 border-neutral-800 text-neutral-100'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between px-1.5 py-0.5 border-b border-neutral-200 dark:border-neutral-800">
-                      <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-500">
-                        6D · Diagnostic Windows (4)
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setStackTrayOpen(false)}
-                        className="p-0.5 rounded hover:bg-neutral-500/15 cursor-pointer"
-                      >
-                        <X className="h-3 w-3 opacity-70" />
-                      </button>
-                    </div>
-                    {DIAGNOSTIC_STACK_ITEMS.map((item) => {
-                      const IconComp = item.icon;
-                      return (
-                        <div
-                          key={item.id}
-                          onClick={() => setStackTrayOpen(false)}
-                          className={`flex items-center justify-between px-2 py-1.5 rounded-lg text-[11px] font-mono cursor-pointer transition-colors ${
-                            hudThemeLight
-                              ? 'hover:bg-neutral-100 text-neutral-800'
-                              : 'hover:bg-neutral-900 text-neutral-200'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 truncate">
-                            <IconComp className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-                            <span className="truncate">{item.title}</span>
-                          </div>
-                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-500 font-bold shrink-0">
-                            {item.tag}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
-          </HudSlot>
+            innerClassName="h-[56px] flex items-center justify-end pr-3"
+          />
 
           {/* Opponent Team [4, 5, 6] Strip (Hidden in Player Live unless demolished, visible in Replay/Spectator) */}
           <div
@@ -266,6 +180,7 @@ export const HudSpatialChoreographyStageCanvas: React.FC<
               barColor={rightBarColor}
               isLight={hudThemeLight}
               demoIndicatorConfig={demoIndicatorConfig}
+              skipIndicatorConfig={skipIndicatorConfig}
               onSelectSlot={handleSelectPov}
               subscribeRoster={channel.subscribeRoster}
             />
@@ -335,32 +250,8 @@ export const HudSpatialChoreographyStageCanvas: React.FC<
           </HudSlot>
         </HudZone>
 
-        {/* 6. BOTTOM-RIGHT ZONE:
-               `CircularBoostGauge` + `Notification` */}
+        {/* 6. BOTTOM-RIGHT ZONE: `CircularBoostGauge` */}
         <HudZone anchor="bottom-right" flush className="pb-4">
-          <div className="mb-3 overflow-hidden pointer-events-auto">
-            <div
-              className={`flex items-center gap-2.5 pl-3.5 pr-4 py-2 rounded-l-lg border-l border-y shadow-md will-change-transform transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-                hudThemeLight
-                  ? 'bg-white/96 border-sky-500/60 text-neutral-900'
-                  : 'bg-[#09090B]/95 border-sky-500/50 text-white'
-              }`}
-              style={{
-                transform: notifSlideOpen ? 'translate3d(0%, 0, 0)' : 'translate3d(105%, 0, 0)',
-              }}
-            >
-              <Zap className="h-3.5 w-3.5 text-sky-500 shrink-0" />
-              <div className="flex flex-col leading-tight">
-                <span className="text-[9px] uppercase tracking-widest text-sky-500 font-bold">
-                  L3 QUICK NOTIFICATION · ABOVE BOOST SLOT
-                </span>
-                <span className="text-[11px] opacity-85">
-                  Anchored To Boost Directly above dial fixed slot (Replay Height remains constant when hiding gauge) 
-                </span>
-              </div>
-            </div>
-          </div>
-
           <HudSlot
             visible={isCockpitVisible}
             mode="reserve"

@@ -6,10 +6,16 @@ import {
 } from 'lucide-react';
 import type {
   EdgeDemoIndicatorConfig,
+  EdgeSkipIndicatorConfig,
   HudRosterViewMode,
   MatchHudChoreographySignal,
 } from '../../../ui-core/stores/hudTransientTypes';
-import { DEFAULT_DEMO_INDICATOR_CONFIG, resolveDemoIndicatorConfig } from '../../../ui-core/stores/hudTransientChannel';
+import {
+  DEFAULT_DEMO_INDICATOR_CONFIG,
+  DEFAULT_SKIP_INDICATOR_CONFIG,
+  resolveDemoIndicatorConfig,
+  resolveSkipIndicatorConfig,
+} from '../../../ui-core/stores/hudTransientChannel';
 import type { HudLayoutStrategy } from '../../../ui-core/layout/HudAnchorStage';
 import {
   HudChoreographySlotAndTopBandColumns,
@@ -45,6 +51,8 @@ export interface HudChoreographyControlDeckProps {
   handleToggleSlotExists: (slotKey: 1 | 2 | 3 | 4 | 5 | 6) => void;
   replaySkipReady?: Record<1 | 2 | 3 | 4 | 5 | 6, boolean>;
   handleToggleReplaySkipReady?: (slotKey: 1 | 2 | 3 | 4 | 5 | 6) => void;
+  skipIndicatorConfig?: Partial<EdgeSkipIndicatorConfig>;
+  onUpdateSkipIndicatorConfig?: (patch: Partial<EdgeSkipIndicatorConfig>) => void;
   handleApplyTeamSizePreset: (leftCount: 1 | 2 | 3, rightCount: 1 | 2 | 3) => void;
   opponentDemoCompact: boolean;
   handleToggleOpponentDemoCompact: () => void;
@@ -59,18 +67,12 @@ export interface HudChoreographyControlDeckProps {
   setLayoutStrategy: React.Dispatch<React.SetStateAction<HudLayoutStrategy>>;
   showTelemetryTopLeft: boolean;
   setShowTelemetryTopLeft: React.Dispatch<React.SetStateAction<boolean>>;
-  showStackTopRight: boolean;
-  setShowStackTopRight: React.Dispatch<React.SetStateAction<boolean>>;
-  stackTrayOpen: boolean;
-  setStackTrayOpen: React.Dispatch<React.SetStateAction<boolean>>;
   flipSimMode: FlipSimMode;
   onFlipSimModeChange: (mode: FlipSimMode) => void;
   jumpPlacement: JumpPlacementOption;
   setJumpPlacement: React.Dispatch<React.SetStateAction<JumpPlacementOption>>;
   showBallCam: boolean;
   setShowBallCam: React.Dispatch<React.SetStateAction<boolean>>;
-  notifSlideOpen: boolean;
-  setNotifSlideOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const SIGNAL_ITEMS: {
@@ -135,6 +137,8 @@ export const HudChoreographyControlDeck: React.FC<HudChoreographyControlDeckProp
   handleToggleSlotExists,
   replaySkipReady,
   handleToggleReplaySkipReady,
+  skipIndicatorConfig: rawSkipIndicatorConfig = DEFAULT_SKIP_INDICATOR_CONFIG,
+  onUpdateSkipIndicatorConfig,
   handleApplyTeamSizePreset,
   opponentDemoCompact,
   handleToggleOpponentDemoCompact,
@@ -149,20 +153,15 @@ export const HudChoreographyControlDeck: React.FC<HudChoreographyControlDeckProp
   setLayoutStrategy,
   showTelemetryTopLeft,
   setShowTelemetryTopLeft,
-  showStackTopRight,
-  setShowStackTopRight,
-  stackTrayOpen,
-  setStackTrayOpen,
   flipSimMode,
   onFlipSimModeChange,
   jumpPlacement,
   setJumpPlacement,
   showBallCam,
   setShowBallCam,
-  notifSlideOpen,
-  setNotifSlideOpen,
 }) => {
   const demoIndicatorConfig = resolveDemoIndicatorConfig(rawDemoIndicatorConfig);
+  const skipIndicatorConfig = resolveSkipIndicatorConfig(rawSkipIndicatorConfig);
   const slotExists: Record<1 | 2 | 3 | 4 | 5 | 6, boolean> =
     rawSlotExists && typeof rawSlotExists === 'object'
       ? { ...DEFAULT_SLOT_EXISTS, ...rawSlotExists }
@@ -369,6 +368,8 @@ export const HudChoreographyControlDeck: React.FC<HudChoreographyControlDeckProp
           handleToggleSlotExists={handleToggleSlotExists}
           replaySkipReady={replaySkipReady}
           handleToggleReplaySkipReady={handleToggleReplaySkipReady}
+          skipIndicatorConfig={skipIndicatorConfig}
+          onUpdateSkipIndicatorConfig={onUpdateSkipIndicatorConfig}
           handleApplyTeamSizePreset={handleApplyTeamSizePreset}
           focusedSlot={focusedSlot}
           handleSelectPov={handleSelectPov}
@@ -383,18 +384,12 @@ export const HudChoreographyControlDeck: React.FC<HudChoreographyControlDeckProp
           setLayoutStrategy={setLayoutStrategy}
           showTelemetryTopLeft={showTelemetryTopLeft}
           setShowTelemetryTopLeft={setShowTelemetryTopLeft}
-          showStackTopRight={showStackTopRight}
-          setShowStackTopRight={setShowStackTopRight}
-          stackTrayOpen={stackTrayOpen}
-          setStackTrayOpen={setStackTrayOpen}
           flipSimMode={flipSimMode}
           onFlipSimModeChange={onFlipSimModeChange}
           jumpPlacement={jumpPlacement}
           setJumpPlacement={setJumpPlacement}
           showBallCam={showBallCam}
           setShowBallCam={setShowBallCam}
-          notifSlideOpen={notifSlideOpen}
-          setNotifSlideOpen={setNotifSlideOpen}
         />
       </div>
     </div>

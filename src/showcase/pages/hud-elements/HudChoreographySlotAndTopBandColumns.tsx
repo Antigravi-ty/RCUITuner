@@ -4,8 +4,8 @@ import {
   EyeOff, ShieldAlert, LayoutGrid, ArrowLeftRight,
   CheckSquare, Square,
 } from 'lucide-react';
-import type { EdgeDemoIndicatorConfig, HudRosterViewMode, } from '../../../ui-core/stores/hudTransientTypes';
-import { BombEmojiSvg } from '../../../ui-core/primitives/packagedSvgIcons';
+import type { EdgeDemoIndicatorConfig, EdgeSkipIndicatorConfig, HudRosterViewMode } from '../../../ui-core/stores/hudTransientTypes';
+import { BombEmojiSvg, ReplaySkipCheckSvg } from '../../../ui-core/primitives/packagedSvgIcons';
 import type { HudLayoutStrategy } from '../../../ui-core/layout/HudAnchorStage';
 
 export type FlipSimMode = 'auto-drain' | 'grounded' | 'multi-flip' | 'unlimited' | 'expired';
@@ -20,6 +20,8 @@ export interface HudChoreographySlotAndTopBandColumnsProps {
   handleToggleSlotExists: (slotKey: 1 | 2 | 3 | 4 | 5 | 6) => void;
   replaySkipReady?: Record<1 | 2 | 3 | 4 | 5 | 6, boolean>;
   handleToggleReplaySkipReady?: (slotKey: 1 | 2 | 3 | 4 | 5 | 6) => void;
+  skipIndicatorConfig?: EdgeSkipIndicatorConfig;
+  onUpdateSkipIndicatorConfig?: (patch: Partial<EdgeSkipIndicatorConfig>) => void;
   handleApplyTeamSizePreset: (leftCount: 1 | 2 | 3, rightCount: 1 | 2 | 3) => void;
   focusedSlot: 1 | 2 | 3 | 4 | 5 | 6 | null;
   handleSelectPov: (slot: 1 | 2 | 3 | 4 | 5 | 6 | null) => void;
@@ -34,18 +36,12 @@ export interface HudChoreographySlotAndTopBandColumnsProps {
   setLayoutStrategy: React.Dispatch<React.SetStateAction<HudLayoutStrategy>>;
   showTelemetryTopLeft: boolean;
   setShowTelemetryTopLeft: React.Dispatch<React.SetStateAction<boolean>>;
-  showStackTopRight: boolean;
-  setShowStackTopRight: React.Dispatch<React.SetStateAction<boolean>>;
-  stackTrayOpen: boolean;
-  setStackTrayOpen: React.Dispatch<React.SetStateAction<boolean>>;
   flipSimMode: FlipSimMode;
   onFlipSimModeChange: (mode: FlipSimMode) => void;
   jumpPlacement: JumpPlacementOption;
   setJumpPlacement: React.Dispatch<React.SetStateAction<JumpPlacementOption>>;
   showBallCam: boolean;
   setShowBallCam: React.Dispatch<React.SetStateAction<boolean>>;
-  notifSlideOpen: boolean;
-  setNotifSlideOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export const HudChoreographySlotAndTopBandColumns: React.FC<
@@ -53,13 +49,13 @@ export const HudChoreographySlotAndTopBandColumns: React.FC<
 > = ({
   isMyTeamOrange, handleToggleTeamSide, viewMode, handleModeChange,
   slotExists, handleToggleSlotExists, replaySkipReady, handleToggleReplaySkipReady,
+  skipIndicatorConfig, onUpdateSkipIndicatorConfig,
   handleApplyTeamSizePreset, focusedSlot, handleSelectPov, handleTriggerDemo,
   opponentDemoCompact, handleToggleOpponentDemoCompact, persistentDemo,
   onTogglePersistentDemo, demoIndicatorConfig, onUpdateDemoIndicatorConfig,
   layoutStrategy, setLayoutStrategy, showTelemetryTopLeft, setShowTelemetryTopLeft,
-  showStackTopRight, setShowStackTopRight, stackTrayOpen, setStackTrayOpen,
   flipSimMode, onFlipSimModeChange, jumpPlacement, setJumpPlacement,
-  showBallCam, setShowBallCam, notifSlideOpen, setNotifSlideOpen,
+  showBallCam, setShowBallCam,
 }) => {
   return (
     <>
@@ -206,33 +202,79 @@ export const HudChoreographySlotAndTopBandColumns: React.FC<
             </div>
           </div>
 
-          {/* 6 Checkboxes for Skip Replay / Ready (Inward Green SVG Glow Square) */}
+          {/* 6 Checkboxes for Skip Replay / Ready (Half-Rounded Check Card) */}
           {handleToggleReplaySkipReady && (
-            <div className="flex items-center justify-between gap-2 flex-wrap pt-1 border-t border-neutral-200/70 dark:border-neutral-800">
-              <span className="text-[10px] font-bold text-emerald-500">
-                Skip Replay / Ready (Green SVG Glow):
-              </span>
-              <div className="flex items-center gap-1 flex-wrap">
-                {([1, 2, 3, 4, 5, 6] as const).map((k) => {
-                  const checked = Boolean(replaySkipReady?.[k]);
-                  return (
-                    <button
-                      key={k}
-                      type="button"
-                      onClick={() => handleToggleReplaySkipReady(k)}
-                      title={`Toggle Skip Goal Replay / Ready indicator for Player #${k}`}
-                      className={`px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-0.5 cursor-pointer border transition-all ${
-                        checked
-                          ? 'bg-emerald-500/20 border-emerald-500 text-emerald-500 shadow-2xs'
-                          : 'border-neutral-400/30 opacity-55 hover:opacity-100'
-                      }`}
-                    >
-                      {checked ? <CheckSquare className="h-3 w-3" /> : <Square className="h-3 w-3" />}
-                      <span>#{k}</span>
-                    </button>
-                  );
-                })}
+            <div className="flex flex-col gap-1.5 pt-1 border-t border-neutral-200/70 dark:border-neutral-800">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <span className="text-[10px] font-bold text-emerald-500 flex items-center gap-1">
+                  {skipIndicatorConfig && (
+                    <ReplaySkipCheckSvg
+                      size={Math.min(16, Math.max(11, skipIndicatorConfig.sizePx || 16))}
+                      color={skipIndicatorConfig.color}
+                      strokeWidth={skipIndicatorConfig.strokeWidth}
+                      glowColor={skipIndicatorConfig.glowColor}
+                      glowBlurPx={skipIndicatorConfig.glowBlurPx}
+                      glowIntensityPct={skipIndicatorConfig.glowIntensityPct}
+                    />
+                  )}
+                  <span>Skip Replay / Ready (Half-Rounded Check Card):</span>
+                </span>
+                <div className="flex items-center gap-1 flex-wrap">
+                  {([1, 2, 3, 4, 5, 6] as const).map((k) => {
+                    const checked = Boolean(replaySkipReady?.[k]);
+                    return (
+                      <button
+                        key={k}
+                        type="button"
+                        onClick={() => handleToggleReplaySkipReady(k)}
+                        title={`Toggle Skip Goal Replay / Ready indicator for Player #${k}`}
+                        className={`px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-0.5 cursor-pointer border transition-all ${
+                          checked
+                            ? 'bg-emerald-500/20 border-emerald-500 text-emerald-500 shadow-2xs'
+                            : 'border-neutral-400/30 opacity-55 hover:opacity-100'
+                        }`}
+                      >
+                        {checked ? <CheckSquare className="h-3 w-3" /> : <Square className="h-3 w-3" />}
+                        <span>#{k}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
+              {skipIndicatorConfig && onUpdateSkipIndicatorConfig && (
+                <div className="flex items-center justify-between gap-2 flex-wrap text-[10px]">
+                  <label className="flex items-center gap-1" title="Adjust Skip Checkmark SVG size (10px ~ 24px)">
+                    <span className="opacity-75">size:</span>
+                    <input type="range" min={10} max={24} step={1} value={skipIndicatorConfig.sizePx}
+                      onChange={(e) => onUpdateSkipIndicatorConfig({ sizePx: Number(e.target.value) })}
+                      className="w-12 accent-emerald-500 cursor-pointer" />
+                    <span className="tabular-nums font-bold">{skipIndicatorConfig.sizePx}px</span>
+                  </label>
+                  <label className="flex items-center gap-1">
+                    <span className="opacity-75">weight:</span>
+                    <input type="range" min={1.5} max={3.8} step={0.1} value={skipIndicatorConfig.strokeWidth}
+                      onChange={(e) => onUpdateSkipIndicatorConfig({ strokeWidth: Number(e.target.value) })}
+                      className="w-12 accent-emerald-500 cursor-pointer" />
+                    <span className="tabular-nums font-bold">{skipIndicatorConfig.strokeWidth.toFixed(1)}</span>
+                  </label>
+                  <label className="flex items-center gap-1">
+                    <span className="opacity-75">Glow:</span>
+                    <input type="range" min={0} max={14} step={1} value={skipIndicatorConfig.glowBlurPx}
+                      onChange={(e) => onUpdateSkipIndicatorConfig({ glowBlurPx: Number(e.target.value) })}
+                      className="w-12 accent-emerald-500 cursor-pointer" />
+                    <span className="tabular-nums font-bold">{skipIndicatorConfig.glowBlurPx}px</span>
+                  </label>
+                  <div className="flex items-center gap-1">
+                    {(['#22C55E', '#10B981', '#84CC16', '#38BDF8', '#FFFFFF'] as const).map((hex) => (
+                      <button key={hex} type="button" onClick={() => onUpdateSkipIndicatorConfig({ color: hex, glowColor: hex })}
+                        title={`Check SVG Color & Glow: ${hex}`}
+                        className={`w-3.5 h-3.5 rounded-full cursor-pointer border transition-transform ${
+                          skipIndicatorConfig.color.toUpperCase() === hex ? 'scale-125 border-white ring-1 ring-emerald-500' : 'border-black/30 opacity-80 hover:opacity-100'
+                        }`} style={{ backgroundColor: hex }} />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -422,7 +464,7 @@ export const HudChoreographySlotAndTopBandColumns: React.FC<
         )}
       </div>
 
-      {/* Column 3: Top Split Band (Telemetry + Stack Icon), Second Flip & Slot Reflow Strategy */}
+      {/* Column 3: Top Split Band (Telemetry), Second Flip & Slot Reflow Strategy */}
       <div className="flex flex-col gap-2.5">
         <span className="text-xs font-bold font-mono flex items-center gap-1.5">
           <LayoutGrid className="h-3.5 w-3.5 text-emerald-500" />
@@ -465,14 +507,14 @@ export const HudChoreographySlotAndTopBandColumns: React.FC<
                   ? 'bg-emerald-500 text-neutral-950 font-bold'
                   : 'border border-neutral-400/40 opacity-85 hover:opacity-100'
               }`}
-              title="Symmetrical Flow: When Top-Left Telemetry And Top-Right Stack When Both Hidden, 1-3 and 4-6 Sync Move Up"
+              title="Symmetrical Flow: When Top-Left Telemetry Hidden, 1-3 and 4-6 Sync Move Up"
             >
               Symmetrical Flow
             </button>
           </div>
         </div>
 
-        {/* Top Split Band Controls: Telemetry (Left) & 6D Stack Icon + Bubble (Right) */}
+        {/* Top Split Band Controls: Telemetry (Left) */}
         <div className="flex items-center justify-between text-xs font-mono gap-1 flex-wrap">
           <span className="text-[11px] opacity-75">top bar 56px Diagnostic Area:</span>
           <div className="flex items-center gap-1 flex-wrap">
@@ -487,31 +529,6 @@ export const HudChoreographySlotAndTopBandColumns: React.FC<
             >
               top left Telemetry:{showTelemetryTopLeft ? 'Show' : 'hidden'}
             </button>
-            <button
-              type="button"
-              onClick={() => setShowStackTopRight((v) => !v)}
-              className={`px-2 py-0.5 rounded text-[11px] cursor-pointer transition-colors ${
-                showStackTopRight
-                  ? 'bg-amber-500 text-neutral-950 font-bold'
-                  : 'border border-neutral-400/40'
-              }`}
-            >
-              Top-Right Stack icon:{showStackTopRight ? 'Show' : 'hidden'}
-            </button>
-            {showStackTopRight && (
-              <button
-                type="button"
-                onClick={() => setStackTrayOpen((v) => !v)}
-                className={`px-2 py-0.5 rounded text-[11px] cursor-pointer transition-colors ${
-                  stackTrayOpen
-                    ? 'bg-sky-500 text-neutral-950 font-bold'
-                    : 'border border-neutral-400/40'
-                }`}
-                title="Click to expand top right 6D Diagnostic floating window list (z-50 Overlay Below 4-6 Player Bar) "
-              >
-                Stack List:{stackTrayOpen ? 'Expanded' : 'collapse'}
-              </button>
-            )}
           </div>
         </div>
 
@@ -544,9 +561,9 @@ export const HudChoreographySlotAndTopBandColumns: React.FC<
           </div>
         </div>
 
-        {/* Flip Placement & Bottom Notification */}
+        {/* Flip Placement & BallCam */}
         <div className="flex items-center justify-between text-xs font-mono">
-          <span className="text-[11px] opacity-75">Flip Align / Notification:</span>
+          <span className="text-[11px] opacity-75">Flip Align / BallCam:</span>
           <div className="flex items-center gap-1 flex-wrap">
             <button
               type="button"
@@ -572,17 +589,6 @@ export const HudChoreographySlotAndTopBandColumns: React.FC<
               }`}
             >
               BallCam:{showBallCam ? 'Show' : 'hidden'}
-            </button>
-            <button
-              type="button"
-              onClick={() => setNotifSlideOpen((v) => !v)}
-              className={`px-2 py-0.5 rounded text-[11px] cursor-pointer ${
-                notifSlideOpen
-                  ? 'bg-sky-500 text-neutral-950 font-bold'
-                  : 'border border-neutral-400/40'
-              }`}
-            >
-              Bottom-Right Notice:{notifSlideOpen ? 'Pop-up' : 'collapse'}
             </button>
           </div>
         </div>

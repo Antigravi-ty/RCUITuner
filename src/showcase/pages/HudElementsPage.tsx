@@ -5,7 +5,11 @@ const useState = createScopedSyncedState('page:hud-elements');
 import { Crosshair, Sparkles, Zap, Play, Pause, } from 'lucide-react';
 import { StepperScoreboardHUD } from '../../ui-core/hud/StepperScoreboardHUD';
 import { EdgePlayerHudStrip } from '../../ui-core/hud/EdgePlayerHudStrip';
-import { createHudTransientChannel } from '../../ui-core/stores/hudTransientChannel';
+import {
+  createHudTransientChannel,
+  DEFAULT_SKIP_INDICATOR_CONFIG,
+  EdgeSkipIndicatorConfig,
+} from '../../ui-core/stores/hudTransientChannel';
 import { Badge } from '../../ui-core/primitives/Badge';
 import { SectionErrorBoundary } from '../../ui-core/primitives/SectionErrorBoundary';
 import { PageJumpDirectory, JumpDirectoryItem } from '../PageJumpDirectory';
@@ -41,35 +45,24 @@ const HUD_5A_DIRECTORY_ITEMS: JumpDirectoryItem[] = [
 ];
 
 export const HudElementsPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }) => {
-  // ──────────────────────────────────────────────────────────────────────────
-  // Element 1: Ball Camera Indicator State (Low-Frequency Discrete State)
-  // ──────────────────────────────────────────────────────────────────────────
   const [ballCamActive, setBallCamActive] = useState<boolean>(true, 'ballCamActive');
   const [ballCamShortcut, setBallCamShortcut] = useState<string | null>('SPACE', 'ballCamShortcut');
   const [ballCamLabel, setBallCamLabel] = useState<string>('BALL CAM', 'ballCamLabel');
-
-  // ──────────────────────────────────────────────────────────────────────────
-  // Element 2: Velocity Progress Bar State (Manual Props + 120Hz Transient Channel)
-  // ──────────────────────────────────────────────────────────────────────────
   const [speed, setSpeed] = useState<number>(1410, 'speed');
   const [barWidth, setBarWidth] = useState<string>('100%', 'barWidth');
   const [barHeight, setBarHeight] = useState<number>(20, 'barHeight');
-
-  // ──────────────────────────────────────────────────────────────────────────
-  // Element 3: Circular Boost Gauge State (Manual Props + 120Hz Transient Channel)
-  // ──────────────────────────────────────────────────────────────────────────
   const [boostAmount, setBoostAmount] = useState<number>(35, 'boostAmount');
   const [isUnlimitedBoost, setIsUnlimitedBoost] = useState<boolean>(false, 'isUnlimitedBoost');
   const [gaugeSize, setGaugeSize] = useState<number>(148, 'gaugeSize');
-
-  // ──────────────────────────────────────────────────────────────────────────
-  // 120Hz Zero-React-Rerender Transient Channel & Sandbox Controls
-  // ──────────────────────────────────────────────────────────────────────────
   const [is120HzLive, setIs120HzLive] = useState<boolean>(true, 'is120HzLive');
   const [slotPreset, setSlotPreset] = useState<SlotLayoutPreset>('classic-triad', 'slotPreset');
   const [edgeSkipReady, setEdgeSkipReady] = useState<Record<1 | 2 | 3 | 4 | 5 | 6, boolean>>(
-    { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false },
+    { 1: true, 2: false, 3: true, 4: true, 5: false, 6: false },
     'edgeSkipReady'
+  );
+  const [edgeSkipConfig, setEdgeSkipConfig] = useState<EdgeSkipIndicatorConfig>(
+    { ...DEFAULT_SKIP_INDICATOR_CONFIG },
+    'edgeSkipConfig'
   );
 
   const transientChannelRef = useRef(
@@ -87,6 +80,14 @@ export const HudElementsPage: React.FC<{ isLight?: boolean }> = ({ isLight = tru
       return { ...prev, [slot]: nextVal };
     });
   };
+
+  useEffect(() => {
+    const ch = transientChannelRef.current;
+    ch.setRoster({ viewMode: 'spectator', skipIndicatorConfig: edgeSkipConfig });
+    ([1, 2, 3, 4, 5, 6] as const).forEach((k) => {
+      ch.updatePlayerSlot(k, { replaySkipReady: Boolean(edgeSkipReady?.[k]) });
+    });
+  }, [edgeSkipReady, edgeSkipConfig]);
 
   // Track React render count to prove 120Hz updates cause 0 React re-renders
   const reactRenderCountRef = useRef<number>(0);
@@ -481,100 +482,92 @@ export const HudElementsPage: React.FC<{ isLight?: boolean }> = ({ isLight = tru
               </Badge>
             </div>
             <p className="text-xs opacity-75">
-              Left-pinned right-rounded corner (<code className="font-mono">rounded-r-[6px]</code>), Right-aligned left-rounded corner (<code className="font-mono">rounded-l-[6px]</code>), support Live / Goal Replay / Spectator Three-mode slide-in/out and 3.0s Explosion Loading Bar. 
+              Left-pinned right-rounded corner (<code className="font-mono">rounded-r-[9px]</code>), Right-aligned left-rounded corner (<code className="font-mono">rounded-l-[9px]</code>), with isolated half-rounded Skip Replay checkmark card (neutral gray border + parameterized green checkmark SVG).
             </p>
-            <div className="flex items-center justify-between gap-2 flex-wrap font-mono text-[11px]">
-              <span className="font-bold text-emerald-500">Skip Replay / Ready (Inward Green SVG Glow):</span>
-              <div className="flex items-center gap-1.5 flex-wrap">
-                {([1, 2, 3, 4, 5, 6] as const).map((k) => (
-                  <label key={k} className="inline-flex items-center gap-1 cursor-pointer select-none px-1.5 py-0.5 rounded border border-neutral-400/30">
-                    <input type="checkbox" checked={edgeSkipReady[k]} onChange={() => toggleEdgeSkipReady(k)} className="accent-emerald-500 cursor-pointer" />
-                    <span>#{k}</span>
-                  </label>
-                ))}
+            <div className="flex flex-col gap-1.5 font-mono text-[11px]">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <span className="font-bold text-emerald-500">Skip Replay / Ready (Half-Rounded Check Card):</span>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {([1, 2, 3, 4, 5, 6] as const).map((k) => (
+                    <label key={k} className="inline-flex items-center gap-1 cursor-pointer select-none px-1.5 py-0.5 rounded border border-neutral-400/30">
+                      <input type="checkbox" checked={Boolean(edgeSkipReady[k])} onChange={() => toggleEdgeSkipReady(k)} className="accent-emerald-500 cursor-pointer" />
+                      <span>#{k}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center justify-between gap-2 flex-wrap text-[10px]">
+                <label className="flex items-center gap-1">
+                  <span className="opacity-75">size:</span>
+                  <input type="range" min={10} max={24} step={1} value={edgeSkipConfig.sizePx}
+                    onChange={(e) => setEdgeSkipConfig((p) => ({ ...p, sizePx: Number(e.target.value) }))}
+                    className="w-12 accent-emerald-500 cursor-pointer" />
+                  <span className="tabular-nums font-bold">{edgeSkipConfig.sizePx}px</span>
+                </label>
+                <label className="flex items-center gap-1">
+                  <span className="opacity-75">weight:</span>
+                  <input type="range" min={1.5} max={3.8} step={0.1} value={edgeSkipConfig.strokeWidth}
+                    onChange={(e) => setEdgeSkipConfig((p) => ({ ...p, strokeWidth: Number(e.target.value) }))}
+                    className="w-12 accent-emerald-500 cursor-pointer" />
+                  <span className="tabular-nums font-bold">{edgeSkipConfig.strokeWidth.toFixed(1)}</span>
+                </label>
+                <label className="flex items-center gap-1">
+                  <span className="opacity-75">Glow:</span>
+                  <input type="range" min={0} max={14} step={1} value={edgeSkipConfig.glowBlurPx}
+                    onChange={(e) => setEdgeSkipConfig((p) => ({ ...p, glowBlurPx: Number(e.target.value) }))}
+                    className="w-12 accent-emerald-500 cursor-pointer" />
+                  <span className="tabular-nums font-bold">{edgeSkipConfig.glowBlurPx}px</span>
+                </label>
+                <div className="flex items-center gap-1">
+                  {(['#22C55E', '#10B981', '#84CC16', '#38BDF8', '#FFFFFF'] as const).map((hex) => (
+                    <button key={hex} type="button" onClick={() => setEdgeSkipConfig((p) => ({ ...p, color: hex, glowColor: hex }))}
+                      className={`w-3.5 h-3.5 rounded-full cursor-pointer border transition-transform ${
+                        edgeSkipConfig.color.toUpperCase() === hex ? 'scale-125 border-white ring-1 ring-emerald-500' : 'border-black/30 opacity-80 hover:opacity-100'
+                      }`} style={{ backgroundColor: hex }} />
+                  ))}
+                </div>
               </div>
             </div>
             <div
               className={`relative h-[156px] rounded-2xl border overflow-hidden flex items-center justify-between ${
               isLight ? 'bg-slate-200/80 border-neutral-300' : 'bg-neutral-950 border-neutral-800' }`}>
-              <EdgePlayerHudStrip
-                side="left"
-                teamColor="#2563EB"
-                barColor="#3B82F6"
-                isLight={isLight}
-                viewMode="spectator"
+              <EdgePlayerHudStrip side="left" teamColor="#2563EB" barColor="#3B82F6" isLight={isLight}
+                viewMode="spectator" skipIndicatorConfig={edgeSkipConfig} onSelectSlot={toggleEdgeSkipReady}
                 players={transientChannelRef.current.getRoster().leftPlayers}
-                subscribeRoster={transientChannelRef.current.subscribeRoster}
-              />
-              <EdgePlayerHudStrip
-                side="right"
-                teamColor="#EA580C"
-                barColor="#F97316"
-                isLight={isLight}
-                viewMode="spectator"
+                subscribeRoster={transientChannelRef.current.subscribeRoster} />
+              <EdgePlayerHudStrip side="right" teamColor="#EA580C" barColor="#F97316" isLight={isLight}
+                viewMode="spectator" skipIndicatorConfig={edgeSkipConfig} onSelectSlot={toggleEdgeSkipReady}
                 players={transientChannelRef.current.getRoster().rightPlayers}
-                subscribeRoster={transientChannelRef.current.subscribeRoster}
-              />
+                subscribeRoster={transientChannelRef.current.subscribeRoster} />
             </div>
           </section>
         </SectionErrorBoundary>
       </div>
 
       {/* 5A.2+: Dedicated Persistent Demolished Slot & Bomb SVG Size/Style Inspector */}
-      <SectionErrorBoundary title="5A.2+ EdgeDemoInspectorSection" scopePrefix="hud-5a-2-demo-inspector"
-        isLight={isLight}>
+      <SectionErrorBoundary title="5A.2+ EdgeDemoInspectorSection" scopePrefix="hud-5a-2-demo-inspector" isLight={isLight}>
         <EdgeDemoInspectorSection isLight={isLight} />
       </SectionErrorBoundary>
 
-      <SectionErrorBoundary title="5A.3 ~ 5A.5 HudCoreTriadInspectorSection" scopePrefix="hud-5a-5-boost-config"
-        isLight={isLight}>
-        <HudCoreTriadInspectorSection
-          isLight={isLight}
-          is120HzLive={is120HzLive}
-          setIs120HzLive={setIs120HzLive}
-          ballCamActive={ballCamActive}
-          setBallCamActive={setBallCamActive}
-          ballCamShortcut={ballCamShortcut}
-          setBallCamShortcut={setBallCamShortcut}
-          ballCamLabel={ballCamLabel}
-          setBallCamLabel={setBallCamLabel}
-          handleToggleBallCam={handleToggleBallCam}
-          subscribeBallCamFn={subscribeBallCamFn}
-          speed={speed}
-          setSpeed={setSpeed}
-          barWidth={barWidth}
-          setBarWidth={setBarWidth}
-          barHeight={barHeight}
-          setBarHeight={setBarHeight}
-          subscribeSpeedFn={subscribeSpeedFn}
-          boostAmount={boostAmount}
-          setBoostAmount={setBoostAmount}
-          isUnlimitedBoost={isUnlimitedBoost}
-          setIsUnlimitedBoost={setIsUnlimitedBoost}
-          gaugeSize={gaugeSize}
-          setGaugeSize={setGaugeSize}
-          subscribeBoostFn={subscribeBoostFn}
-        />
+      <SectionErrorBoundary title="5A.3 ~ 5A.5 HudCoreTriadInspectorSection" scopePrefix="hud-5a-5-boost-config" isLight={isLight}>
+        <HudCoreTriadInspectorSection isLight={isLight} is120HzLive={is120HzLive} setIs120HzLive={setIs120HzLive}
+          ballCamActive={ballCamActive} setBallCamActive={setBallCamActive} ballCamShortcut={ballCamShortcut}
+          setBallCamShortcut={setBallCamShortcut} ballCamLabel={ballCamLabel} setBallCamLabel={setBallCamLabel}
+          handleToggleBallCam={handleToggleBallCam} subscribeBallCamFn={subscribeBallCamFn}
+          speed={speed} setSpeed={setSpeed} barWidth={barWidth} setBarWidth={setBarWidth}
+          barHeight={barHeight} setBarHeight={setBarHeight} subscribeSpeedFn={subscribeSpeedFn}
+          boostAmount={boostAmount} setBoostAmount={setBoostAmount} isUnlimitedBoost={isUnlimitedBoost}
+          setIsUnlimitedBoost={setIsUnlimitedBoost} gaugeSize={gaugeSize} setGaugeSize={setGaugeSize}
+          subscribeBoostFn={subscribeBoostFn} />
       </SectionErrorBoundary>
 
       <SectionErrorBoundary title="5A.6 ~ 5A.9 HudStageAndFollowupSection" isLight={isLight}>
-        <HudStageAndFollowupSection
-          isLight={isLight}
-          is120HzLive={is120HzLive}
-          slotPreset={slotPreset}
-          setSlotPreset={setSlotPreset}
-          ballCamActive={ballCamActive}
-          subscribeBallCamFn={subscribeBallCamFn}
-          ballCamShortcut={ballCamShortcut}
-          ballCamLabel={ballCamLabel}
-          handleToggleBallCam={handleToggleBallCam}
-          speed={speed}
-          subscribeSpeedFn={subscribeSpeedFn}
-          boostAmount={boostAmount}
-          isUnlimitedBoost={isUnlimitedBoost}
-          subscribeBoostFn={subscribeBoostFn}
-          transientChannel={transientChannelRef.current}
-        />
+        <HudStageAndFollowupSection isLight={isLight} is120HzLive={is120HzLive} slotPreset={slotPreset}
+          setSlotPreset={setSlotPreset} ballCamActive={ballCamActive} subscribeBallCamFn={subscribeBallCamFn}
+          ballCamShortcut={ballCamShortcut} ballCamLabel={ballCamLabel} handleToggleBallCam={handleToggleBallCam}
+          speed={speed} subscribeSpeedFn={subscribeSpeedFn} boostAmount={boostAmount}
+          isUnlimitedBoost={isUnlimitedBoost} subscribeBoostFn={subscribeBoostFn}
+          transientChannel={transientChannelRef.current} />
       </SectionErrorBoundary>
     </div>
   );
