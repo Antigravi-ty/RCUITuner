@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Sparkles, Play, Square, Trophy, Timer, Megaphone, Repeat, } from 'lucide-react';
+import { Sparkles, Play, Square, Trophy, Timer, Repeat, Palette, } from 'lucide-react';
 import {
-  CenterUpperInfoPayload, CenterUpperGlowConfig, CenterUpperTypographyConfig, CenterUpperTimingConfig,
-  CenterUpperInfoVariant, WinnerTeamPreset, DEFAULT_RL_COUNTDOWN_GLOW, DEFAULT_CENTER_UPPER_TYPOGRAPHY,
-  DEFAULT_CENTER_UPPER_TIMING,
+  CenterUpperInfoPayload, CenterUpperGlowConfig, CenterUpperBlueTeamConfig, CenterUpperTypographyConfig,
+  CenterUpperTimingConfig, CenterUpperInfoVariant, WinnerTeamPreset, DEFAULT_RL_COUNTDOWN_GLOW,
+  DEFAULT_WINNER_BLUE_TEAM_CONFIG, DEFAULT_CENTER_UPPER_TYPOGRAPHY, DEFAULT_CENTER_UPPER_TIMING,
 } from '../../ui-core/hud/CenterUpperInfoHUD';
+import { hexToRgbTuple } from '../../ui-core/compounds/tuner/ColorSwatchInput';
 import { ArenaLightingPreset } from '../ArenaBackdrop';
 import { Badge } from '../../ui-core/primitives/Badge';
 import { SegmentedSwitch } from '../../ui-core/primitives/SegmentedSwitch';
@@ -12,6 +13,7 @@ import { ToggleSwitch } from '../../ui-core/primitives/ToggleSwitch';
 import { PageJumpDirectory } from '../PageJumpDirectory';
 import { useSyncedState, crossClientSync } from '../stores/crossClientSync';
 import { CenterUpperTunerSection } from './center-upper-info/CenterUpperTunerSection';
+import { CenterUpperBlueTeamColorMenu } from './center-upper-info/CenterUpperBlueTeamColorMenu';
 import {
   DIRECTORY_ITEMS, CenterUpperStageBackdropBar, CenterUpperArchetypesSection, CenterUpperStageCanvas,
   CenterUpperAnnouncementControls, type StageBgMode, type CustomAnnouncementPreset,
@@ -52,25 +54,30 @@ export const CenterUpperInfoPage: React.FC<{ isLight?: boolean }> = ({ isLight =
   );
   const [loopSequence, setLoopSequence] = useSyncedState<boolean>('5e:loopSequence', false);
   const sequenceTimerRef = useRef<number | null>(null);
-  const [winnerTeam, setWinnerTeam] = useSyncedState<WinnerTeamPreset>('5e:winnerTeam', 'blue');
-  const [winnerTopText, setWinnerTopText] = useSyncedState<string>('5e:winnerTopText', 'WINNER');
+  const [winnerTeam, setWinnerTeam] = useSyncedState<WinnerTeamPreset>('5e-v2:winnerTeam', 'blue');
+  const [winnerTopText, setWinnerTopText] = useSyncedState<string>('5e-v2:winnerTopText', 'WINNER');
   const [winnerMainText, setWinnerMainText] = useSyncedState<string>(
-    '5e:winnerMainText', 'BLUE TEAM'
+    '5e-v2:winnerMainText', 'BLUE TEAM'
   );
-  const [winnerSubText, setWinnerSubText] = useSyncedState<string>('5e:winnerSubText', '');
+  const [winnerSubText, setWinnerSubText] = useSyncedState<string>('5e-v2:winnerSubText', '');
+  const [winnerBlueConfig, setWinnerBlueConfig] = useSyncedState<CenterUpperBlueTeamConfig>(
+    '5e-v2:winnerBlueConfig',
+    { ...DEFAULT_WINNER_BLUE_TEAM_CONFIG }
+  );
+  const [showWinnerBlueMenu, setShowWinnerBlueMenu] = useState<boolean>(true);
   const [customPresetId, setCustomPresetId] = useSyncedState<string>(
-    '5e:customPresetId', 'match-paused'
+    '5e-v2:customPresetId', 'match-paused'
   );
   const [showCustomTopLine, setShowCustomTopLine] = useSyncedState<boolean>(
-    '5e:showCustomTopLine', true
+    '5e-v2:showCustomTopLine', true
   );
   const [customTopText, setCustomTopText] = useSyncedState<string>(
-    '5e:customTopText', 'MATCH STATUS'
+    '5e-v2:customTopText', 'ADMIN CONTROL'
   );
   const [customMainText, setCustomMainText] = useSyncedState<string>(
-    '5e:customMainText', 'MATCH PAUSED'
+    '5e-v2:customMainText', 'MATCH PAUSED'
   );
-  const [customSubText, setCustomSubText] = useSyncedState<string>('5e:customSubText', '');
+  const [customSubText, setCustomSubText] = useSyncedState<string>('5e-v2:customSubText', '');
   const [glowConfig, setGlowConfig] = useSyncedState<CenterUpperGlowConfig>('5e:glowConfig', {
     ...DEFAULT_RL_COUNTDOWN_GLOW,
   });
@@ -94,20 +101,44 @@ export const CenterUpperInfoPage: React.FC<{ isLight?: boolean }> = ({ isLight =
   const [copied5EConfig, setCopied5EConfig] = useState<boolean>(false);
   const [showExported5ECode, setShowExported5ECode] = useState<boolean>(false);
   const build5EExportCode = useCallback(() => {
+    const blueRgb = hexToRgbTuple(winnerBlueConfig.textColor);
+    const blueGlowHex = winnerBlueConfig.syncGlowWithText
+      ? winnerBlueConfig.textColor
+      : winnerBlueConfig.glowColor;
+    const blueGlowRgb = hexToRgbTuple(blueGlowHex);
     const snapshot = {
-      upperCenterTopPct, goLabelText,
-      countdownIntervalMs, glowConfig,
-      timingConfig, typoConfig,
+      upperCenterTopPct,
+      goLabelText,
+      countdownIntervalMs,
+      glowConfig,
+      winnerBlueConfig: {
+        ...winnerBlueConfig,
+        rgb: blueRgb,
+        glowRgb: blueGlowRgb,
+      },
+      customAnnouncementDefault: {
+        presetId: customPresetId,
+        topText: customTopText.toUpperCase(),
+        mainText: customMainText.toUpperCase(),
+        forceUppercase: true,
+      },
+      timingConfig,
+      typoConfig,
       stageBackdrop: {
-        stageBgMode, stageBgColor,
-        stageBgSecondaryColor, arenaPreset,
-        stageBrightness, },
+        stageBgMode,
+        stageBgColor,
+        stageBgSecondaryColor,
+        arenaPreset,
+        stageBrightness,
+      },
     };
     return `// 5E Center-Upper Default Parameters Snapshot
 export const DEFAULT_5E_CENTER_UPPER_CONFIG = ${JSON.stringify(snapshot, null, 2)};`;
   }, [
     upperCenterTopPct, goLabelText,
     countdownIntervalMs, glowConfig,
+    winnerBlueConfig, customPresetId,
+    customTopText, customMainText,
     timingConfig, typoConfig,
     stageBgMode, stageBgColor,
     stageBgSecondaryColor, arenaPreset,
@@ -122,6 +153,7 @@ export const DEFAULT_5E_CENTER_UPPER_CONFIG = ${JSON.stringify(snapshot, null, 2
   }, [build5EExportCode]);
   const handleReset5EDaults = useCallback(() => {
     crossClientSync.resetAll({ scopePrefix: '5e:' });
+    crossClientSync.resetAll({ scopePrefix: '5e-v2:' });
   }, []);
   const stopCountdownSequence = useCallback(() => {
     if (sequenceTimerRef.current !== null) {
@@ -204,13 +236,28 @@ export const DEFAULT_5E_CENTER_UPPER_CONFIG = ${JSON.stringify(snapshot, null, 2
     } setIsVisibleOnStage(true);
     setTriggerNonce((n) => n + 1);
   };
+  const handleActivateBlueWinnerPreview = useCallback(() => {
+    stopCountdownSequence();
+    setActiveVariant('winner');
+    setWinnerTeam('blue');
+    setWinnerTopText('WINNER');
+    setWinnerMainText('BLUE TEAM');
+    setIsVisibleOnStage(true);
+  }, [
+    stopCountdownSequence,
+    setActiveVariant,
+    setWinnerTeam,
+    setWinnerTopText,
+    setWinnerMainText,
+    setIsVisibleOnStage,
+  ]);
   const handleApplyCustomPreset = (preset: CustomAnnouncementPreset) => {
     stopCountdownSequence();
     setActiveVariant('announcement');
     setCustomPresetId(preset.id);
     setShowCustomTopLine(Boolean(preset.topText));
-    setCustomTopText(preset.topText);
-    setCustomMainText(preset.mainText);
+    setCustomTopText(preset.topText.toUpperCase());
+    setCustomMainText(preset.mainText.toUpperCase());
     setCustomSubText('');
     setIsVisibleOnStage(true);
     setTriggerNonce((n) => n + 1);
@@ -224,14 +271,15 @@ export const DEFAULT_5E_CENTER_UPPER_CONFIG = ${JSON.stringify(snapshot, null, 2
           }, triggerKey: triggerNonce,
         } : activeVariant === 'winner'
       ? {
-          variant: 'winner', topText: winnerTopText,
+          variant: 'winner', winnerTeam,
+          winnerBlueConfig, topText: winnerTopText,
           mainText: winnerMainText, subText: winnerSubText,
           glow: glowConfig, typography: typoConfig,
           timing: timingConfig, triggerKey: triggerNonce,
         } : {
-          variant: 'announcement', topText: showCustomTopLine ? customTopText : '',
-          mainText: customMainText, subText: customSubText,
-          glow: glowConfig, typography: typoConfig,
+          variant: 'announcement', topText: showCustomTopLine ? customTopText.toUpperCase() : '',
+          mainText: customMainText.toUpperCase(), subText: customSubText.toUpperCase(),
+          glow: glowConfig, typography: { ...typoConfig, uppercase: true },
           timing: timingConfig, triggerKey: triggerNonce,
         } : null;
   const getStageBackgroundStyle = (): React.CSSProperties => {
@@ -389,56 +437,82 @@ export const DEFAULT_5E_CENTER_UPPER_CONFIG = ${JSON.stringify(snapshot, null, 2
             </div>
           )}
           {activeVariant === 'winner' && (
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-neutral-200/70 dark:border-neutral-800/80">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[11px] font-mono font-bold flex items-center gap-1 text-sky-500">
-                  <Trophy className="h-3.5 w-3.5" />
-                  <span>Winning team text preset (Text Only):</span>
-                </span>
-                <button
-                  type="button" onClick={() => handleSelectWinnerTeam('blue')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold border cursor-pointer transition-all ${
-                    winnerTeam === 'blue' ? 'bg-sky-500 text-neutral-950 border-sky-400 shadow-xs'
-                      : isLight ? 'bg-white hover:bg-sky-50 border-neutral-300 text-sky-700'
-                      : 'bg-neutral-900 hover:bg-sky-950/40 border-neutral-700 text-sky-400' }`}
-                >
-                  WINNER · BLUE TEAM (Blue Team Wins)
-                </button>
-                <button
-                  type="button" onClick={() => handleSelectWinnerTeam('orange')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold border cursor-pointer transition-all ${
-                    winnerTeam === 'orange' ? 'bg-orange-500 text-neutral-950 border-orange-400 shadow-xs'
-                      : isLight ? 'bg-white hover:bg-orange-50 border-neutral-300 text-orange-700'
-                      : 'bg-neutral-900 hover:bg-orange-950/40 border-neutral-700 text-orange-400' }`}
-                >
-                  WINNER · ORANGE TEAM (Orange Team Wins)
-                </button>
-                <button
-                  type="button" onClick={() => handleSelectWinnerTeam('custom')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold border cursor-pointer transition-all ${
-                    winnerTeam === 'custom' ? 'bg-amber-500 text-neutral-950 border-amber-400 shadow-xs'
-                      : isLight ? 'bg-white hover:bg-amber-50 border-neutral-300 text-amber-700'
-                      : 'bg-neutral-900 hover:bg-amber-950/40 border-neutral-700 text-amber-400' }`}
-                >
-                  WINNER · CHAMPIONS
-                </button>
+            <div className="flex flex-col gap-3 pt-2 border-t border-neutral-200/70 dark:border-neutral-800/80">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[11px] font-mono font-bold flex items-center gap-1 text-sky-500">
+                    <Trophy className="h-3.5 w-3.5" />
+                    <span>Winning Team Preset (`WINNER` Top Color Unchanged):</span>
+                  </span>
+                  <button
+                    type="button" onClick={() => handleSelectWinnerTeam('blue')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold border cursor-pointer transition-all ${
+                      winnerTeam === 'blue' ? 'bg-sky-500 text-neutral-950 border-sky-400 shadow-xs'
+                        : isLight ? 'bg-white hover:bg-sky-50 border-neutral-300 text-sky-700'
+                        : 'bg-neutral-900 hover:bg-sky-950/40 border-neutral-700 text-sky-400' }`}
+                  >
+                    WINNER · BLUE TEAM ({winnerBlueConfig.textColor})
+                  </button>
+                  <button
+                    type="button" onClick={() => handleSelectWinnerTeam('orange')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold border cursor-pointer transition-all ${
+                      winnerTeam === 'orange' ? 'bg-orange-500 text-neutral-950 border-orange-400 shadow-xs'
+                        : isLight ? 'bg-white hover:bg-orange-50 border-neutral-300 text-orange-700'
+                        : 'bg-neutral-900 hover:bg-orange-950/40 border-neutral-700 text-orange-400' }`}
+                  >
+                    WINNER · ORANGE TEAM (Orange Team Wins)
+                  </button>
+                  <button
+                    type="button" onClick={() => handleSelectWinnerTeam('custom')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold border cursor-pointer transition-all ${
+                      winnerTeam === 'custom' ? 'bg-amber-500 text-neutral-950 border-amber-400 shadow-xs'
+                        : isLight ? 'bg-white hover:bg-amber-50 border-neutral-300 text-amber-700'
+                        : 'bg-neutral-900 hover:bg-amber-950/40 border-neutral-700 text-amber-400' }`}
+                  >
+                    WINNER · CHAMPIONS
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowWinnerBlueMenu((v) => !v)}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-mono border cursor-pointer transition-all ${
+                      showWinnerBlueMenu
+                        ? 'bg-sky-500/15 border-sky-500/40 text-sky-400 font-bold'
+                        : isLight
+                        ? 'bg-white border-neutral-300 text-neutral-700'
+                        : 'bg-neutral-900 border-neutral-700 text-neutral-300'
+                    }`}
+                  >
+                    <Palette className="h-3.5 w-3.5" />
+                    <span>{showWinnerBlueMenu ? 'Hide Blue Team RGB Menu' : 'Blue Team RGB Menu'}</span>
+                  </button>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <label className="flex items-center gap-1.5 text-xs font-mono">
+                    <span className="opacity-70">Top Regular(400):</span>
+                    <input type="text" value={winnerTopText} onChange={(e) => { setWinnerTopText(e.target.value);
+                      setIsVisibleOnStage(true); }} className={`w-28 px-2 py-1 rounded-lg border font-mono text-xs ${
+                      isLight ? 'bg-white border-neutral-300 text-neutral-900'
+                      : 'bg-neutral-900 border-neutral-700 text-neutral-100' }`} />
+                  </label>
+                  <label className="flex items-center gap-1.5 text-xs font-mono">
+                    <span className="opacity-70">Bottom Thin(100):</span>
+                    <input type="text" value={winnerMainText} onChange={(e) => { setWinnerMainText(e.target.value);
+                      setIsVisibleOnStage(true); }} className={`w-36 px-2 py-1 rounded-lg border font-mono text-xs ${
+                      isLight ? 'bg-white border-neutral-300 text-neutral-900'
+                      : 'bg-neutral-900 border-neutral-700 text-neutral-100' }`} />
+                  </label>
+                </div>
               </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <label className="flex items-center gap-1.5 text-xs font-mono">
-                  <span className="opacity-70">Top Regular(400):</span>
-                  <input type="text" value={winnerTopText} onChange={(e) => { setWinnerTopText(e.target.value);
-                    setIsVisibleOnStage(true); }} className={`w-28 px-2 py-1 rounded-lg border font-mono text-xs ${
-                    isLight ? 'bg-white border-neutral-300 text-neutral-900'
-                    : 'bg-neutral-900 border-neutral-700 text-neutral-100' }`} />
-                </label>
-                <label className="flex items-center gap-1.5 text-xs font-mono">
-                  <span className="opacity-70">Bottom Thin(100):</span>
-                  <input type="text" value={winnerMainText} onChange={(e) => { setWinnerMainText(e.target.value);
-                    setIsVisibleOnStage(true); }} className={`w-36 px-2 py-1 rounded-lg border font-mono text-xs ${
-                    isLight ? 'bg-white border-neutral-300 text-neutral-900'
-                    : 'bg-neutral-900 border-neutral-700 text-neutral-100' }`} />
-                </label>
-              </div>
+              {showWinnerBlueMenu && (
+                <CenterUpperBlueTeamColorMenu
+                  isLight={isLight}
+                  winnerBlueConfig={winnerBlueConfig}
+                  setWinnerBlueConfig={setWinnerBlueConfig}
+                  onActivateBlueWinnerPreview={handleActivateBlueWinnerPreview}
+                  copied5EConfig={copied5EConfig}
+                  handleCopy5EConfig={handleCopy5EConfig}
+                />
+              )}
             </div>
           )}
           {activeVariant === 'announcement' && (
@@ -454,7 +528,8 @@ export const DEFAULT_5E_CENTER_UPPER_CONFIG = ${JSON.stringify(snapshot, null, 2
         <CenterUpperStageCanvas stageBgMode={stageBgMode} arenaPreset={arenaPreset}
           stageBrightness={stageBrightness} showPitchLines={showPitchLines} showAnchorGuides={showAnchorGuides}
           upperCenterTopPct={upperCenterTopPct} showSurroundingHud={showSurroundingHud}
-          activePayload={activePayload} glowConfig={glowConfig} typoConfig={typoConfig} timingConfig={timingConfig}
+          activePayload={activePayload} glowConfig={glowConfig} winnerBlueConfig={winnerBlueConfig}
+          typoConfig={typoConfig} timingConfig={timingConfig}
           activeVariant={activeVariant} isSequencePlaying={isSequencePlaying}
           setIsVisibleOnStage={setIsVisibleOnStage} getStageBackgroundStyle={getStageBackgroundStyle} />
         <CenterUpperStageBackdropBar isLight={isLight} stageBgMode={stageBgMode} setStageBgMode={setStageBgMode}
@@ -468,14 +543,16 @@ export const DEFAULT_5E_CENTER_UPPER_CONFIG = ${JSON.stringify(snapshot, null, 2
         setShowExported5ECode={setShowExported5ECode} copied5EConfig={copied5EConfig}
         handleCopy5EConfig={handleCopy5EConfig} handleReset5EDefaults={handleReset5EDaults}
         build5EExportCode={build5EExportCode} glowConfig={glowConfig} setGlowConfig={setGlowConfig}
+        winnerBlueConfig={winnerBlueConfig} setWinnerBlueConfig={setWinnerBlueConfig}
+        onActivateBlueWinnerPreview={handleActivateBlueWinnerPreview}
         syncGlowWithText={syncGlowWithText} setSyncGlowWithText={setSyncGlowWithText} timingConfig={timingConfig}
         setTimingConfig={setTimingConfig} typoConfig={typoConfig} setTypoConfig={setTypoConfig}
         countdownIntervalMs={countdownIntervalMs} setCountdownIntervalMs={setCountdownIntervalMs}
         upperCenterTopPct={upperCenterTopPct} setUpperCenterTopPct={setUpperCenterTopPct}
         setIsVisibleOnStage={setIsVisibleOnStage} setTriggerNonce={setTriggerNonce} />
       <CenterUpperArchetypesSection isLight={isLight} stageBgColor={stageBgColor} winnerTeam={winnerTeam}
-        activeVariant={activeVariant} upperCenterTopPct={upperCenterTopPct} activePayload={activePayload}
-        glowConfig={glowConfig} typoConfig={typoConfig} timingConfig={timingConfig}
+        winnerBlueConfig={winnerBlueConfig} activeVariant={activeVariant} upperCenterTopPct={upperCenterTopPct}
+        activePayload={activePayload} glowConfig={glowConfig} typoConfig={typoConfig} timingConfig={timingConfig}
         handleSelectVariant={handleSelectVariant} startCountdownSequence={startCountdownSequence}
         handleSelectWinnerTeam={handleSelectWinnerTeam} handleApplyCustomPreset={handleApplyCustomPreset} />
     </div>

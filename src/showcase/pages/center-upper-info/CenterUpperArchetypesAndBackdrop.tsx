@@ -1,8 +1,8 @@
 import React from 'react';
 import { Palette, Crosshair, Megaphone } from 'lucide-react';
 import {
-  CenterUpperInfoHUD, CenterUpperInfoPayload, CenterUpperGlowConfig, CenterUpperTypographyConfig,
-  CenterUpperTimingConfig, CenterUpperInfoVariant, WinnerTeamPreset,
+  CenterUpperInfoHUD, CenterUpperInfoPayload, CenterUpperGlowConfig, CenterUpperBlueTeamConfig,
+  CenterUpperTypographyConfig, CenterUpperTimingConfig, CenterUpperInfoVariant, WinnerTeamPreset,
 } from '../../../ui-core/hud/CenterUpperInfoHUD';
 import { StepperScoreboardHUD } from '../../../ui-core/hud/StepperScoreboardHUD';
 import { EdgePlayerHudStrip } from '../../../ui-core/hud/EdgePlayerHudStrip';
@@ -31,63 +31,39 @@ export interface CustomAnnouncementPreset {
 
 export const DIRECTORY_ITEMS: JumpDirectoryItem[] = [
   { id: 'center-upper-stage', code: '5E-1',
-    name: 'HudAnchorStage (upper-center)', label: 'Top-center high-priority live stage + Adjustable background color + 3-2-1-GO / Winner / Custom Trigger' },
+    name: 'HudAnchorStage (upper-center)', label: 'Top-center high-priority live stage + Winner Blue Team RGB menu + ADMIN CONTROL / MATCH PAUSED' },
   {
     id: 'center-upper-tuner',
     code: '5E-2',
-    name: 'OutGlow & Duration Tuner',
-    label: 'Rocket League Yellow Outer Glow (Out Glow), 400ms 1.5x Entry Impact, 2000ms Duration And 400ms Tail fade parameter tuner',
+    name: 'OutGlow, Winner Blue RGB & Duration Tuner',
+    label: 'Winner Blue Team Color (5G presets + manual RGB), Out Glow, 400ms 1.5x Entry Impact, 2000ms Duration & 400ms Tail fade tuner',
   },
   {
     id: 'center-upper-archetypes',
     code: '5E-3',
     name: 'Archetype Gallery & Recipe',
-    label: 'Three types of high-priority alert reference cards (Countdown / Winner Blue & Orange / Custom Announcement) With Code Recipe',
+    label: 'Three types of high-priority alert reference cards (Countdown / Winner Blue & Orange / Custom ADMIN CONTROL · MATCH PAUSED)',
   },
 ];
 
 export const CUSTOM_ANNOUNCEMENT_PRESETS: CustomAnnouncementPreset[] = [
-  { id: 'match-paused', label: 'MATCH PAUSED (Match Paused)', topText: 'MATCH STATUS', mainText: 'MATCH PAUSED' },
-  { id: 'match-post', label: 'MATCH POST (Match Alert)', topText: 'OFFICIAL SIGNAL', mainText: 'MATCH POST' },
-  { id: 'overtime', label: 'OVERTIME (Overtime)', topText: 'SUDDEN DEATH', mainText: 'OVERTIME' },
+  { id: 'match-paused', label: 'MATCH PAUSED (ADMIN CONTROL)', topText: 'ADMIN CONTROL', mainText: 'MATCH PAUSED' },
+  { id: 'overtime', label: 'OVERTIME (Sudden Death)', topText: 'SUDDEN DEATH', mainText: 'OVERTIME' },
   { id: 'goal-scored', label: 'GOAL SCORED (Goal Broadcast)', topText: 'SCORED BY', mainText: 'ZEN_MASTER_RL' },
-  { id: 'match-point', label: 'MATCH POINT (Match Point)', topText: 'SERIES ALERT', mainText: 'MATCH POINT' },
-  { id: 'single-line-info', label: 'WAITING FOR PLAYERS (pure Thin Single line)', topText: '', mainText: 'WAITING FOR PLAYERS' },
+  { id: 'match-point', label: 'MATCH POINT (Series Alert)', topText: 'SERIES ALERT', mainText: 'MATCH POINT' },
+  { id: 'single-line-info', label: 'WAITING FOR PLAYERS (Single Line Thin)', topText: '', mainText: 'WAITING FOR PLAYERS' },
 ];
 
-export const BG_COLOR_SWATCHES = [
-  '#090D16',
-  '#000000',
-  '#0F172A',
-  '#1E293B',
-  '#18181B',
-  '#0E2218',
-  '#23121B',
-  '#334155',
-  '#CBD5E1',
-  '#F8FAFC',
-];
+export const BG_COLOR_SWATCHES = ['#090D16', '#000000', '#0F172A', '#1E293B', '#18181B', '#0E2218', '#23121B', '#334155', '#CBD5E1', '#F8FAFC'];
 
-export const RL_GLOW_SWATCHES = [
-  '#FFE600',
-  '#FACC15',
-  '#F59E0B',
-  '#FB923C',
-  '#38BDF8',
-  '#22C55E',
-  '#EF4444',
-  '#A855F7',
-  '#FFFFFF',
-];
+export const RL_GLOW_SWATCHES = ['#FFE600', '#FACC15', '#F59E0B', '#FB923C', '#38BDF8', '#22C55E', '#EF4444', '#A855F7', '#FFFFFF'];
 
 export interface CenterUpperStageBackdropBarProps {
   isLight: boolean;
   stageBgMode: StageBgMode;
   setStageBgMode: (val: StageBgMode | ((prev: StageBgMode) => StageBgMode)) => void;
   arenaPreset: ArenaLightingPreset;
-  setArenaPreset: (
-    val: ArenaLightingPreset | ((prev: ArenaLightingPreset) => ArenaLightingPreset)
-  ) => void;
+  setArenaPreset: (val: ArenaLightingPreset | ((prev: ArenaLightingPreset) => ArenaLightingPreset)) => void;
   stageBgColor: string;
   setStageBgColor: (val: string | ((prev: string) => string)) => void;
   stageBgSecondaryColor: string;
@@ -99,70 +75,57 @@ export interface CenterUpperStageBackdropBarProps {
 }
 
 export const CenterUpperStageBackdropBar: React.FC<CenterUpperStageBackdropBarProps> = ({
-  isLight,
-  stageBgMode,
-  setStageBgMode,
-  arenaPreset,
-  setArenaPreset,
-  stageBgColor,
-  setStageBgColor,
-  stageBgSecondaryColor,
-  setStageBgSecondaryColor,
-  stageBrightness,
-  setStageBrightness,
-  showPitchLines,
-  setShowPitchLines,
-}) => {
-  return (
-    <div className={`p-4 rounded-2xl border grid grid-cols-1 md:grid-cols-3 gap-4 ${ isLight
-      ? 'bg-neutral-50/80 border-neutral-200' : 'bg-neutral-950/60 border-neutral-800' }`}>
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-bold flex items-center gap-1.5">
-            <Palette className="h-3.5 w-3.5 text-amber-500" />
-            <span>Preview Background Mode (Stage Backdrop)</span>
-          </span>
-        </div>
-        <SegmentedSwitch size="sm" fullWidth isLight={isLight} value={stageBgMode}
-          onValueChange={(v) => setStageBgMode(v as StageBgMode)} options={[
-          { value: 'solid', label: 'Solid Background (Solid)' }, { value: 'gradient', label: 'Dual Gradient (Gradient)' },
-          { value: 'arena', label: 'Stadium Preset (Arena)' }, ]} />
-        {stageBgMode === 'arena' && (
-          <SegmentedSwitch size="sm" fullWidth isLight={isLight} value={arenaPreset}
-            onValueChange={(v) => setArenaPreset(v as ArenaLightingPreset)} options={[
-            { value: 'night', label: 'Night' }, { value: 'twilight', label: 'Twilight' },
-            { value: 'daylight', label: 'Daylight' }, ]} />
-        )}
+  isLight, stageBgMode, setStageBgMode, arenaPreset, setArenaPreset,
+  stageBgColor, setStageBgColor, stageBgSecondaryColor, setStageBgSecondaryColor,
+  stageBrightness, setStageBrightness, showPitchLines, setShowPitchLines,
+}) => (
+  <div className={`p-4 rounded-2xl border grid grid-cols-1 md:grid-cols-3 gap-4 ${ isLight
+    ? 'bg-neutral-50/80 border-neutral-200' : 'bg-neutral-950/60 border-neutral-800' }`}>
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-bold flex items-center gap-1.5">
+          <Palette className="h-3.5 w-3.5 text-amber-500" />
+          <span>Preview Background Mode (Stage Backdrop)</span>
+        </span>
       </div>
-
-      <div>
-        <ColorSwatchInput label="Preview Background Main Color (Background Color)" description="Toggle Dark Mode Anytime/Light/Stadium Color Check Out Glow Contrast"
-          value={stageBgColor} onChange={setStageBgColor} presets={BG_COLOR_SWATCHES} isLight={isLight} />
-      </div>
-
-      <div className="flex flex-col justify-between gap-2">
-        {stageBgMode === 'gradient' ? (
-          <ColorSwatchInput label="Gradient Center Secondary Color (Radial Core Color)" value={stageBgSecondaryColor}
-            onChange={setStageBgSecondaryColor} presets={['#1E293B', '#0F172A', '#31102F', '#064E3B', '#3B2F13']}
-            isLight={isLight} />
-        ) : (
-          <SliderControl label="Background Environment Brightness (Backdrop Brightness)" value={stageBrightness} min={10} max={100} step={1}
-            unit="%" onChange={setStageBrightness} isLight={isLight} />
-        )}
-        <div className="flex items-center justify-between pt-1">
-          <ToggleSwitch label="Stadium Midline/Center Circle Texture" checked={showPitchLines} onCheckedChange={setShowPitchLines}
-            isLight={isLight} />
-          <span className="text-[11px] font-mono opacity-60">16:9 Safe Stage</span>
-        </div>
+      <SegmentedSwitch size="sm" fullWidth isLight={isLight} value={stageBgMode}
+        onValueChange={(v) => setStageBgMode(v as StageBgMode)} options={[
+        { value: 'solid', label: 'Solid Background (Solid)' }, { value: 'gradient', label: 'Dual Gradient (Gradient)' },
+        { value: 'arena', label: 'Stadium Preset (Arena)' }, ]} />
+      {stageBgMode === 'arena' && (
+        <SegmentedSwitch size="sm" fullWidth isLight={isLight} value={arenaPreset}
+          onValueChange={(v) => setArenaPreset(v as ArenaLightingPreset)} options={[
+          { value: 'night', label: 'Night' }, { value: 'twilight', label: 'Twilight' },
+          { value: 'daylight', label: 'Daylight' }, { value: 'flow', label: 'Flow' }, ]} />
+      )}
+    </div>
+    <div>
+      <ColorSwatchInput label="Preview Background Main Color (Background Color)" description="Toggle Dark/Light/Stadium Color Check Out Glow Contrast"
+        value={stageBgColor} onChange={setStageBgColor} presets={BG_COLOR_SWATCHES} isLight={isLight} />
+    </div>
+    <div className="flex flex-col justify-between gap-2">
+      {stageBgMode === 'gradient' ? (
+        <ColorSwatchInput label="Gradient Center Secondary Color (Radial Core Color)" value={stageBgSecondaryColor}
+          onChange={setStageBgSecondaryColor} presets={['#1E293B', '#0F172A', '#31102F', '#064E3B', '#3B2F13']}
+          isLight={isLight} />
+      ) : (
+        <SliderControl label="Background Environment Brightness (Backdrop Brightness)" value={stageBrightness} min={10} max={100} step={1}
+          unit="%" onChange={setStageBrightness} isLight={isLight} />
+      )}
+      <div className="flex items-center justify-between pt-1">
+        <ToggleSwitch label="Stadium Midline/Center Circle Texture" checked={showPitchLines} onCheckedChange={setShowPitchLines}
+          isLight={isLight} />
+        <span className="text-[11px] font-mono opacity-60">16:9 Safe Stage</span>
       </div>
     </div>
-  );
-};
+  </div>
+);
 
 export interface CenterUpperArchetypesSectionProps {
   isLight: boolean;
   stageBgColor: string;
   winnerTeam: WinnerTeamPreset;
+  winnerBlueConfig: CenterUpperBlueTeamConfig;
   activeVariant: CenterUpperInfoVariant;
   upperCenterTopPct: number;
   activePayload: CenterUpperInfoPayload | null;
@@ -181,6 +144,7 @@ export const CenterUpperArchetypesSection: React.FC<
   isLight,
   stageBgColor,
   winnerTeam,
+  winnerBlueConfig,
   activeVariant,
   upperCenterTopPct,
   activePayload,
@@ -192,6 +156,10 @@ export const CenterUpperArchetypesSection: React.FC<
   handleSelectWinnerTeam,
   handleApplyCustomPreset,
 }) => {
+  const blueGlowHex = winnerBlueConfig.syncGlowWithText
+    ? winnerBlueConfig.textColor
+    : winnerBlueConfig.glowColor;
+
   return (
     <section id="center-upper-archetypes" className={`p-5 rounded-3xl border flex flex-col gap-5 scroll-mt-24 ${
       isLight ? 'bg-white border-neutral-200 text-neutral-900 shadow-xs'
@@ -203,7 +171,7 @@ export const CenterUpperArchetypesSection: React.FC<
           </Badge>
           <h2 className="text-sm font-bold font-mono">Visual specification for three types of upper-center high-priority alerts (Countdown / Winner / Custom Announcement)</h2>
         </div>
-        <span className="text-xs font-mono opacity-65">Click any card to switch text and trigger animations, Never modify parameters in the tuning panel below</span>
+        <span className="text-xs font-mono opacity-65">Click any card to switch text and trigger animations</span>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -217,7 +185,7 @@ export const CenterUpperArchetypesSection: React.FC<
           style={{ backgroundColor: stageBgColor }}
         >
           <span className="absolute top-2.5 left-3 text-[10px] font-mono uppercase tracking-wider text-amber-400/90 bg-black/60 px-2 py-0.5 rounded border border-amber-500/30">
-            ① Countdown · 3-2-1-GO · 1.50x Pop
+            1. Countdown · 3-2-1-GO · 1.50x Pop
           </span>
           <div style={{ fontFamily: 'var(--font-jetbrains), monospace', fontWeight: 100, fontSize: '68px',
             letterSpacing: '0em', color: '#FFE600', WebkitTextStroke: '1.2px #F59E0B', }}
@@ -225,7 +193,7 @@ export const CenterUpperArchetypesSection: React.FC<
             3 · 2 · 1 · GO
           </div>
           <span className="absolute bottom-2.5 text-[10px] font-mono text-neutral-400 group-hover:text-white transition-colors">
-            Click to play on main stage 3 → 2 → 1 → GO Sequence →
+            Click to play on main stage 3 -&gt; 2 -&gt; 1 -&gt; GO Sequence -&gt;
           </span>
         </div>
 
@@ -236,28 +204,33 @@ export const CenterUpperArchetypesSection: React.FC<
           style={{ backgroundColor: stageBgColor }}
         >
           <span className="absolute top-2.5 left-3 text-[10px] font-mono uppercase tracking-wider text-sky-400/90 bg-black/60 px-2 py-0.5 rounded border border-sky-500/30">
-            ② Winner · Regular (400) + Thin (100)
+            2. Winner · Top Unchanged + Blue Team Color
           </span>
           <div style={{ fontFamily: 'var(--font-jetbrains), monospace', fontWeight: 400, fontSize: '20px',
-            letterSpacing: '0em', color: '#FFFFFF', WebkitTextStroke: '0.7px #F59E0B', }}
+            letterSpacing: '0em', color: '#FFFFFF', textShadow: '0 0 18px rgba(245, 158, 11, 0.7)' }}
             className="leading-none select-none">
             WINNER
           </div>
-          <div style={{ fontFamily: 'var(--font-jetbrains), monospace', fontWeight: 100, fontSize: '42px',
-            letterSpacing: '0em', color: '#FFE600', WebkitTextStroke: '1.2px #F59E0B', }}
-            className="leading-none select-none">
-            BLUE / ORANGE
+          <div className="flex items-center gap-2 leading-none select-none"
+            style={{ fontFamily: 'var(--font-jetbrains), monospace', fontWeight: 100, fontSize: '36px', letterSpacing: '0em' }}>
+            <span style={{ color: winnerBlueConfig.textColor, textShadow: `0 0 22px ${blueGlowHex}` }}>
+              BLUE
+            </span>
+            <span className="text-neutral-500 text-2xl">/</span>
+            <span style={{ color: '#FFE600', textShadow: '0 0 22px rgba(245, 158, 11, 0.7)' }}>
+              ORANGE
+            </span>
           </div>
           <span className="absolute bottom-2.5 text-[10px] font-mono text-neutral-400 group-hover:text-white transition-colors">
-            Click to Toggle Blue Team / Orange Team text →
+            Click to Toggle Blue Team ({winnerBlueConfig.textColor}) / Orange Team -&gt;
           </span>
         </div>
 
-        {/* Card 3: Custom Announcement (Match Paused / Waiting for Players) */}
+        {/* Card 3: Custom Announcement (ADMIN CONTROL / MATCH PAUSED) */}
         <div
           onClick={() =>
             handleApplyCustomPreset(
-              CUSTOM_ANNOUNCEMENT_PRESETS.find((p) => p.id === 'single-line-info') ??
+              CUSTOM_ANNOUNCEMENT_PRESETS.find((p) => p.id === 'match-paused') ??
                 CUSTOM_ANNOUNCEMENT_PRESETS[0]
             )
           }
@@ -265,20 +238,20 @@ export const CenterUpperArchetypesSection: React.FC<
           style={{ backgroundColor: stageBgColor }}
         >
           <span className="absolute top-2.5 left-3 text-[10px] font-mono uppercase tracking-wider text-emerald-400/90 bg-black/60 px-2 py-0.5 rounded border border-emerald-500/30">
-            ③ Custom · Unconstrained Center Container
+            3. Custom · Forced Uppercase Announcement
           </span>
-          <div style={{ fontFamily: 'var(--font-jetbrains), monospace', fontWeight: 400, fontSize: '15px',
-            letterSpacing: '0em', color: '#FFFFFF', WebkitTextStroke: '0.7px #F59E0B', }}
-            className="leading-none select-none">
-            PRE-MATCH LOBBY
+          <div style={{ fontFamily: 'var(--font-jetbrains), monospace', fontWeight: 400, fontSize: '18px',
+            letterSpacing: '0em', color: '#FFFFFF', textShadow: '0 0 18px rgba(245, 158, 11, 0.7)' }}
+            className="leading-none select-none uppercase">
+            ADMIN CONTROL
           </div>
-          <div style={{ fontFamily: 'var(--font-jetbrains), monospace', fontWeight: 100, fontSize: '32px',
-            letterSpacing: '0em', color: '#FFE600', WebkitTextStroke: '1.2px #F59E0B', }}
-            className="leading-none select-none whitespace-nowrap">
-            WAITING FOR PLAYERS
+          <div style={{ fontFamily: 'var(--font-jetbrains), monospace', fontWeight: 100, fontSize: '38px',
+            letterSpacing: '0em', color: '#FFE600', textShadow: '0 0 22px rgba(245, 158, 11, 0.7)' }}
+            className="leading-none select-none whitespace-nowrap uppercase">
+            MATCH PAUSED
           </div>
           <span className="absolute bottom-2.5 text-[10px] font-mono text-neutral-400 group-hover:text-white transition-colors">
-            Click to Load WAITING FOR PLAYERS Ultra-Wide Centering Test →
+            Click to Load ADMIN CONTROL / MATCH PAUSED -&gt;
           </span>
         </div>
       </div>
@@ -294,24 +267,38 @@ import { CenterUpperInfoHUD } from '@/ui-core/hud/CenterUpperInfoHUD';
 export function MatchUpperCenterOverlay() {
   return (
     <HudAnchorStage strategy="reserve">
-      {/* Top-center high-priority alert area (default Top 40%, Unconstrained centered container, Decoupled from top scoreboard and center crosshair) */}
       <HudZone anchor="upper-center" style={{ top: '${upperCenterTopPct}%' }}>
         <HudSlot visible={true} mode="reserve">
           <CenterUpperInfoHUD
             info={{
               variant: '${activeVariant}',
+              winnerTeam: '${winnerTeam}',
               topText: '${activePayload?.topText ?? ''}', // JetBrains Mono Regular (400)
               mainText: '${activePayload?.mainText ?? '3'}', // JetBrains Mono Thin (100)
             }}
             glowConfig={{
               textColor: '${glowConfig.textColor}',
               glowColor: '${glowConfig.glowColor}',
+              topLabelColor: '${glowConfig.topLabelColor ?? '#FFFFFF'}',
+              topLabelGlowColor: '${glowConfig.topLabelGlowColor ?? '#F59E0B'}',
               innerBlurPx: ${glowConfig.innerBlurPx},
               outerBlurPx: ${glowConfig.outerBlurPx},
               ambientBlurPx: ${glowConfig.ambientBlurPx},
               intensityPct: ${glowConfig.intensityPct},
               backdropBloomPct: ${glowConfig.backdropBloomPct ?? 0},
               strokeWidthPx: ${glowConfig.strokeWidthPx ?? 0},
+            }}
+            winnerBlueConfig={{
+              enabled: ${winnerBlueConfig.enabled},
+              textColor: '${winnerBlueConfig.textColor}',
+              glowColor: '${winnerBlueConfig.glowColor}',
+              syncGlowWithText: ${winnerBlueConfig.syncGlowWithText},
+              innerBlurPx: ${winnerBlueConfig.innerBlurPx},
+              outerBlurPx: ${winnerBlueConfig.outerBlurPx},
+              ambientBlurPx: ${winnerBlueConfig.ambientBlurPx},
+              intensityPct: ${winnerBlueConfig.intensityPct},
+              strokeWidthPx: ${winnerBlueConfig.strokeWidthPx},
+              strokeColor: '${winnerBlueConfig.strokeColor}',
             }}
             typographyConfig={{
               mainFontSizePx: ${typoConfig.mainFontSizePx},
@@ -325,10 +312,10 @@ export function MatchUpperCenterOverlay() {
               italic: ${typoConfig.italic ?? false},
             }}
             timingConfig={{
-              durationMs: ${timingConfig.durationMs}, // default 2000ms Post-entry 400ms Fade Out
-              entryScale: ${timingConfig.entryScale}, // default 1.50x
-              entryDurationMs: ${timingConfig.entryDurationMs}, // default 400ms
-              exitDurationMs: ${timingConfig.exitDurationMs}, // default 400ms
+              durationMs: ${timingConfig.durationMs},
+              entryScale: ${timingConfig.entryScale},
+              entryDurationMs: ${timingConfig.entryDurationMs},
+              exitDurationMs: ${timingConfig.exitDurationMs},
             }}
           />
         </HudSlot>
@@ -351,6 +338,7 @@ export interface CenterUpperStageCanvasProps {
   showSurroundingHud: boolean;
   activePayload: CenterUpperInfoPayload | null;
   glowConfig: CenterUpperGlowConfig;
+  winnerBlueConfig: CenterUpperBlueTeamConfig;
   typoConfig: CenterUpperTypographyConfig;
   timingConfig: CenterUpperTimingConfig;
   activeVariant: CenterUpperInfoVariant;
@@ -369,6 +357,7 @@ export const CenterUpperStageCanvas: React.FC<CenterUpperStageCanvasProps> = ({
   showSurroundingHud,
   activePayload,
   glowConfig,
+  winnerBlueConfig,
   typoConfig,
   timingConfig,
   activeVariant,
@@ -468,6 +457,7 @@ export const CenterUpperStageCanvas: React.FC<CenterUpperStageCanvasProps> = ({
             <CenterUpperInfoHUD
               info={activePayload}
               glowConfig={glowConfig}
+              winnerBlueConfig={winnerBlueConfig}
               typographyConfig={typoConfig}
               timingConfig={timingConfig}
               onExpire={() => {
@@ -533,56 +523,61 @@ export const CenterUpperAnnouncementControls: React.FC<CenterUpperAnnouncementCo
 }) => {
   return (
     <div className="flex flex-col gap-2.5 pt-2 border-t border-neutral-200/70 dark:border-neutral-800/80">
-      <div className="flex items-center gap-1.5 flex-wrap">
-        <span className="text-[11px] font-mono font-bold flex items-center gap-1 text-emerald-500 mr-1">
-          <Megaphone className="h-3.5 w-3.5" />
-          <span>Race status alert preset (Text Only):</span>
-        </span>
-        {CUSTOM_ANNOUNCEMENT_PRESETS.map((preset) => {
-          const isSelected = customPresetId === preset.id;
-          return (
-            <button
-              key={preset.id}
-              type="button"
-              onClick={() => handleApplyCustomPreset(preset)}
-              className={`px-2.5 py-1 rounded-xl text-xs font-mono border cursor-pointer transition-all ${
-                isSelected
-                  ? 'bg-amber-500 text-neutral-950 font-bold border-amber-400 shadow-xs'
-                  : isLight
-                  ? 'bg-white hover:bg-neutral-100 border-neutral-300 text-neutral-700'
-                  : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-700 text-neutral-300'
-              }`}
-            >
-              {preset.label}
-            </button>
-          );
-        })}
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-[11px] font-mono font-bold flex items-center gap-1 text-emerald-500 mr-1">
+            <Megaphone className="h-3.5 w-3.5" />
+            <span>Custom Announcement Presets (Forced Uppercase):</span>
+          </span>
+          {CUSTOM_ANNOUNCEMENT_PRESETS.map((preset) => {
+            const isSelected = customPresetId === preset.id;
+            return (
+              <button
+                key={preset.id}
+                type="button"
+                onClick={() => handleApplyCustomPreset(preset)}
+                className={`px-2.5 py-1 rounded-xl text-xs font-mono border cursor-pointer transition-all ${
+                  isSelected
+                    ? 'bg-amber-500 text-neutral-950 font-bold border-amber-400 shadow-xs'
+                    : isLight
+                    ? 'bg-white hover:bg-neutral-100 border-neutral-300 text-neutral-700'
+                    : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-700 text-neutral-300'
+                }`}
+              >
+                {preset.label}
+              </button>
+            );
+          })}
+        </div>
+        <Badge variant="success" size="sm" isLight={isLight}>
+          Force Uppercase: TOP `ADMIN CONTROL` · MAIN `MATCH PAUSED`
+        </Badge>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <ToggleSwitch label="Show Above Regular subtitle" checked={showCustomTopLine} onCheckedChange={(v) => {
+        <ToggleSwitch label="Show Top Regular(400) Line" checked={showCustomTopLine} onCheckedChange={(v) => {
           setShowCustomTopLine(v); setIsVisibleOnStage(true); }} isLight={isLight} />
         {showCustomTopLine && (
           <label className="flex items-center gap-1.5 text-xs font-mono">
             <span className="opacity-70">Top Regular(400):</span>
-            <input type="text" value={customTopText} onChange={(e) => { setCustomTopText(e.target.value);
-              setIsVisibleOnStage(true); }} className={`w-36 px-2 py-1 rounded-lg border font-mono text-xs ${
+            <input type="text" value={customTopText} onChange={(e) => { setCustomTopText(e.target.value.toUpperCase());
+              setIsVisibleOnStage(true); }} className={`w-40 px-2 py-1 rounded-lg border font-mono text-xs uppercase ${
               isLight ? 'bg-white border-neutral-300 text-neutral-900'
               : 'bg-neutral-900 border-neutral-700 text-neutral-100' }`} />
           </label>
         )}
         <label className="flex items-center gap-1.5 text-xs font-mono">
           <span className="opacity-70">Main Row Thin(100):</span>
-          <input type="text" value={customMainText} onChange={(e) => { setCustomMainText(e.target.value);
-            setIsVisibleOnStage(true); }} className={`w-56 px-2 py-1 rounded-lg border font-mono text-xs ${ isLight
+          <input type="text" value={customMainText} onChange={(e) => { setCustomMainText(e.target.value.toUpperCase());
+            setIsVisibleOnStage(true); }} className={`w-56 px-2 py-1 rounded-lg border font-mono text-xs uppercase ${ isLight
             ? 'bg-white border-neutral-300 text-neutral-900' : 'bg-neutral-900 border-neutral-700 text-neutral-100'
             }`} />
         </label>
         <label className="flex items-center gap-1.5 text-xs font-mono">
           <span className="opacity-70">Bottom Capsule Footer (Leave Blank if Unused):</span>
           <input type="text" value={customSubText} placeholder="Default blank if hidden" onChange={(e) => {
-            setCustomSubText(e.target.value); setIsVisibleOnStage(true); }}
-            className={`w-44 px-2 py-1 rounded-lg border font-mono text-xs ${ isLight
+            setCustomSubText(e.target.value.toUpperCase()); setIsVisibleOnStage(true); }}
+            className={`w-44 px-2 py-1 rounded-lg border font-mono text-xs uppercase ${ isLight
             ? 'bg-white border-neutral-300 text-neutral-900' : 'bg-neutral-900 border-neutral-700 text-neutral-100'
             }`} />
         </label>

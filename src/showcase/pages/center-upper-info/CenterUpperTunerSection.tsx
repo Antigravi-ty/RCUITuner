@@ -1,8 +1,9 @@
 import React from 'react';
 import { RotateCcw, Timer, Palette, Sliders, Layers, Copy, Check, Code2, } from 'lucide-react';
 import {
-  CenterUpperGlowConfig, CenterUpperTypographyConfig, CenterUpperTimingConfig, DEFAULT_RL_COUNTDOWN_GLOW,
-  DEFAULT_CENTER_UPPER_TYPOGRAPHY, DEFAULT_CENTER_UPPER_TIMING,
+  CenterUpperGlowConfig, CenterUpperBlueTeamConfig, CenterUpperTypographyConfig, CenterUpperTimingConfig,
+  DEFAULT_RL_COUNTDOWN_GLOW, DEFAULT_WINNER_BLUE_TEAM_CONFIG, DEFAULT_CENTER_UPPER_TYPOGRAPHY,
+  DEFAULT_CENTER_UPPER_TIMING,
 } from '../../../ui-core/hud/CenterUpperInfoHUD';
 import { Badge } from '../../../ui-core/primitives/Badge';
 import { SliderControl } from '../../../ui-core/primitives/SliderControl';
@@ -11,6 +12,7 @@ import { ToggleSwitch } from '../../../ui-core/primitives/ToggleSwitch';
 import { ColorSwatchInput } from '../../../ui-core/compounds/tuner/ColorSwatchInput';
 import { CodeBlock } from '../../CodeBlock';
 import { RL_GLOW_SWATCHES } from './CenterUpperArchetypesAndBackdrop';
+import { CenterUpperBlueTeamColorMenu } from './CenterUpperBlueTeamColorMenu';
 
 export interface CenterUpperTunerSectionProps {
   isLight: boolean;
@@ -26,6 +28,13 @@ export interface CenterUpperTunerSectionProps {
       | CenterUpperGlowConfig
       | ((prev: CenterUpperGlowConfig) => CenterUpperGlowConfig)
   ) => void;
+  winnerBlueConfig: CenterUpperBlueTeamConfig;
+  setWinnerBlueConfig: (
+    val:
+      | CenterUpperBlueTeamConfig
+      | ((prev: CenterUpperBlueTeamConfig) => CenterUpperBlueTeamConfig)
+  ) => void;
+  onActivateBlueWinnerPreview: () => void;
   syncGlowWithText: boolean;
   setSyncGlowWithText: (val: boolean | ((prev: boolean) => boolean)) => void;
   timingConfig: CenterUpperTimingConfig;
@@ -58,6 +67,9 @@ export const CenterUpperTunerSection: React.FC<CenterUpperTunerSectionProps> = (
   build5EExportCode,
   glowConfig,
   setGlowConfig,
+  winnerBlueConfig,
+  setWinnerBlueConfig,
+  onActivateBlueWinnerPreview,
   syncGlowWithText,
   setSyncGlowWithText,
   timingConfig,
@@ -83,7 +95,7 @@ export const CenterUpperTunerSection: React.FC<CenterUpperTunerSectionProps> = (
               5E-2
             </Badge>
             <span className="text-sm font-bold font-mono">Parameter fine-tuning and export (Tuner &amp; Default Solidifier)</span>
-            <span className="text-xs font-mono opacity-65">All sliders support clicking the value to input precise numbers; One-click copy after adjustment JSON/TS Solidify as default parameters</span>
+            <span className="text-xs font-mono opacity-65">Includes Winner Blue Team RGB menu, Out Glow, Duration &amp; Typography; One-click copy JSON/TS to solidify as default parameters</span>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
@@ -124,7 +136,7 @@ export const CenterUpperTunerSection: React.FC<CenterUpperTunerSectionProps> = (
               isLight ? 'bg-white hover:bg-neutral-100 border-neutral-300 text-neutral-700'
               : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-700 text-neutral-300' }`}>
               <RotateCcw className="h-3.5 w-3.5" />
-              <span>reset 5E Default Parameters</span>
+              <span>Reset 5E Default Parameters</span>
             </button>
           </div>
         </div>
@@ -135,22 +147,23 @@ export const CenterUpperTunerSection: React.FC<CenterUpperTunerSectionProps> = (
         )}
       </div>
 
-      {/* Column 1: Rocket League Yellow & Outer Glow (`Out Glow`) Parameters */}
+      {/* Column 1: Winner Blue Team RGB Menu & Rocket League Yellow Outer Glow (`Out Glow`) Parameters */}
       <div className={`p-5 rounded-3xl border flex flex-col gap-4 ${ isLight
         ? 'bg-white border-neutral-200 text-neutral-900 shadow-xs'
         : 'bg-neutral-900/80 border-neutral-800 text-neutral-100 shadow-lg' }`}>
         <div className="flex items-center justify-between border-b pb-2.5 border-neutral-200 dark:border-neutral-800">
           <div className="flex items-center gap-2">
             <Palette className="h-4 w-4 text-amber-500" />
-            <h3 className="text-sm font-bold font-mono">1. Color and Glow (Out Glow Tuner)</h3>
+            <h3 className="text-sm font-bold font-mono">1. Winner Blue Team RGB &amp; Out Glow Tuner</h3>
           </div>
           <button
             type="button"
             onClick={() => {
               setGlowConfig({ ...DEFAULT_RL_COUNTDOWN_GLOW });
+              setWinnerBlueConfig({ ...DEFAULT_WINNER_BLUE_TEAM_CONFIG });
               setIsVisibleOnStage(true);
             }}
-            title="Reset to default outer glow preset (Intensity 100%, Kernel 0, Middle Layer 28, Background 0, Soft Light 0)"
+            title="Reset to default outer glow and 5G Blue Team preset"
             className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-mono border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer"
           >
             <RotateCcw className="h-3 w-3" />
@@ -158,7 +171,17 @@ export const CenterUpperTunerSection: React.FC<CenterUpperTunerSectionProps> = (
           </button>
         </div>
 
-        <ColorSwatchInput label="Primary Text Color (Main Thin Text Color)" description="Rocket League Countdown default yellow #FFE600"
+        <CenterUpperBlueTeamColorMenu
+          isLight={isLight}
+          winnerBlueConfig={winnerBlueConfig}
+          setWinnerBlueConfig={setWinnerBlueConfig}
+          onActivateBlueWinnerPreview={onActivateBlueWinnerPreview}
+          copied5EConfig={copied5EConfig}
+          handleCopy5EConfig={handleCopy5EConfig}
+          compact={true}
+        />
+
+        <ColorSwatchInput label="Primary Text Color (Countdown / Orange Team / Custom)" description="Rocket League Countdown default yellow #FFE600"
           value={glowConfig.textColor} onChange={(hex) => { setGlowConfig((prev) => ({ ...prev, textColor: hex,
           ...(syncGlowWithText ? { glowColor: hex, topLabelGlowColor: hex } : {}), })); setIsVisibleOnStage(true);
           }} presets={RL_GLOW_SWATCHES} isLight={isLight} />
