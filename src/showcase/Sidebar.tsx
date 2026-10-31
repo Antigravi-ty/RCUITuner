@@ -54,6 +54,7 @@ export type ShowcaseTab =
   // L5. Specials (Game and telemetry exclusive)
   | 'hud-elements'
   | 'center-upper-info'
+  | 'takeover'
   | 'stats-event-feed'
   | 'temporal-t5a'
   | 'charts-curves'
@@ -122,7 +123,7 @@ export const PYRAMID_LAYERS: Record<string, SidebarLayerMeta> = {
   L5: {
     code: 'L5',
     title: 'Specials Game and telemetry exclusive',
-    rule: '5A HUD · 5B Chart · 5C Viewport · 5D Loading · 5E Critical Alert · 5F State Flow',
+    rule: '5A HUD · 5B Chart · 5C Viewport · 5D Loading · 5E Critical Alert · 5F State Flow · 5G Takeover',
     badgeColor: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30',
   },
   L6: {
@@ -341,6 +342,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
       id: 'stats-event-feed',
       label: '5F · Stats Event Status Event Stream',
       icon: <Activity className="h-4 w-4 text-rose-500" />,
+      layer: 'L5',
+    },
+    {
+      id: 'takeover',
+      label: '5G · Takeover Handoff & Vignette',
+      icon: <Crosshair className="h-4 w-4 text-emerald-500" />,
       layer: 'L5',
     },
 

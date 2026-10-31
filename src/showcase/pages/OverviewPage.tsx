@@ -174,6 +174,11 @@ const PYRAMID_SPEC: PyramidRow[] = [
         tab: 'stats-event-feed',
         items: 'StatsEventFeedHUD (Icon + Text + Capsule + Footnote · Crossbar / Bounce Single line solid / High-Five 2³=8 / Tactics 1:1 / Strategy 2²=4)',
       },
+      {
+        label: '5G · Takeover Handoff & Vignette',
+        tab: 'takeover',
+        items: 'TakeoverCountdownHUD & TakeoverVignetteOverlay (HudAnchorStage bottom-center upward offset · Stationary Top Regular + 3-2-1 Bottom Thin Scale Pop · replacing-in Signal + 4-Edge Vignette Curve)',
+      },
     ],
   },
   {

@@ -14,6 +14,7 @@ const QuickNotificationPage = lazy(() => import('./showcase/pages/QuickNotificat
 const NotificationIntegrationPage = lazy(() => import('./showcase/pages/NotificationIntegrationPage').then((m) => ({ default: m.NotificationIntegrationPage })));
 const HudElementsPage = lazy(() => import('./showcase/pages/HudElementsPage').then((m) => ({ default: m.HudElementsPage })));
 const CenterUpperInfoPage = lazy(() => import('./showcase/pages/CenterUpperInfoPage').then((m) => ({ default: m.CenterUpperInfoPage })));
+const TakeoverPage = lazy(() => import('./showcase/pages/TakeoverPage').then((m) => ({ default: m.TakeoverPage })));
 const StatsEventFeedPage = lazy(() => import('./showcase/pages/StatsEventFeedPage').then((m) => ({ default: m.StatsEventFeedPage })));
 const TemporalOverlayPage = lazy(() => import('./showcase/pages/TemporalOverlayPage').then((m) => ({ default: m.TemporalOverlayPage })));
 const MenusPage = lazy(() => import('./showcase/pages/PostMatchMenusPage').then((m) => ({ default: m.MenusPage })));
@@ -304,6 +305,7 @@ export const App: React.FC = () => {
                   {activeTab === 'charts-curves' && <ChartsAndCurvesPage isLight={isLight} />}
                   {activeTab === 'hud-elements' && <HudElementsPage isLight={isLight} />}
                   {activeTab === 'center-upper-info' && <CenterUpperInfoPage isLight={isLight} />}
+                  {activeTab === 'takeover' && <TakeoverPage isLight={isLight} />}
                   {activeTab === 'stats-event-feed' && <StatsEventFeedPage isLight={isLight} />}
                   {activeTab === 'temporal-t5a' && <TemporalOverlayPage isLight={isLight} />}
                   {activeTab === 'viewport-safe-area' && <ViewportSafeAreaPage isLight={isLight} />}
