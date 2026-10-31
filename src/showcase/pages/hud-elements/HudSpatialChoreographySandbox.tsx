@@ -55,7 +55,7 @@ export const HudSpatialChoreographySandbox: React.FC<{ isLight?: boolean }> = Re
     const [demoIndicatorConfig, setDemoIndicatorConfig] = useState<EdgeDemoIndicatorConfig>({
       ...DEFAULT_DEMO_INDICATOR_CONFIG, }, 'demoIndicatorConfig');
     const [skipIndicatorConfig, setSkipIndicatorConfig] = useState<EdgeSkipIndicatorConfig>({
-      ...DEFAULT_SKIP_INDICATOR_CONFIG, }, 'skipIndicatorConfig');
+      ...DEFAULT_SKIP_INDICATOR_CONFIG, }, 'skipIndicatorConfigV2');
     const [focusedSlot, setFocusedSlot] = useState<1 | 2 | 3 | 4 | 5 | 6 | null>(1, 'focusedSlot');
     const [scorePreset, setScorePreset] = useState<ScorePresetKey>('1digit', 'scorePreset');
     const [overtimeChinOpen, setOvertimeChinOpen] = useState<boolean>(false, 'overtimeChinOpen');
@@ -224,6 +224,15 @@ export const HudSpatialChoreographySandbox: React.FC<{ isLight?: boolean }> = Re
     const leftBarColor = myTeamSide === 'blue' ? '#3B82F6' : '#F97316';
     const rightTeamColor = myTeamSide === 'blue' ? '#EA580C' : '#2563EB';
     const rightBarColor = myTeamSide === 'blue' ? '#F97316' : '#3B82F6';
+    const resetAllReplaySkipReady = () => {
+      const emptySkip: Record<1 | 2 | 3 | 4 | 5 | 6, boolean> = {
+        1: false, 2: false, 3: false, 4: false, 5: false, 6: false,
+      };
+      setReplaySkipReady(emptySkip);
+      ([1, 2, 3, 4, 5, 6] as const).forEach((k) => {
+        channelRef.current.updatePlayerSlot(k, { replaySkipReady: false });
+      });
+    };
     const handleDispatchSignal = (signal: MatchHudChoreographySignal) => {
       setActiveSignal(signal);
       setInstantCockpitTransition(false); // Signals always use smooth GPU transitions
@@ -243,6 +252,9 @@ export const HudSpatialChoreographySandbox: React.FC<{ isLight?: boolean }> = Re
       } else if (signal === 'kickoff-will-start') {
         setBottomHudRetracted(false);
         setViewMode('player-live');
+        if (skipIndicatorConfig.autoResetOnKickoff !== false) {
+          resetAllReplaySkipReady();
+        }
         if (focusedSlot === null) {
           setFocusedSlot(1);
           channelRef.current.setRoster({ viewMode: 'player-live', focusedSlotKey: 1 });
@@ -263,6 +275,9 @@ export const HudSpatialChoreographySandbox: React.FC<{ isLight?: boolean }> = Re
       } else {
         setActiveSignal('kickoff-will-start');
         setBottomHudRetracted(false);
+        if (mode === 'player-live' && skipIndicatorConfig.autoResetOnKickoff !== false) {
+          resetAllReplaySkipReady();
+        }
         channelRef.current.setReplayFooter({ visible: false });
       } };
     const handleSelectPov = (slotKey: 1 | 2 | 3 | 4 | 5 | 6 | null) => {

@@ -209,6 +209,7 @@ export const HudChoreographySlotAndTopBandColumns: React.FC<
                 <span className="text-[10px] font-bold text-emerald-500 flex items-center gap-1">
                   {skipIndicatorConfig && (
                     <ReplaySkipCheckSvg
+                      variant={skipIndicatorConfig.variant}
                       size={Math.min(16, Math.max(11, skipIndicatorConfig.sizePx || 16))}
                       color={skipIndicatorConfig.color}
                       strokeWidth={skipIndicatorConfig.strokeWidth}
@@ -217,7 +218,7 @@ export const HudChoreographySlotAndTopBandColumns: React.FC<
                       glowIntensityPct={skipIndicatorConfig.glowIntensityPct}
                     />
                   )}
-                  <span>Skip Replay / Ready (Half-Rounded Check Card):</span>
+                  <span>Skip Replay / Ready (Under-Card Push Drawer):</span>
                 </span>
                 <div className="flex items-center gap-1 flex-wrap">
                   {([1, 2, 3, 4, 5, 6] as const).map((k) => {
@@ -243,31 +244,56 @@ export const HudChoreographySlotAndTopBandColumns: React.FC<
               </div>
               {skipIndicatorConfig && onUpdateSkipIndicatorConfig && (
                 <div className="flex items-center justify-between gap-2 flex-wrap text-[10px]">
-                  <label className="flex items-center gap-1" title="Adjust Skip Checkmark SVG size (10px ~ 24px)">
+                  <label
+                    className="flex items-center gap-1"
+                    title="Adjust Skip Icon SVG size (10px ~ 32px, default 24px)"
+                    data-tuner-label="5A.S Skip Icon Size"
+                    data-tuner-value={String(skipIndicatorConfig.sizePx)}
+                  >
                     <span className="opacity-75">size:</span>
-                    <input type="range" min={10} max={24} step={1} value={skipIndicatorConfig.sizePx}
+                    <input type="range" min={10} max={32} step={1} value={skipIndicatorConfig.sizePx}
                       onChange={(e) => onUpdateSkipIndicatorConfig({ sizePx: Number(e.target.value) })}
-                      className="w-12 accent-emerald-500 cursor-pointer" />
+                      className="w-11 accent-emerald-500 cursor-pointer" />
                     <span className="tabular-nums font-bold">{skipIndicatorConfig.sizePx}px</span>
                   </label>
-                  <label className="flex items-center gap-1">
+                  <label
+                    className="flex items-center gap-1"
+                    data-tuner-label="5A.S Skip Icon Weight"
+                    data-tuner-value={String(skipIndicatorConfig.strokeWidth)}
+                  >
                     <span className="opacity-75">weight:</span>
-                    <input type="range" min={1.5} max={3.8} step={0.1} value={skipIndicatorConfig.strokeWidth}
+                    <input type="range" min={1.0} max={3.8} step={0.1} value={skipIndicatorConfig.strokeWidth}
                       onChange={(e) => onUpdateSkipIndicatorConfig({ strokeWidth: Number(e.target.value) })}
-                      className="w-12 accent-emerald-500 cursor-pointer" />
+                      className="w-11 accent-emerald-500 cursor-pointer" />
                     <span className="tabular-nums font-bold">{skipIndicatorConfig.strokeWidth.toFixed(1)}</span>
                   </label>
-                  <label className="flex items-center gap-1">
+                  <label
+                    className="flex items-center gap-1"
+                    data-tuner-label="5A.S Skip Glow Blur"
+                    data-tuner-value={String(skipIndicatorConfig.glowBlurPx)}
+                  >
                     <span className="opacity-75">Glow:</span>
-                    <input type="range" min={0} max={14} step={1} value={skipIndicatorConfig.glowBlurPx}
+                    <input type="range" min={0} max={16} step={1} value={skipIndicatorConfig.glowBlurPx}
                       onChange={(e) => onUpdateSkipIndicatorConfig({ glowBlurPx: Number(e.target.value) })}
-                      className="w-12 accent-emerald-500 cursor-pointer" />
+                      className="w-10 accent-emerald-500 cursor-pointer" />
                     <span className="tabular-nums font-bold">{skipIndicatorConfig.glowBlurPx}px</span>
                   </label>
+                  <label
+                    className="flex items-center gap-1"
+                    title="Protrude length past player card (24px ~ 64px)"
+                    data-tuner-label="5A.S Skip Protrude Width"
+                    data-tuner-value={String(skipIndicatorConfig.protrudeWidthPx)}
+                  >
+                    <span className="opacity-75">ext:</span>
+                    <input type="range" min={24} max={64} step={1} value={skipIndicatorConfig.protrudeWidthPx}
+                      onChange={(e) => onUpdateSkipIndicatorConfig({ protrudeWidthPx: Number(e.target.value) })}
+                      className="w-10 accent-emerald-500 cursor-pointer" />
+                    <span className="tabular-nums font-bold">{skipIndicatorConfig.protrudeWidthPx}px</span>
+                  </label>
                   <div className="flex items-center gap-1">
-                    {(['#22C55E', '#10B981', '#84CC16', '#38BDF8', '#FFFFFF'] as const).map((hex) => (
+                    {(['#22C55E', '#10B981', '#84CC16', '#38BDF8', '#FFFFFF'] as const).map((hex, i) => (
                       <button key={hex} type="button" onClick={() => onUpdateSkipIndicatorConfig({ color: hex, glowColor: hex })}
-                        title={`Check SVG Color & Glow: ${hex}`}
+                        title={`#${i + 1} Color & Glow: ${hex}`}
                         className={`w-3.5 h-3.5 rounded-full cursor-pointer border transition-transform ${
                           skipIndicatorConfig.color.toUpperCase() === hex ? 'scale-125 border-white ring-1 ring-emerald-500' : 'border-black/30 opacity-80 hover:opacity-100'
                         }`} style={{ backgroundColor: hex }} />

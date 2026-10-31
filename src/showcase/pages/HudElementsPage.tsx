@@ -9,12 +9,14 @@ import {
   createHudTransientChannel,
   DEFAULT_SKIP_INDICATOR_CONFIG,
   EdgeSkipIndicatorConfig,
+  resolveSkipIndicatorConfig,
 } from '../../ui-core/stores/hudTransientChannel';
 import { Badge } from '../../ui-core/primitives/Badge';
 import { SectionErrorBoundary } from '../../ui-core/primitives/SectionErrorBoundary';
 import { PageJumpDirectory, JumpDirectoryItem } from '../PageJumpDirectory';
 import { HudSpatialChoreographySandbox } from './hud-elements/HudSpatialChoreographySandbox';
 import { EdgeDemoInspectorSection } from './hud-elements/EdgeDemoInspectorSection';
+import { EdgeSkipReplayInspectorSection } from './hud-elements/EdgeSkipReplayInspectorSection';
 import { HudCoreTriadInspectorSection } from './hud-elements/HudCoreTriadInspectorSection';
 import { HudStageAndFollowupSection, type SlotLayoutPreset } from './hud-elements/HudStageAndFollowupSection';
 
@@ -28,6 +30,8 @@ const HUD_5A_DIRECTORY_ITEMS: JumpDirectoryItem[] = [
     name: 'EdgePlayerHudStrip', label: '3v3 Strictly axis-symmetric single-sided rounded bar (Live/Replay/Spectator)' },
   { id: 'hud-5a-2-demo-inspector', code: '5A.2+',
     name: 'EdgeDemoInspectorSection', label: 'Explosion status persistent preview Bomb SVG size/weight/Outer glow workbench' },
+  { id: 'hud-5a-2-skip-inspector', code: '5A.2++',
+    name: 'EdgeSkipReplayInspectorSection', label: 'Skip Replay & Slot Extension Card under-card border, push/retract choreography & icon workbench' },
   { id: 'hud-5a-3-ball-cam', code: '5A.3',
     name: 'BallCameraIndicator', label: 'Low-frequency discrete sphere view indicator (React.memo + subscribeBallCam)' },
   { id: 'hud-5a-4-velocity-bar', code: '5A.4',
@@ -60,10 +64,11 @@ export const HudElementsPage: React.FC<{ isLight?: boolean }> = ({ isLight = tru
     { 1: true, 2: false, 3: true, 4: true, 5: false, 6: false },
     'edgeSkipReady'
   );
-  const [edgeSkipConfig, setEdgeSkipConfig] = useState<EdgeSkipIndicatorConfig>(
+  const [rawEdgeSkipConfig, setEdgeSkipConfig] = useState<EdgeSkipIndicatorConfig>(
     { ...DEFAULT_SKIP_INDICATOR_CONFIG },
-    'edgeSkipConfig'
+    'edgeSkipConfigV2'
   );
+  const edgeSkipConfig = resolveSkipIndicatorConfig(rawEdgeSkipConfig);
 
   const transientChannelRef = useRef(
     createHudTransientChannel({
@@ -482,11 +487,11 @@ export const HudElementsPage: React.FC<{ isLight?: boolean }> = ({ isLight = tru
               </Badge>
             </div>
             <p className="text-xs opacity-75">
-              Left-pinned right-rounded corner (<code className="font-mono">rounded-r-[9px]</code>), Right-aligned left-rounded corner (<code className="font-mono">rounded-l-[9px]</code>), with isolated half-rounded Skip Replay checkmark card (neutral gray border + parameterized green checkmark SVG).
+              Left-pinned right-rounded corner (<code className="font-mono">rounded-r-[9px]</code>), Right-aligned left-rounded corner (<code className="font-mono">rounded-l-[9px]</code>), with under-card tucked Skip Replay drawer (slides out from beneath player card · see <a href="#hud-5a-2-skip-inspector" className="text-emerald-500 underline">5A.2++ Workbench</a> below).
             </p>
             <div className="flex flex-col gap-1.5 font-mono text-[11px]">
               <div className="flex items-center justify-between gap-2 flex-wrap">
-                <span className="font-bold text-emerald-500">Skip Replay / Ready (Half-Rounded Check Card):</span>
+                <span className="font-bold text-emerald-500">Skip Replay / Ready (Under-Card Push Drawer):</span>
                 <div className="flex items-center gap-1.5 flex-wrap">
                   {([1, 2, 3, 4, 5, 6] as const).map((k) => (
                     <label key={k} className="inline-flex items-center gap-1 cursor-pointer select-none px-1.5 py-0.5 rounded border border-neutral-400/30">
@@ -499,28 +504,36 @@ export const HudElementsPage: React.FC<{ isLight?: boolean }> = ({ isLight = tru
               <div className="flex items-center justify-between gap-2 flex-wrap text-[10px]">
                 <label className="flex items-center gap-1">
                   <span className="opacity-75">size:</span>
-                  <input type="range" min={10} max={24} step={1} value={edgeSkipConfig.sizePx}
-                    onChange={(e) => setEdgeSkipConfig((p) => ({ ...p, sizePx: Number(e.target.value) }))}
-                    className="w-12 accent-emerald-500 cursor-pointer" />
+                  <input type="range" min={10} max={32} step={1} value={edgeSkipConfig.sizePx}
+                    onChange={(e) => setEdgeSkipConfig((p) => ({ ...resolveSkipIndicatorConfig(p), sizePx: Number(e.target.value) }))}
+                    className="w-11 accent-emerald-500 cursor-pointer" />
                   <span className="tabular-nums font-bold">{edgeSkipConfig.sizePx}px</span>
                 </label>
                 <label className="flex items-center gap-1">
                   <span className="opacity-75">weight:</span>
-                  <input type="range" min={1.5} max={3.8} step={0.1} value={edgeSkipConfig.strokeWidth}
-                    onChange={(e) => setEdgeSkipConfig((p) => ({ ...p, strokeWidth: Number(e.target.value) }))}
-                    className="w-12 accent-emerald-500 cursor-pointer" />
+                  <input type="range" min={1.0} max={3.8} step={0.1} value={edgeSkipConfig.strokeWidth}
+                    onChange={(e) => setEdgeSkipConfig((p) => ({ ...resolveSkipIndicatorConfig(p), strokeWidth: Number(e.target.value) }))}
+                    className="w-11 accent-emerald-500 cursor-pointer" />
                   <span className="tabular-nums font-bold">{edgeSkipConfig.strokeWidth.toFixed(1)}</span>
                 </label>
                 <label className="flex items-center gap-1">
                   <span className="opacity-75">Glow:</span>
-                  <input type="range" min={0} max={14} step={1} value={edgeSkipConfig.glowBlurPx}
-                    onChange={(e) => setEdgeSkipConfig((p) => ({ ...p, glowBlurPx: Number(e.target.value) }))}
-                    className="w-12 accent-emerald-500 cursor-pointer" />
+                  <input type="range" min={0} max={16} step={1} value={edgeSkipConfig.glowBlurPx}
+                    onChange={(e) => setEdgeSkipConfig((p) => ({ ...resolveSkipIndicatorConfig(p), glowBlurPx: Number(e.target.value) }))}
+                    className="w-10 accent-emerald-500 cursor-pointer" />
                   <span className="tabular-nums font-bold">{edgeSkipConfig.glowBlurPx}px</span>
                 </label>
+                <label className="flex items-center gap-1" title="Protrude length past player card">
+                  <span className="opacity-75">ext:</span>
+                  <input type="range" min={24} max={64} step={1} value={edgeSkipConfig.protrudeWidthPx}
+                    onChange={(e) => setEdgeSkipConfig((p) => ({ ...resolveSkipIndicatorConfig(p), protrudeWidthPx: Number(e.target.value) }))}
+                    className="w-10 accent-emerald-500 cursor-pointer" />
+                  <span className="tabular-nums font-bold">{edgeSkipConfig.protrudeWidthPx}px</span>
+                </label>
                 <div className="flex items-center gap-1">
-                  {(['#22C55E', '#10B981', '#84CC16', '#38BDF8', '#FFFFFF'] as const).map((hex) => (
-                    <button key={hex} type="button" onClick={() => setEdgeSkipConfig((p) => ({ ...p, color: hex, glowColor: hex }))}
+                  {(['#22C55E', '#10B981', '#84CC16', '#38BDF8', '#FFFFFF'] as const).map((hex, i) => (
+                    <button key={hex} type="button" onClick={() => setEdgeSkipConfig((p) => ({ ...resolveSkipIndicatorConfig(p), color: hex, glowColor: hex }))}
+                      title={`#${i + 1} Color: ${hex}`}
                       className={`w-3.5 h-3.5 rounded-full cursor-pointer border transition-transform ${
                         edgeSkipConfig.color.toUpperCase() === hex ? 'scale-125 border-white ring-1 ring-emerald-500' : 'border-black/30 opacity-80 hover:opacity-100'
                       }`} style={{ backgroundColor: hex }} />
@@ -547,6 +560,11 @@ export const HudElementsPage: React.FC<{ isLight?: boolean }> = ({ isLight = tru
       {/* 5A.2+: Dedicated Persistent Demolished Slot & Bomb SVG Size/Style Inspector */}
       <SectionErrorBoundary title="5A.2+ EdgeDemoInspectorSection" scopePrefix="hud-5a-2-demo-inspector" isLight={isLight}>
         <EdgeDemoInspectorSection isLight={isLight} />
+      </SectionErrorBoundary>
+
+      {/* 5A.2++: Dedicated Skip Replay & Slot Extension Card Workbench */}
+      <SectionErrorBoundary title="5A.2++ EdgeSkipReplayInspectorSection" scopePrefix="hud-5a-2-skip-inspector" isLight={isLight}>
+        <EdgeSkipReplayInspectorSection isLight={isLight} />
       </SectionErrorBoundary>
 
       <SectionErrorBoundary title="5A.3 ~ 5A.5 HudCoreTriadInspectorSection" scopePrefix="hud-5a-5-boost-config" isLight={isLight}>
