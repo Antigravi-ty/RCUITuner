@@ -1,0 +1,143 @@
+import React, { lazy } from 'react';
+import type { DeepLayerRecipeSpec } from './deepLayerOnlineRecipeSpecs';
+
+const Layer3ExpMultiBotsRecipe = lazy(() =>
+  import('../../../ui-core/recipes/Layer3ExpMultiBotsRecipe').then((m) => ({
+    default: m.Layer3ExpMultiBotsRecipe,
+  }))
+);
+const Layer3DevSubsystemIsolationRecipe = lazy(() =>
+  import('../../../ui-core/recipes/Layer3DevSubsystemIsolationRecipe').then((m) => ({
+    default: m.Layer3DevSubsystemIsolationRecipe,
+  }))
+);
+const Layer3DevActiveTunersRecipe = lazy(() =>
+  import('../../../ui-core/recipes/Layer3DevActiveTunersRecipe').then((m) => ({
+    default: m.Layer3DevActiveTunersRecipe,
+  }))
+);
+const Layer3DevCalibratedPresetsRecipe = lazy(() =>
+  import('../../../ui-core/recipes/Layer3DevCalibratedPresetsRecipe').then((m) => ({
+    default: m.Layer3DevCalibratedPresetsRecipe,
+  }))
+);
+const Layer3DevUnderDevelopmentRecipe = lazy(() =>
+  import('../../../ui-core/recipes/Layer3DevUnderDevelopmentRecipe').then((m) => ({
+    default: m.Layer3DevUnderDevelopmentRecipe,
+  }))
+);
+const Layer4StaticTrainingPackBrowseRecipe = lazy(() =>
+  import('../../../ui-core/recipes/Layer4StaticTrainingPackBrowseRecipe').then((m) => ({
+    default: m.Layer4StaticTrainingPackBrowseRecipe,
+  }))
+);
+const Layer4AdvancedAudioRecipe = lazy(() =>
+  import('../../../ui-core/recipes/Layer4AdvancedAudioRecipe').then((m) => ({
+    default: m.Layer4AdvancedAudioRecipe,
+  }))
+);
+const Layer4ControllerSettingsRecipe = lazy(() =>
+  import('../../../ui-core/recipes/Layer4ControllerSettingsRecipe').then((m) => ({
+    default: m.Layer4ControllerSettingsRecipe,
+  }))
+);
+const Layer4EventTriggerRulesRecipe = lazy(() =>
+  import('../../../ui-core/recipes/Layer4EventTriggerRulesRecipe').then((m) => ({
+    default: m.Layer4EventTriggerRulesRecipe,
+  }))
+);
+
+const noop = () => {};
+
+export const DEEP_LAYER_DEV_AND_L4_RECIPE_SPECS: DeepLayerRecipeSpec[] = [
+  {
+    id: 'recipe-6a-13-multibots',
+    code: '6A.13',
+    badgeColor: 'amber',
+    title: 'Layer 3 Experimental Multi-Bots 3v3 (Dual Team 6 Independent Slots ONNX Bot Layout & POV Select)',
+    panelId: 'layer3-exp-multi-bots',
+    tunerLabel: 'Layer 3 Experimental Multi-Bots (3v3)',
+    recommendation: 'Dual Team 6 Independent Slots ONNX Bot Layout & POV Select',
+    renderPreview: (isLight) => <Layer3ExpMultiBotsRecipe isLight={isLight} onBack={noop} />,
+  },
+  {
+    id: 'recipe-6a-14-rcspack',
+    code: '6A.14',
+    badgeColor: 'sky',
+    title: 'Layer 4 Static Training Pack Browser (.RCSPack Dual-column training pack browser and metadata inspector)',
+    panelId: 'layer4-static-training-pack',
+    tunerLabel: 'Layer 4 Static Training Pack Browser (.RCSPack)',
+    recommendation: 'Dual-column training pack browser and metadata inspector',
+    renderPreview: (isLight) => <Layer4StaticTrainingPackBrowseRecipe isLight={isLight} onBack={noop} />,
+  },
+  {
+    id: 'recipe-6a-15-adv-audio',
+    code: '6A.15',
+    badgeColor: 'sky',
+    title: 'Layer 4 Advanced Audio Synthesis Pool (Boost and Rumble Stage sample matrix tuning)',
+    panelId: 'layer4-advanced-audio',
+    tunerLabel: 'Layer 4 Advanced Audio Synthesis Pool',
+    recommendation: 'Boost and Rumble Stage sample matrix tuning',
+    renderPreview: (isLight) => <Layer4AdvancedAudioRecipe isLight={isLight} onBack={noop} />,
+  },
+  {
+    id: 'recipe-6a-16-adv-ctrl',
+    code: '6A.16',
+    badgeColor: 'sky',
+    title: 'Layer 4 Controller Settings (Controller Axis Mapping and Turning / Dodging Deadzone Visualization)',
+    panelId: 'layer4-controller-settings',
+    tunerLabel: 'Layer 4 Controller Settings',
+    recommendation: 'Gamepad input device detection, 4-Axis Mapping, Deadzone / Dodge Deadzone High-performance dual-graph deadzone visualization',
+    renderPreview: (isLight) => <Layer4ControllerSettingsRecipe isLight={isLight} onBack={noop} />,
+  },
+  {
+    id: 'recipe-6a-17-triggers',
+    code: '6A.17',
+    badgeColor: 'sky',
+    title: 'Layer 4 Event & Trigger Rules Engine (Dual-cursor threshold conditions and automatic training action trigger engine)',
+    panelId: 'layer4-event-trigger-rules',
+    tunerLabel: 'Layer 4 Event & Trigger Rules Engine',
+    recommendation: 'Dual-cursor threshold conditions and automatic training action trigger engine',
+    renderPreview: (isLight) => <Layer4EventTriggerRulesRecipe isLight={isLight} onBack={noop} />,
+  },
+  {
+    id: 'recipe-6a-20-dev-isolation',
+    code: '6A.20',
+    badgeColor: 'amber',
+    title: 'Layer 3 Subsystem Isolation Lab (6 Physics & AI Independent subsystem verification sandbox)',
+    panelId: 'layer3-dev-subsystem-isolation',
+    tunerLabel: 'Layer 3 Subsystem Isolation Lab (6-Tab Launcher)',
+    recommendation: '6 Physics & AI Independent subsystem verification sandbox',
+    renderPreview: (isLight) => <Layer3DevSubsystemIsolationRecipe isLight={isLight} onBack={noop} />,
+  },
+  {
+    id: 'recipe-6a-21-dev-tuners',
+    code: '6A.21',
+    badgeColor: 'amber',
+    title: 'Layer 3 Active Tuners & Phase Matrix (Active tuning floating window launcher and phase matrix)',
+    panelId: 'layer3-dev-active-tuners',
+    tunerLabel: 'Layer 3 Active Tuners & Phase Matrix',
+    recommendation: 'Active parameter tuning floating window launcher and L3 PhaseVariationMatrix Phase Matrix',
+    renderPreview: (isLight) => <Layer3DevActiveTunersRecipe isLight={isLight} onBack={noop} />,
+  },
+  {
+    id: 'recipe-6a-22-dev-presets',
+    code: '6A.22',
+    badgeColor: 'amber',
+    title: 'Layer 3 Calibrated Presets & Tuners (10 Physical baseline solidified/Camera/Shader tuner floating window summary)',
+    panelId: 'layer3-dev-calibrated-presets',
+    tunerLabel: 'Layer 3 Calibrated Presets & Tuners',
+    recommendation: '10 Physical baseline solidified/Camera/Shader tuner floating window summary',
+    renderPreview: (isLight) => <Layer3DevCalibratedPresetsRecipe isLight={isLight} onBack={noop} />,
+  },
+  {
+    id: 'recipe-6a-23-dev-under-dev',
+    code: '6A.23',
+    badgeColor: 'amber',
+    title: 'Layer 3 Under Development (Three-Wheeler · Throwback Stadium · Per-Car Boost · Camera Shake)',
+    panelId: 'layer3-dev-under-development',
+    tunerLabel: 'Layer 3 Under Development (Experimental features lab)',
+    recommendation: '3-Wheel Mode, Retro Arena, Bike Boost Fine-tuning and collision camera shake parameter panel',
+    renderPreview: (isLight) => <Layer3DevUnderDevelopmentRecipe isLight={isLight} onBack={noop} />,
+  },
+];
