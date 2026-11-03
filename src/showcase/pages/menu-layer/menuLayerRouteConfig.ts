@@ -14,11 +14,9 @@ export type ActiveMenuRoute =
   | 'play'
   | 'garage'
   | 'settings'
-  | 'additional-preview'
   | 'room-host-control'
   | 'audio-eq'
   | 'trajectory'
-  | 'online-warmup'
   | 'host-match'
   | 'host-training'
   | 'custom-play'
@@ -30,7 +28,7 @@ export type ActiveMenuRoute =
   | 'camera'
   | 'keybindings'
   | 'exp-multi-bots'
-  | 'dev-subsystem-isolation'
+  | 'dev-sandboxes'
   | 'dev-active-tuners'
   | 'dev-calibrated-presets'
   | 'dev-under-development'
@@ -44,11 +42,9 @@ export const ROUTE_TO_PANEL_ID: Record<Exclude<ActiveMenuRoute, 'layer-0'>, Menu
   'play': 'layer2-play',
   'garage': 'layer2-garage',
   'settings': 'layer2-settings',
-  'additional-preview': 'layer2-previews',
   'room-host-control': 'layer2-room-host-control',
   'audio-eq': 'layer3-audio-eq',
   'trajectory': 'layer3-ball-trajectory',
-  'online-warmup': 'layer3-online-warmup',
   'host-match': 'layer3-host-match',
   'host-training': 'layer3-host-training',
   'custom-play': 'layer3-custom-play',
@@ -60,7 +56,7 @@ export const ROUTE_TO_PANEL_ID: Record<Exclude<ActiveMenuRoute, 'layer-0'>, Menu
   'camera': 'layer3-camera',
   'keybindings': 'layer3-keybindings',
   'exp-multi-bots': 'layer3-exp-multi-bots',
-  'dev-subsystem-isolation': 'layer3-dev-subsystem-isolation',
+  'dev-sandboxes': 'layer3-dev-sandboxes',
   'dev-active-tuners': 'layer3-dev-active-tuners',
   'dev-calibrated-presets': 'layer3-dev-calibrated-presets',
   'dev-under-development': 'layer3-dev-under-development',
@@ -80,9 +76,9 @@ export const MENU_SANDBOX_JUMP_ITEMS: SandboxJumpEntry[] = [
   { code: '7A.0', componentName: 'MenuLayerStageCanvas', label: 'Level 0 menu-less game state (0px)', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 0 · User', route: 'layer-0', tier: 'user' },
   { code: '7A.1', componentName: 'Layer1MainMenuRecipe', label: 'Main pause root menu (11 User Contexts)', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 1 · User', route: 'main-menu', tier: 'user' },
   { code: '7A.2', componentName: 'Layer2PlayRecipe', label: 'Mode Selection 2×3 Grid (Play)', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 2 · User', route: 'play', tier: 'user' },
-  { code: '7A.3', componentName: 'Layer2GarageRecipe', label: 'Garage Preset (5 Tabs includes Materials)', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 2 · User', route: 'garage', tier: 'user' },
+  { code: '7A.3', componentName: 'Layer2GarageRecipe', label: 'Garage Preset (5 Tabs includes Loadout)', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 2 · User', route: 'garage', tier: 'user' },
   { code: '7A.4', componentName: 'Layer2SettingsRecipe', label: '5-Tab icon+Text Settings (User 4 Tabs)', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 2 · User', route: 'settings', tier: 'user' },
-  { code: '7A.5', componentName: 'Layer2RoomHostControlRecipe', label: 'Host online console (Room Host)', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 2 · User', route: 'room-host-control', tier: 'user' },
+  { code: '7A.5', componentName: 'Layer2OnlineRoomControlRecipe', label: 'Online room control console (6 Contexts)', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 2 · User', route: 'room-host-control', tier: 'user' },
   { code: '7A.6', componentName: 'Layer3HostMatchRecipe', label: 'Create online room page (Host Match)', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 3 · User', route: 'host-match', tier: 'user' },
   { code: '7A.6T', componentName: 'Layer3HostTrainingRecipe', label: 'Create online training room (Host Training)', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 3 · User', route: 'host-training', tier: 'user' },
   { code: '7A.6C', componentName: 'Layer3CustomPlayRecipe', label: 'Custom mode under development (Custom · In Development)', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 3 · User', route: 'custom-play', tier: 'user' },
@@ -100,7 +96,7 @@ export const MENU_SANDBOX_JUMP_ITEMS: SandboxJumpEntry[] = [
   // --- Developer Tier ---
   { code: '7A.D1', componentName: 'Layer1MainMenuRecipe', label: 'Root Menu (Dev Test Lab / Multi-Bots Context)', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 1 · Dev', route: 'main-menu', tier: 'developer' },
   { code: '7A.D2', componentName: 'Layer2SettingsRecipe', label: 'Settings -> Developer Tab Developer Center', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 2 · Dev', route: 'settings', tier: 'developer' },
-  { code: '7A.D4', componentName: 'Layer3DevSubsystemIsolationRecipe', label: '6-Tab Subsystem Isolation Lab & Sandboxes', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 3 · Dev', route: 'dev-subsystem-isolation', tier: 'developer' },
+  { code: '7A.D4', componentName: 'Layer3DevSandboxesRecipe', label: '6-Tab Subsystem Isolation Lab & Sandboxes', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 3 · Dev', route: 'dev-sandboxes', tier: 'developer' },
   { code: '7A.D5', componentName: 'Layer3ExpMultiBotsRecipe', label: 'Experimental Multi-Bots (3v3 ONNX)', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 3 · Dev', route: 'exp-multi-bots', tier: 'developer' },
   { code: '7A.D6', componentName: 'Layer3DevActiveTunersRecipe', label: 'Active Tuners & Phase Matrix', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 3 · Dev', route: 'dev-active-tuners', tier: 'developer' },
   { code: '7A.D7', componentName: 'Layer3DevCalibratedPresetsRecipe', label: 'Calibrated Presets & Tuners', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 3 · Dev', route: 'dev-calibrated-presets', tier: 'developer' },
@@ -125,11 +121,9 @@ export const MENU_ROUTE_CONFIG: Record<ActiveMenuRoute, LayerRouteConfig> = {
   'play': { id: 'play', label: 'Play Modes', layer: 2, width: 600, tier: 'user', parentRoute: 'main-menu' },
   'garage': { id: 'garage', label: 'Garage Loadout', layer: 2, width: 640, tier: 'user', parentRoute: 'main-menu' },
   'settings': { id: 'settings', label: 'Game Settings', layer: 2, width: 680, tier: 'both', parentRoute: 'main-menu' },
-  'additional-preview': { id: 'additional-preview', label: 'Additional Preview', layer: 2, width: 600, tier: 'developer', parentRoute: 'main-menu' },
-  'room-host-control': { id: 'room-host-control', label: 'Room Host Control', layer: 2, width: 720, tier: 'user', parentRoute: 'play' },
+  'room-host-control': { id: 'room-host-control', label: 'Online Room Control', layer: 2, width: 720, tier: 'user', parentRoute: 'play' },
   'audio-eq': { id: 'audio-eq', label: 'Acoustics & EQ', layer: 3, width: 480, tier: 'developer', parentRoute: 'settings' },
   'trajectory': { id: 'trajectory', label: 'Ball Trajectory Predictor', layer: 3, width: 560, tier: 'both', parentRoute: 'settings' },
-  'online-warmup': { id: 'online-warmup', label: 'Online Warmup & Match', layer: 3, width: 480, tier: 'user', parentRoute: 'play' },
   'host-match': { id: 'host-match', label: 'Host Match Room', layer: 3, width: 520, tier: 'user', parentRoute: 'play' },
   'host-training': { id: 'host-training', label: 'Host Training Room', layer: 3, width: 500, tier: 'user', parentRoute: 'play' },
   'custom-play': { id: 'custom-play', label: 'Custom Mode (In Development)', layer: 3, width: 500, tier: 'user', parentRoute: 'play' },
@@ -141,7 +135,7 @@ export const MENU_ROUTE_CONFIG: Record<ActiveMenuRoute, LayerRouteConfig> = {
   'camera': { id: 'camera', label: 'Camera Settings', layer: 3, width: 560, tier: 'user', parentRoute: 'settings' },
   'keybindings': { id: 'keybindings', label: 'Key Bindings & Controls', layer: 3, width: 560, tier: 'user', parentRoute: 'settings' },
   'exp-multi-bots': { id: 'exp-multi-bots', label: 'Experimental Multi-Bots (3v3)', layer: 3, width: 720, tier: 'developer', parentRoute: 'settings' },
-  'dev-subsystem-isolation': { id: 'dev-subsystem-isolation', label: 'Sandboxes', layer: 3, width: 560, tier: 'developer', parentRoute: 'settings' },
+  'dev-sandboxes': { id: 'dev-sandboxes', label: 'Sandboxes', layer: 3, width: 560, tier: 'developer', parentRoute: 'settings' },
   'dev-active-tuners': { id: 'dev-active-tuners', label: 'Active Tuners', layer: 3, width: 600, tier: 'developer', parentRoute: 'settings' },
   'dev-calibrated-presets': { id: 'dev-calibrated-presets', label: 'Calibrated Presets', layer: 3, width: 560, tier: 'developer', parentRoute: 'settings' },
   'dev-under-development': { id: 'dev-under-development', label: 'Under Development', layer: 3, width: 600, tier: 'developer', parentRoute: 'settings' },
@@ -169,8 +163,8 @@ export const SETTINGS_QUICK_TABS: TabItem[] = [
 
 export const GARAGE_QUICK_TABS: TabItem[] = [
   { id: 'car', label: 'Car' },
-  { id: 'colour', label: 'Paint' },
-  { id: 'materials', label: 'Loadout' },
+  { id: 'paint', label: 'Paint' },
+  { id: 'loadout', label: 'Loadout' },
   { id: 'anthem', label: 'Anthem' },
   { id: 'sync', label: 'Sync' },
 ];
@@ -296,21 +290,19 @@ export const DEV_LINEAR_PLAYLIST: LinearPlaylistStep[] = [
     layer: 1 as const, label: `L1 Dev Menu · ${v.label}`, breadcrumb: `Layer 1 (Dev) · ${v.headerTitle} (${v.label})`,
   })),
   { id: 'dev-l2-settings-developer', tier: 'developer', route: 'settings', subtab: 'developer', layer: 2, label: 'L2 Settings · Developer Tab', breadcrumb: 'Settings → Developer Tab (5 Hub Cards)' },
-  { id: 'dev-l3-isolation', tier: 'developer', route: 'dev-subsystem-isolation', layer: 3, label: 'L3 Subsystem Isolation Lab (6 Tabs)', breadcrumb: 'Developer → Sandboxes & Isolation Labs' },
+  { id: 'dev-l3-isolation', tier: 'developer', route: 'dev-sandboxes', layer: 3, label: 'L3 Sandboxes & Isolation Lab (6 Tabs)', breadcrumb: 'Developer → Sandboxes & Isolation Labs' },
   { id: 'dev-l3-multibots', tier: 'developer', route: 'exp-multi-bots', layer: 3, label: 'L3 Experimental Multi-Bots (3v3)', breadcrumb: 'Developer → Experimental Multi-Bots' },
   { id: 'dev-l3-active-tuners', tier: 'developer', route: 'dev-active-tuners', layer: 3, label: 'L3 Active Tuners & Phase Matrix', breadcrumb: 'Developer → Active Tuners' },
   { id: 'dev-l3-calibrated-presets', tier: 'developer', route: 'dev-calibrated-presets', layer: 3, label: 'L3 Calibrated Presets & Tuners', breadcrumb: 'Developer → Calibrated Presets' },
   { id: 'dev-l3-under-dev', tier: 'developer', route: 'dev-under-development', layer: 3, label: 'L3 Under Development', breadcrumb: 'Developer → Under Development' },
   { id: 'dev-l3-audio-eq', tier: 'developer', route: 'audio-eq', layer: 3, label: 'L3 Acoustics & Parametric EQ', breadcrumb: 'Developer → Acoustics & EQ' },
   { id: 'dev-l4-adv-audio', tier: 'developer', route: 'advanced-audio', layer: 4, label: 'L4 Advanced Audio Synthesis Pool', breadcrumb: 'Developer → Active Tuners → Advanced Audio' },
-  { id: 'dev-l4-event-triggerer', tier: 'developer', route: 'event-trigger-rules', layer: 4, label: 'L4 Event & Trigger Rules Engine', breadcrumb: 'Developer → Active Tuners → Event & Trigger Rules' },
+  { id: 'dev-l4-event-trigger-rules', tier: 'developer', route: 'event-trigger-rules', layer: 4, label: 'L4 Event & Trigger Rules Engine', breadcrumb: 'Developer → Active Tuners → Event & Trigger Rules' },
 ];
 
 const DIRECT_STORE_ONLY_ROUTES = new Set<ActiveMenuRoute>([
   'host-training',
   'custom-play',
-  'online-warmup',
-  'additional-preview',
 ]);
 
 export function resolveRouteAuditInfo(

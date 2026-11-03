@@ -4,10 +4,9 @@ import type { Layer1MenuContextMode } from '../../../ui-core/recipes/layer1MenuC
 import { Layer2PlayRecipe } from '../../../ui-core/recipes/Layer2PlayRecipe';
 import { Layer2GarageRecipe } from '../../../ui-core/recipes/Layer2GarageRecipe';
 import { Layer2SettingsRecipe } from '../../../ui-core/recipes/Layer2SettingsRecipe';
-import { Layer2RoomHostControlRecipe, resolveOnlineSessionContextId } from '../../../ui-core/recipes/Layer2RoomHostControlRecipe';
+import { Layer2OnlineRoomControlRecipe, resolveOnlineSessionContextId } from '../../../ui-core/recipes/Layer2OnlineRoomControlRecipe';
 import { Layer3AudioEqRecipe } from '../../../ui-core/recipes/Layer3AudioEqRecipe';
 import { Layer3BallTrajectoryRecipe } from '../../../ui-core/recipes/Layer3BallTrajectoryRecipe';
-import { Layer3OnlineWarmupRecipe } from '../../../ui-core/recipes/Layer3OnlineWarmupRecipe';
 import { Layer3HostMatchRecipe } from '../../../ui-core/recipes/Layer3HostMatchRecipe';
 import { Layer3HostTrainingRecipe } from '../../../ui-core/recipes/Layer3HostTrainingRecipe';
 import { Layer3CustomPlayRecipe } from '../../../ui-core/recipes/Layer3CustomPlayRecipe';
@@ -19,7 +18,7 @@ import { Layer3TrainingRecipe } from '../../../ui-core/recipes/Layer3TrainingRec
 import { Layer3CameraRecipe } from '../../../ui-core/recipes/Layer3CameraRecipe';
 import { Layer3KeybindingsRecipe } from '../../../ui-core/recipes/Layer3KeybindingsRecipe';
 import { Layer3ExpMultiBotsRecipe } from '../../../ui-core/recipes/Layer3ExpMultiBotsRecipe';
-import { Layer3DevSubsystemIsolationRecipe } from '../../../ui-core/recipes/Layer3DevSubsystemIsolationRecipe';
+import { Layer3DevSandboxesRecipe } from '../../../ui-core/recipes/Layer3DevSandboxesRecipe';
 import { Layer3DevActiveTunersRecipe } from '../../../ui-core/recipes/Layer3DevActiveTunersRecipe';
 import { Layer3DevCalibratedPresetsRecipe } from '../../../ui-core/recipes/Layer3DevCalibratedPresetsRecipe';
 import { Layer3DevUnderDevelopmentRecipe } from '../../../ui-core/recipes/Layer3DevUnderDevelopmentRecipe';
@@ -116,7 +115,7 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
       {displayedRoute === 'main-menu' && (
         <Layer1MainMenuRecipe
           isLight={isLight}
-          contextMode={layer1ContextMode}
+          contextVariation={layer1ContextMode}
           touchMode={touchMode}
           touchInputAgent={touchInputAgent}
           onTouchInputAgentChange={setTouchInputAgent}
@@ -130,7 +129,6 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
             if (tab) setSettingsTab(tab);
             handleSelectRoute('settings');
           }}
-          onNavigatePreviews={() => handleSelectRoute('additional-preview')}
           onNavigateRoomControl={() => handleSelectRoute('room-host-control')}
           onNavigateTrainingConfig={() => handleSelectRoute('training')}
           onNavigateKickoffConfig={() => handleSelectRoute('kickoff-training')}
@@ -149,7 +147,7 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
             showToast('Exited Edit Training Pack Return to training pack browser');
           }}
           onOpenFloatingWindow={(id) => spawnPresetById(id)}
-          backgroundRenderPaused={bgRenderPaused}
+          menuPowerSave={bgRenderPaused ? 'extreme' : '30'}
         />
       )}
 
@@ -191,8 +189,8 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
           initialTab={settingsTab}
           activeTab={settingsTab}
           onTabChange={(tab) => setSettingsTab(tab)}
-          developerModeEnabled={visibilityTier === 'developer'}
-          onToggleDeveloperMode={(enabled) => {
+          developerMode={visibilityTier === 'developer'}
+          onDeveloperModeChange={(enabled) => {
             onSwitchTier?.(enabled ? 'developer' : 'user');
             if (enabled) {
               setSettingsTab('developer');
@@ -204,7 +202,6 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
           }}
           onSpawnDiagnosticWindow={(win) => floatingStore.spawnWindow(win)}
           onNavigateTrainingDetail={() => { setLastParentRoute('settings'); handleSelectRoute('training'); }}
-          onNavigateCameraSettings={() => { setLastParentRoute('settings'); handleSelectRoute('camera'); }}
           onNavigateCameraDetail={() => { setLastParentRoute('settings'); handleSelectRoute('camera'); }}
           onNavigateKeybindingsDetail={() => { setLastParentRoute('settings'); handleSelectRoute('keybindings'); }}
           onNavigateAudioDetail={() => { setLastParentRoute('settings'); handleSelectRoute('audio-eq'); }}
@@ -214,25 +211,18 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
             handleSelectRoute('trajectory');
             showToast('Enter Submenu: Ball Trajectory Predictor (support TAB Side collapsed real-time preview)');
           }}
-          onNavigateTrajectory={() => {
-            setLastParentRoute('settings');
-            setLiveAnimPhase('expanded');
-            handleSelectRoute('trajectory');
-            showToast('Enter Submenu: Ball Trajectory Predictor (support TAB Side collapsed real-time preview)');
-          }}
-          onNavigateDevSandboxes={() => { setLastParentRoute('settings'); handleSelectRoute('dev-subsystem-isolation'); }}
-          onNavigateDevSubsystemIsolation={() => { setLastParentRoute('settings'); handleSelectRoute('dev-subsystem-isolation'); }}
+          onNavigateDevSandboxes={() => { setLastParentRoute('settings'); handleSelectRoute('dev-sandboxes'); }}
           onNavigateExpMultiBots={() => { setLastParentRoute('settings'); handleSelectRoute('exp-multi-bots'); }}
           onNavigateDevActiveTuners={() => { setLastParentRoute('settings'); handleSelectRoute('dev-active-tuners'); }}
           onNavigateDevCalibratedPresets={() => { setLastParentRoute('settings'); handleSelectRoute('dev-calibrated-presets'); }}
           onNavigateDevUnderDevelopment={() => { setLastParentRoute('settings'); handleSelectRoute('dev-under-development'); }}
           onNavigateAdvancedAudio={() => { setLastParentRoute('settings'); handleSelectRoute('advanced-audio'); }}
-          onNavigateEventAndTriggerer={() => { setLastParentRoute('settings'); handleSelectRoute('event-trigger-rules'); }}
+          onNavigateEventTriggerRules={() => { setLastParentRoute('settings'); handleSelectRoute('event-trigger-rules'); }}
         />
       )}
 
       {displayedRoute === 'room-host-control' && (
-        <Layer2RoomHostControlRecipe
+        <Layer2OnlineRoomControlRecipe
           isLight={isLight}
           developerMode={visibilityTier === 'developer'}
           sessionContext={resolveOnlineSessionContextId(layer1ContextMode)}
@@ -258,13 +248,6 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
         <Layer3AudioEqRecipe
           isLight={isLight}
           developerMode={visibilityTier === 'developer'}
-          onBack={goBack}
-        />
-      )}
-
-      {displayedRoute === 'online-warmup' && (
-        <Layer3OnlineWarmupRecipe
-          isLight={isLight}
           onBack={goBack}
         />
       )}
@@ -419,20 +402,15 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
         />
       )}
 
-      {displayedRoute === 'dev-subsystem-isolation' && (
-        <Layer3DevSubsystemIsolationRecipe
+      {displayedRoute === 'dev-sandboxes' && (
+        <Layer3DevSandboxesRecipe
           isLight={isLight}
           onBack={goBack}
           onNavigateExpMultiBots={() => {
-            setLastParentRoute('dev-subsystem-isolation');
+            setLastParentRoute('dev-sandboxes');
             handleSelectRoute('exp-multi-bots');
           }}
           onEnterBench={(tabId) =>
-            tabId === 'exp-multi-bots'
-              ? handleSelectRoute('exp-multi-bots')
-              : spawnPresetById('subsystem-isolation-lab', tabId)
-          }
-          onLaunchIsolationTab={(tabId) =>
             tabId === 'exp-multi-bots'
               ? handleSelectRoute('exp-multi-bots')
               : spawnPresetById('subsystem-isolation-lab', tabId)
@@ -445,8 +423,7 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
           isLight={isLight}
           onBack={goBack}
           onNavigateAdvancedAudio={() => handleSelectRoute('advanced-audio')}
-          onNavigateEventAndTriggerer={() => handleSelectRoute('event-trigger-rules')}
-          onNavigateEventTriggerer={() => handleSelectRoute('event-trigger-rules')}
+          onNavigateEventTriggerRules={() => handleSelectRoute('event-trigger-rules')}
           onAddPresetWindow={handleAddPresetWindow}
           activeWindows={windows}
           onClosePresetWindow={closeWindow}

@@ -11,7 +11,7 @@ import {
   type CameraSettingsPresetId,
 } from '../../../ui-core/stores/cameraSettingsStyleStore';
 import { useQuickNotificationStore } from '../../../ui-core/stores/quickNotificationStore';
-import { dispatchOnlineRoomErrorNotification } from '../../../ui-core/recipes/Layer3OnlineWarmupRecipe';
+import { dispatchOnlineRoomErrorNotification } from '../../../ui-core/recipes/online/onlineRoomErrorNotification';
 import type { ShowcaseTab } from '../../sidebarNavConfig';
 import {
   type ActiveMenuRoute,
@@ -132,9 +132,9 @@ export const MenuLayerDeepRouteRenderer: React.FC<MenuLayerDeepRouteRendererProp
               ]
             : [
                 {
-                  route: 'dev-subsystem-isolation' as const,
+                  route: 'dev-sandboxes' as const,
                   label: 'Sandboxes & Isolation (6-Tab Isolation Chamber)',
-                  panel: 'layer3-dev-subsystem-isolation' as const,
+                  panel: 'layer3-dev-sandboxes' as const,
                 },
                 {
                   route: 'exp-multi-bots' as const,

@@ -188,7 +188,7 @@ function analyzePropsInterfaces(content, relPath) {
     relPath.startsWith('src/ui-core/hud/') ||
     relPath.startsWith('src/ui-core/navigation/') ||
     /^src\/ui-core\/recipes\/Layer[1-5]\w+Recipe\.tsx$/.test(relPath) ||
-    /^src\/ui-core\/recipes\/online\/\w+RoomRecipe\.tsx$/.test(relPath) ||
+    /^src\/ui-core\/recipes\/online\/\w+(RoomRecipe|SubView)\.tsx$/.test(relPath) ||
     /^src\/ui-core\/panels\/(user|dev)\/\w+FloatingWindow\.tsx$/.test(relPath);
 
   if (isRootContractOrPrimitive) {

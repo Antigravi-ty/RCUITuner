@@ -53,7 +53,7 @@ export type ShowcaseTab =
   | 'charts-curves'
   | 'viewport-safe-area'
   | 'loading-preview'
-  | 'name-plate-tuner'
+  | 'name-tag-tuner'
   // L6. Patterns (Scene templates and reference recipes)
   | 'recipes'
   | 'post-match-menus'
@@ -106,7 +106,7 @@ export const PYRAMID_LAYERS: Record<string, SidebarLayerMeta> = {
   L5: {
     code: 'L5',
     title: 'Specials Game and telemetry exclusive',
-    rule: '5A HUD · 5B Chart · 5C Viewport · 5D Loading · 5E Critical Alert · 5F State Flow · 5G Takeover · 5H Name Plate',
+    rule: '5A HUD · 5B Chart · 5C Viewport · 5D Loading · 5E Critical Alert · 5F State Flow · 5G Takeover · 5H Name Tag',
     badgeColor: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30',
   },
   L6: {
@@ -269,8 +269,8 @@ export const SIDEBAR_NAV_ITEMS: SidebarNavItem[] = [
     layer: 'L5',
   },
   {
-    id: 'name-plate-tuner',
-    label: '5H · Multiplayer Name Plate & Boost',
+    id: 'name-tag-tuner',
+    label: '5H · Multiplayer Name Tag & Boost',
     icon: <Tag className="h-4 w-4 text-teal-400" />,
     layer: 'L5',
   },

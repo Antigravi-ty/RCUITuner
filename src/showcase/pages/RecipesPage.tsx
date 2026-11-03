@@ -16,7 +16,7 @@ import { Button } from '../../ui-core/primitives/Button';
 import { useMenuLayoutStore } from '../../ui-core/stores/menuLayoutStore';
 import { readUrlParams, updateUrlParams } from '../stores/urlSync';
 import { useQuickNotificationStore } from '../../ui-core/stores/quickNotificationStore';
-import { dispatchOnlineRoomErrorNotification } from '../../ui-core/recipes/Layer3OnlineWarmupRecipe';
+import { dispatchOnlineRoomErrorNotification } from '../../ui-core/recipes/online/onlineRoomErrorNotification';
 import { PageJumpDirectory, type JumpDirectoryItem } from '../PageJumpDirectory';
 import {
   RECIPES_JUMP_ITEMS,

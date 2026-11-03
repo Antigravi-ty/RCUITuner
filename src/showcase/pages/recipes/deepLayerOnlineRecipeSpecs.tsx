@@ -17,9 +17,9 @@ export interface DeepLayerRecipeSpec {
   renderPreview: (isLight: boolean) => React.ReactNode;
 }
 
-const Layer2RoomHostControlRecipe = lazy(() =>
-  import('../../../ui-core/recipes/Layer2RoomHostControlRecipe').then((m) => ({
-    default: m.Layer2RoomHostControlRecipe,
+const Layer2OnlineRoomControlRecipe = lazy(() =>
+  import('../../../ui-core/recipes/Layer2OnlineRoomControlRecipe').then((m) => ({
+    default: m.Layer2OnlineRoomControlRecipe,
   }))
 );
 const Layer3HostTrainingRecipe = lazy(() =>
@@ -78,7 +78,7 @@ export const DEEP_LAYER_ONLINE_AND_USER_RECIPE_SPECS: DeepLayerRecipeSpec[] = [
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 w-full items-start">
         {LAYER2_ROOM_HOST_CONTROL_STATES.map((st, idx) => (
           <div key={st.id} className="flex flex-col gap-2 items-center w-full">
-            <Layer2RoomHostControlRecipe
+            <Layer2OnlineRoomControlRecipe
               isLight={isLight}
               {...st.props}
               onBack={noop}
@@ -88,8 +88,8 @@ export const DEEP_LAYER_ONLINE_AND_USER_RECIPE_SPECS: DeepLayerRecipeSpec[] = [
               label={st.label}
               description={st.description}
               referenceCode="6A.8"
-              componentName={st.componentName || 'Layer2RoomHostControlRecipe'}
-              sourceFile={st.sourceFile || 'src/ui-core/recipes/Layer2RoomHostControlRecipe.tsx'}
+              componentName={st.componentName || 'Layer2OnlineRoomControlRecipe'}
+              sourceFile={st.sourceFile || 'src/ui-core/recipes/Layer2OnlineRoomControlRecipe.tsx'}
               subViewFile={st.subViewFile}
               stateId={st.id}
               activeProps={st.props}

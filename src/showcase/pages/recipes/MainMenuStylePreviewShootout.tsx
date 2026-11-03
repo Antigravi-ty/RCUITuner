@@ -99,7 +99,7 @@ export const MainMenuStylePreviewShootout: React.FC<
             }}
             className="flex justify-center py-2"
           >
-            <Layer1MainMenuRecipe isLight={isLight} contextMode={activeCtx} />
+            <Layer1MainMenuRecipe isLight={isLight} contextVariation={activeCtx} />
           </div>
         </div>
       )}
@@ -176,7 +176,7 @@ export const MainMenuStylePreviewShootout: React.FC<
               >
                 <Layer1MainMenuRecipe
                   isLight={isLight}
-                  contextMode={activeCtx}
+                  contextVariation={activeCtx}
                   styleVariant="large-clean-row"
                   styleParams={{
                     ...store,
@@ -239,7 +239,7 @@ export const MainMenuStylePreviewShootout: React.FC<
               >
                 <Layer1MainMenuRecipe
                   isLight={isLight}
-                  contextMode={activeCtx}
+                  contextVariation={activeCtx}
                   styleVariant="large-clean-row"
                   styleParams={{
                     ...store,
@@ -299,7 +299,7 @@ export const MainMenuStylePreviewShootout: React.FC<
               >
                 <Layer1MainMenuRecipe
                   isLight={isLight}
-                  contextMode={activeCtx}
+                  contextVariation={activeCtx}
                   styleVariant="classic-descriptive-row"
                   styleParams={{
                     ...store,

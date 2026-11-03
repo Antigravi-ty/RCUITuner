@@ -8,26 +8,26 @@ import { NameTagTunerFloatingWindow } from '../../ui-core/panels/dev/NameTagTune
 import { setNameTagRuntimeState } from '../../ui-core/stores/nameTagTunerStore';
 import type { ArenaLightingPreset } from '../ArenaBackdrop';
 import { PageJumpDirectory, type JumpDirectoryItem } from '../PageJumpDirectory';
-import { NamePlateModeShootoutSection } from './name-plate-tuner/NamePlateModeShootoutSection';
+import { NameTagModeShootoutSection } from './name-tag-tuner/NameTagModeShootoutSection';
 import {
   buildKickoffCars,
   KICKOFF_SLOT_PAIRS,
-  NamePlateStageCanvas,
-} from './name-plate-tuner/NamePlateStageCanvas';
+  NameTagStageCanvas,
+} from './name-tag-tuner/NameTagStageCanvas';
 
 const JUMP_ITEMS: JumpDirectoryItem[] = [
   {
     code: '5H.1',
-    componentName: 'NamePlateModeShootoutSection',
+    componentName: 'NameTagModeShootoutSection',
     label: '4 Boost Modes & Kickoff Ball Occlusion Shootout',
-    targetId: 'sec-nameplate-shootout',
+    targetId: 'sec-nametag-shootout',
     tag: '4 Modes + Ball Mask',
   },
   {
     code: '5H.2',
     componentName: 'NameTagTunerFloatingWindow',
     label: 'Shared NameTagTunerFloatingWindow Control Slot (Direct Reuse)',
-    targetId: 'sec-nameplate-shared-slot',
+    targetId: 'sec-nametag-shared-slot',
     tag: 'Zero Duplication',
   },
 ];
@@ -42,7 +42,7 @@ const KICKOFF_COMBINATIONS: Array<[number, number, number]> = [
 
 const ARENA_PRESETS: ArenaLightingPreset[] = ['night', 'twilight', 'daylight', 'flow'];
 
-export const NamePlateTunerPage: React.FC<{ isLight?: boolean }> = ({ isLight = false }) => {
+export const NameTagTunerPage: React.FC<{ isLight?: boolean }> = ({ isLight = false }) => {
   const [config, setConfig] = useState(getNameTagConfig);
   const [arenaPreset, setArenaPreset] = useState<ArenaLightingPreset>('night');
   const [stageHeight, setStageHeight] = useState(330);
@@ -147,7 +147,7 @@ export const NamePlateTunerPage: React.FC<{ isLight?: boolean }> = ({ isLight = 
                 fontFamily: 'var(--font-mono)',
               }}
             >
-              5H · MULTIPLAYER NAME PLATE & BOOST TUNER
+              5H · MULTIPLAYER NAME TAG & BOOST TUNER
             </span>
 
             {/* POV Selector Pills */}
@@ -309,8 +309,8 @@ export const NamePlateTunerPage: React.FC<{ isLight?: boolean }> = ({ isLight = 
           </div>
         </div>
 
-        {/* Interactive 3D Kickoff + 2D Name Plate Overlay Stage */}
-        <NamePlateStageCanvas
+        {/* Interactive 3D Kickoff + 2D Name Tag Overlay Stage */}
+        <NameTagStageCanvas
           config={config}
           cars={cars}
           focusedCarIndex={focusedCarIndex}
@@ -325,15 +325,15 @@ export const NamePlateTunerPage: React.FC<{ isLight?: boolean }> = ({ isLight = 
 
       <PageJumpDirectory
         layerTag="L5H · SPECIALS"
-        title="5H · Multiplayer Name Plate & Boost Tuner"
-        subtitle="Dedicated calibration workbench for 2D multiplayer name plates, 4 boost progress modes, and kickoff ball entity occlusion"
+        title="5H · Multiplayer Name Tag & Boost Tuner"
+        subtitle="Dedicated calibration workbench for 2D multiplayer name tags, 4 boost progress modes, and kickoff ball entity occlusion"
         items={JUMP_ITEMS}
         isLight={isLight}
       />
 
       {/* Section 01: 4 Boost Indicator Modes & Ball Occlusion Shootout */}
       <section
-        id="sec-nameplate-shootout"
+        id="sec-nametag-shootout"
         className={`rounded-2xl border p-6 flex flex-col gap-4 ${
           isLight ? 'bg-neutral-900 text-neutral-100 border-neutral-800' : 'bg-neutral-900/75 border-neutral-800'
         }`}
@@ -350,7 +350,7 @@ export const NamePlateTunerPage: React.FC<{ isLight?: boolean }> = ({ isLight = 
           </div>
         </div>
 
-        <NamePlateModeShootoutSection
+        <NameTagModeShootoutSection
           config={config}
           onSelectMode={(mode) => updateNameTagConfig({ boostIndicatorMode: mode })}
           onUpdateConfig={(patch) => updateNameTagConfig(patch)}
@@ -359,7 +359,7 @@ export const NamePlateTunerPage: React.FC<{ isLight?: boolean }> = ({ isLight = 
 
       {/* Section 02: Directly Reused NameTagTunerFloatingWindow Content Slot */}
       <section
-        id="sec-nameplate-shared-slot"
+        id="sec-nametag-shared-slot"
         className={`rounded-2xl border p-6 flex flex-col gap-4 ${
           isLight ? 'bg-white border-neutral-200/90 shadow-xs' : 'bg-neutral-900/75 border-neutral-800'
         }`}

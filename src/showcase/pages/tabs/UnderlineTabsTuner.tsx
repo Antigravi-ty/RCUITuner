@@ -150,8 +150,8 @@ export const UnderlineTabsTuner: React.FC<UnderlineTabsTunerProps> = React.memo(
 
   const garageDemoTabs: TabItem[] = [
     { id: 'car', label: 'Car', icon: <Car className="h-4 w-4" /> },
-    { id: 'colour', label: 'Paint', icon: <Palette className="h-4 w-4" /> },
-    { id: 'materials', label: 'Loadout', icon: <Sparkles className="h-4 w-4" /> },
+    { id: 'paint', label: 'Paint', icon: <Palette className="h-4 w-4" /> },
+    { id: 'loadout', label: 'Loadout', icon: <Sparkles className="h-4 w-4" /> },
     { id: 'anthem', label: 'Anthem', icon: <Music className="h-4 w-4" /> },
     { id: 'sync', label: 'Sync', icon: <CloudSync className="h-4 w-4" /> },
   ];

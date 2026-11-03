@@ -19,12 +19,12 @@ import {
   CLASSIC_BALL_RADIUS,
   KICKOFF_SLOT_PAIRS,
   projectWorldPoint,
-  renderNamePlate3DScenePass,
-  resolveNamePlateCameraBasis,
+  renderNameTag3DScenePass,
+  resolveNameTagCameraBasis,
   type KickoffCarSpawn,
   type KickoffSlotPair,
   type Vec3,
-} from './namePlateStageProjectionMath';
+} from './nameTagStageProjectionMath';
 
 export {
   buildKickoffCars,
@@ -34,7 +34,7 @@ export {
   type KickoffSlotPair,
 };
 
-export interface NamePlateStageCanvasProps {
+export interface NameTagStageCanvasProps {
   config: NameTagConfig;
   cars: KickoffCarSpawn[];
   focusedCarIndex: number | null;
@@ -46,7 +46,7 @@ export interface NamePlateStageCanvasProps {
   stageHeight: number;
 }
 
-export const NamePlateStageCanvas: React.FC<NamePlateStageCanvasProps> = ({
+export const NameTagStageCanvas: React.FC<NameTagStageCanvasProps> = ({
   config,
   cars,
   focusedCarIndex,
@@ -111,8 +111,8 @@ export const NamePlateStageCanvas: React.FC<NamePlateStageCanvasProps> = ({
           ? cars.find((c) => c.carIndex === focusedCarIndex) ?? null
           : null;
 
-      const camBasis = resolveNamePlateCameraBasis(povCar, ballWorld, cameraFovDeg);
-      const { ballProj, ballRadiusPx, halfTan, focalPx } = renderNamePlate3DScenePass(
+      const camBasis = resolveNameTagCameraBasis(povCar, ballWorld, cameraFovDeg);
+      const { ballProj, ballRadiusPx, halfTan, focalPx } = renderNameTag3DScenePass(
         sceneCtx,
         width,
         height,
@@ -123,7 +123,7 @@ export const NamePlateStageCanvas: React.FC<NamePlateStageCanvasProps> = ({
         config,
       );
 
-      // Build 2D Name Plate Cards & Telemetry
+      // Build 2D Name Tag Cards & Telemetry
       const elapsedSec = (nowMs - startMs) / 1000;
       const visibleCards2D: NameTagPillRenderCard2D[] = [];
       const telemetryCars: NameTagCarTelemetry[] = [];

@@ -180,9 +180,9 @@ const PYRAMID_SPEC: PyramidRow[] = [
         items: 'TakeoverCountdownHUD & TakeoverVignetteOverlay (HudAnchorStage bottom-center upward offset · Stationary Top Regular + 3-2-1 Bottom Thin Scale Pop · replacing-in Signal + 4-Edge Vignette Curve)',
       },
       {
-        label: '5H · Multiplayer Name Plate & Boost',
-        tab: 'name-plate-tuner',
-        items: 'NamePlateTunerPage & NameTagPillRenderer (4 Boost Modes: Bottom-Up Fill / Left-Right Fill / Sunset Circle / Border Only · Analytical 2D Ball Entity Occlusion · Direct NameTagTunerFloatingWindow Content Reuse)',
+        label: '5H · Multiplayer Name Tag & Boost',
+        tab: 'name-tag-tuner',
+        items: 'NameTagTunerPage & NameTagPillRenderer (4 Boost Modes: Bottom-Up Fill / Left-Right Fill / Sunset Circle / Border Only · Analytical 2D Ball Entity Occlusion · Direct NameTagTunerFloatingWindow Content Reuse)',
       },
     ],
   },

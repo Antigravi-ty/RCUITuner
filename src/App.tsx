@@ -32,7 +32,7 @@ const ChartsAndCurvesPage = lazy(() => import('./showcase/pages/ChartsAndCurvesP
 const ComposableNestingPage = lazy(() => import('./showcase/pages/ComposableNestingPage').then((m) => ({ default: m.ComposableNestingPage })));
 const FoundationsPage = lazy(() => import('./showcase/pages/FoundationsPage').then((m) => ({ default: m.FoundationsPage })));
 const ViewportSafeAreaPage = lazy(() => import('./showcase/pages/ViewportSafeAreaPage').then((m) => ({ default: m.ViewportSafeAreaPage })));
-const NamePlateTunerPage = lazy(() => import('./showcase/pages/NamePlateTunerPage').then((m) => ({ default: m.NamePlateTunerPage })));
+const NameTagTunerPage = lazy(() => import('./showcase/pages/NameTagTunerPage').then((m) => ({ default: m.NameTagTunerPage })));
 import { SafeAreaHud } from './ui-core/viewport/SafeAreaHud';
 import { useViewportStore, viewportStore } from './ui-core/stores/viewportStore';
 import { DialogueStackContainer } from './ui-core/compounds/Dialogue';
@@ -308,7 +308,7 @@ export const App: React.FC = () => {
                   {activeTab === 'hud-elements' && <HudElementsPage isLight={isLight} />}
                   {activeTab === 'center-upper-info' && <CenterUpperInfoPage isLight={isLight} />}
                   {activeTab === 'takeover' && <TakeoverPage isLight={isLight} />}
-                  {activeTab === 'name-plate-tuner' && <NamePlateTunerPage isLight={isLight} />}
+                  {activeTab === 'name-tag-tuner' && <NameTagTunerPage isLight={isLight} />}
                   {activeTab === 'stats-event-feed' && <StatsEventFeedPage isLight={isLight} />}
                   {activeTab === 'temporal-overlay' && <TemporalOverlayPage isLight={isLight} />}
                   {activeTab === 'viewport-safe-area' && <ViewportSafeAreaPage isLight={isLight} />}

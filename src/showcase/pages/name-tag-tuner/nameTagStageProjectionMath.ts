@@ -214,7 +214,7 @@ export function buildCameraBasis(pos: Vec3, target: Vec3, fovDeg: number): Camer
   return { pos, target, forward, right, up, fovDeg };
 }
 
-export function resolveNamePlateCameraBasis(
+export function resolveNameTagCameraBasis(
   povCar: KickoffCarSpawn | null,
   ballWorld: Vec3,
   cameraFovDeg: number,
@@ -279,7 +279,7 @@ export function projectWorldPoint(
   };
 }
 
-export function renderNamePlate3DScenePass(
+export function renderNameTag3DScenePass(
   sceneCtx: CanvasRenderingContext2D,
   width: number,
   height: number,

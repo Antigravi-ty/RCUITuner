@@ -170,7 +170,7 @@ export const NavigationPage: React.FC<{ isLight?: boolean }> = ({ isLight = fals
               if (tab) setTargetSettingsTab(tab);
               navigateTo('settings');
             }}
-            backgroundRenderPaused={bgRenderPaused}
+            menuPowerSave={bgRenderPaused ? 'extreme' : '30'}
           />
         )}
 
@@ -183,7 +183,7 @@ export const NavigationPage: React.FC<{ isLight?: boolean }> = ({ isLight = fals
           />
         )}
 
-        {/* Layer 2: Garage Loadout (Car, Colour, Anthem, Player Name) */}
+        {/* Layer 2: Garage Loadout (Car, Paint, Loadout, Anthem, Sync) */}
         {currentRoute === 'garage' && (
           <Layer2GarageRecipe
             isLight={isLight}
@@ -191,14 +191,12 @@ export const NavigationPage: React.FC<{ isLight?: boolean }> = ({ isLight = fals
           />
         )}
 
-        {/* Layer 2: Settings (Gameplay, Camera, Controls, Interface, Video, Audio, Chat, Extra, Advanced, Developer) */}
+        {/* Layer 2: Settings (Gameplay, Audio, Display, Advanced, Developer) */}
         {currentRoute === 'settings' && (
           <Layer2SettingsRecipe
             isLight={isLight}
             onBack={goBack}
             initialTab={targetSettingsTab}
-            backgroundRenderPaused={bgRenderPaused}
-            onToggleBackgroundRender={setBgRenderPaused}
             onNavigateAudioDetail={() => navigateTo('audio-eq')}
             onNavigateTrajectoryDetail={() => navigateTo('trajectory')}
           />

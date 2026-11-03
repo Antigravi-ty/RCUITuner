@@ -105,7 +105,6 @@ export const EdgeInspectorSceneOverlayAndMenu: React.FC<
             {escMenuRoute === 'main-menu' && (
               <Layer1MainMenuRecipe
                 isLight={isLight}
-                showAdditionalPreviews={false}
                 onResume={() => {
                   setEscMenuRoute('none');
                   showToast('Resume: Back 3D Training pack edit scene');

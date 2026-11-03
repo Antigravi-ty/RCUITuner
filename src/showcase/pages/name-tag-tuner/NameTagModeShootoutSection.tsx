@@ -7,7 +7,7 @@ import {
   drawNameTagPillCard2D,
   renderNameTagOverlayPass2D,
 } from '../../../ui-core/config/nameTagPillRenderer';
-import { buildSinglePillCard2D } from './NamePlateStageCanvas';
+import { buildSinglePillCard2D } from './NameTagStageCanvas';
 
 interface ModeDescriptor {
   mode: NameTagBoostIndicatorMode;
@@ -195,7 +195,7 @@ const BallOcclusionSampleCanvas: React.FC<{
     ctx.stroke();
     ctx.restore();
 
-    // Composite the 2D Name Plate overlay pass on top
+    // Composite the 2D Name Tag overlay pass on top
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.drawImage(offscreen, 0, 0);
   }, [config, enabled, opacity]);
@@ -229,13 +229,13 @@ const BallOcclusionSampleCanvas: React.FC<{
   );
 };
 
-export interface NamePlateModeShootoutSectionProps {
+export interface NameTagModeShootoutSectionProps {
   config: NameTagConfig;
   onSelectMode: (mode: NameTagBoostIndicatorMode) => void;
   onUpdateConfig: (patch: Partial<NameTagConfig>) => void;
 }
 
-export const NamePlateModeShootoutSection: React.FC<NamePlateModeShootoutSectionProps> = ({
+export const NameTagModeShootoutSection: React.FC<NameTagModeShootoutSectionProps> = ({
   config,
   onSelectMode,
   onUpdateConfig,

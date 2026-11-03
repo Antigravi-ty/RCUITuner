@@ -53,17 +53,10 @@ const ROUTE_TO_6A_RECIPE_TARGET: Record<ActiveMenuRoute, InspectorJumpTarget> = 
     tab: 'recipes',
     targetId: 'recipe-6a-4-settings',
   },
-  'additional-preview': {
-    code: '6A.4',
-    componentName: 'Layer2SettingsRecipe',
-    label: '6A.4 Settings Panel Tuning',
-    tab: 'recipes',
-    targetId: 'recipe-6a-4-settings',
-  },
   'room-host-control': {
     code: '6A.8',
-    componentName: 'Layer2RoomHostControlRecipe',
-    label: '6A.8 Host console tuning',
+    componentName: 'Layer2OnlineRoomControlRecipe',
+    label: '6A.8 Online room control console tuning',
     tab: 'recipes',
     targetId: 'recipe-6a-8-host-ctrl',
   },
@@ -80,13 +73,6 @@ const ROUTE_TO_6A_RECIPE_TARGET: Record<ActiveMenuRoute, InspectorJumpTarget> = 
     label: '6A.12C Trajectory prediction panel tuning',
     tab: 'recipes',
     targetId: 'recipe-6a-12c-trajectory',
-  },
-  'online-warmup': {
-    code: '6A.6A',
-    componentName: 'Layer3HostMatchRecipe',
-    label: '6A.6A Online lobby page tuning',
-    tab: 'recipes',
-    targetId: 'recipe-6a-6a-host',
   },
   'host-match': {
     code: '6A.6A',
@@ -165,10 +151,10 @@ const ROUTE_TO_6A_RECIPE_TARGET: Record<ActiveMenuRoute, InspectorJumpTarget> = 
     tab: 'recipes',
     targetId: 'recipe-6a-13-multibots',
   },
-  'dev-subsystem-isolation': {
+  'dev-sandboxes': {
     code: '6A.20',
-    componentName: 'Layer3DevSubsystemIsolationRecipe',
-    label: '6A.20 Subsystem isolation chamber and sandbox panel tuning',
+    componentName: 'Layer3DevSandboxesRecipe',
+    label: '6A.20 Sandboxes and isolation chamber panel tuning',
     tab: 'recipes',
     targetId: 'recipe-6a-20-dev-isolation',
   },
@@ -426,7 +412,7 @@ export function resolveNodePathInspectorLinks(
         label: 'SelectableCard (Vehicle preset selection card)',
         tab: 'cards',
       });
-    } else if (garageTab === 'colour') {
+    } else if (garageTab === 'paint') {
       garageElements.unshift({
         code: 'L3.5',
         componentName: 'PriorityQueueList',
@@ -434,7 +420,7 @@ export function resolveNodePathInspectorLinks(
         tab: 'composable-nesting',
         targetId: 'l3-5-priority-event-matrix',
       });
-    } else if (garageTab === 'materials') {
+    } else if (garageTab === 'loadout') {
       garageElements.unshift(
         {
           code: 'L3.3',
@@ -506,7 +492,7 @@ export function resolveNodePathInspectorLinks(
 
   if (
     currentRoute === 'training' ||
-    currentRoute === 'dev-subsystem-isolation' ||
+    currentRoute === 'dev-sandboxes' ||
     currentRoute === 'dev-active-tuners' ||
     currentRoute === 'dev-calibrated-presets'
   ) {

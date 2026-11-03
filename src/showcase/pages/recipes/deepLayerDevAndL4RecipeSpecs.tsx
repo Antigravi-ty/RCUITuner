@@ -6,9 +6,9 @@ const Layer3ExpMultiBotsRecipe = lazy(() =>
     default: m.Layer3ExpMultiBotsRecipe,
   }))
 );
-const Layer3DevSubsystemIsolationRecipe = lazy(() =>
-  import('../../../ui-core/recipes/Layer3DevSubsystemIsolationRecipe').then((m) => ({
-    default: m.Layer3DevSubsystemIsolationRecipe,
+const Layer3DevSandboxesRecipe = lazy(() =>
+  import('../../../ui-core/recipes/Layer3DevSandboxesRecipe').then((m) => ({
+    default: m.Layer3DevSandboxesRecipe,
   }))
 );
 const Layer3DevActiveTunersRecipe = lazy(() =>
@@ -104,11 +104,11 @@ export const DEEP_LAYER_DEV_AND_L4_RECIPE_SPECS: DeepLayerRecipeSpec[] = [
     id: 'recipe-6a-20-dev-isolation',
     code: '6A.20',
     badgeColor: 'amber',
-    title: 'Layer 3 Subsystem Isolation Lab (6 Physics & AI Independent subsystem verification sandbox)',
-    panelId: 'layer3-dev-subsystem-isolation',
-    tunerLabel: 'Layer 3 Subsystem Isolation Lab (6-Tab Launcher)',
+    title: 'Layer 3 Sandboxes & Isolation Lab (6 Physics & AI Independent subsystem verification sandbox)',
+    panelId: 'layer3-dev-sandboxes',
+    tunerLabel: 'Layer 3 Sandboxes & Isolation Lab (6-Tab Launcher)',
     recommendation: '6 Physics & AI Independent subsystem verification sandbox',
-    renderPreview: (isLight) => <Layer3DevSubsystemIsolationRecipe isLight={isLight} onBack={noop} />,
+    renderPreview: (isLight) => <Layer3DevSandboxesRecipe isLight={isLight} onBack={noop} />,
   },
   {
     id: 'recipe-6a-21-dev-tuners',

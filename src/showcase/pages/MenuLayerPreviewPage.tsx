@@ -76,15 +76,14 @@ export const MenuLayerPreviewPage: React.FC<MenuLayerPreviewPageProps> = ({
     const p = readUrlParams();
     return p.route !== 'garage' && p.subtab ? p.subtab : 'gameplay';
   }, 'settingsTab');
-  const [rawGarageTab, setGarageTab] = useState<string>(() => {
+  const [garageTab, setGarageTab] = useState<string>(() => {
     const p = readUrlParams();
     return p.route === 'garage' && p.subtab ? p.subtab : 'car';
   }, 'garageTab');
-  const garageTab = rawGarageTab === 'player-name' ? 'sync' : rawGarageTab;
   const [bgRenderPaused, setBgRenderPaused] = useState<boolean>(true, 'bgRenderPaused');
   const [feedbackToast, setFeedbackToast] = useLocalState<string | null>(null);
   const [showInlineTuner, setShowInlineTuner] = useLocalState<boolean>(false);
-  const [lastParentRoute, setLastParentRoute] = useState<ActiveMenuRoute>('additional-preview', 'lastParentRoute');
+  const [lastParentRoute, setLastParentRoute] = useState<ActiveMenuRoute>('main-menu', 'lastParentRoute');
   const [routeHistory, setRouteHistory] = useState<ActiveMenuRoute[]>([], 'routeHistory');
   const [liveAnimPhase, setLiveAnimPhase] = useState<LivePreviewAnimPhase>('expanded', 'liveAnimPhase');
   const [isPillHovered, setIsPillHovered] = useLocalState(false);
