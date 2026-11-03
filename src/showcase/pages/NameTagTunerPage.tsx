@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { NameTagTunerFloatingWindow } from '../../ui-core/panels/dev/NameTagTunerFloatingWindow';
 import {
   getNameTagConfig,
+  setNameTagRuntimeState,
   subscribeNameTagConfig,
   updateNameTagConfig,
-} from '../../ui-core/config/nameTagConfig';
-import { NameTagTunerFloatingWindow } from '../../ui-core/panels/dev/NameTagTunerFloatingWindow';
-import { setNameTagRuntimeState } from '../../ui-core/stores/nameTagTunerStore';
+} from '../../ui-core/stores/nameTagTunerStore';
 import type { ArenaLightingPreset } from '../ArenaBackdrop';
 import { PageJumpDirectory, type JumpDirectoryItem } from '../PageJumpDirectory';
 import { NameTagModeShootoutSection } from './name-tag-tuner/NameTagModeShootoutSection';
