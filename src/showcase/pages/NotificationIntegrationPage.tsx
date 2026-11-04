@@ -199,7 +199,7 @@ export const NotificationIntegrationPage: React.FC<{ isLight?: boolean }> = ({ i
     const fullErrorDetails = `[WebRTC Negotiation Exception]
 Status: ICE_CONNECTION_FAILED
 Target Room: 8942-US-WEST
-Signaling Server: wss://signaling.car-soccer.antigravity.dev
+Signaling Server: wss://signaling.car-ball.antigravity.dev
 Candidate Pair: 192.168.1.104:54321 <-> 104.28.19.4:443 (STUN Timeout 10000ms)
 Details: Remote host failed to answer SDP offer within 10-second deadline.
 Trace:
