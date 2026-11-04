@@ -348,14 +348,16 @@ export const FloatingWindowsSimulationPage: React.FC<FloatingWindowsSimulationPa
         currentIndex={currentIndex}
         activeTierWindows={activeTierWindows}
         currentPreset={currentPreset}
-        containerPreset={containerPreset}
-        setContainerPreset={setContainerPreset}
-        boundaryLocked={boundaryLocked}
-        effectiveBoundaryW={effectiveBoundaryW}
-        effectiveBoundaryH={effectiveBoundaryH}
-        setManualBoundarySize={setManualBoundarySize}
-        handleChangeManualBoundarySize={handleChangeManualBoundarySize}
-        handleToggleBoundaryLock={handleToggleBoundaryLock}
+        boundary={{
+          containerPreset,
+          setContainerPreset,
+          boundaryLocked,
+          effectiveBoundaryW,
+          effectiveBoundaryH,
+          setManualBoundarySize,
+          handleChangeManualBoundarySize,
+          handleToggleBoundaryLock,
+        }}
         handleSwitchTier={handleSwitchTier}
         handleStepWindow={handleStepWindow}
         totalCount={totalCount}

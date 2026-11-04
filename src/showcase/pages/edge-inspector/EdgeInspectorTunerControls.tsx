@@ -189,6 +189,19 @@ export const EdgeInspectorSceneOverlayAndMenu: React.FC<
   );
 };
 
+export interface EdgeInspectorDrawerGeometryControls {
+  drawerSide: EdgeDrawerSide;
+  setDrawerSide: (side: EdgeDrawerSide) => void;
+  expandedWidth: number;
+  setExpandedWidth: (w: number) => void;
+  collapsedWidth: number;
+  setCollapsedWidth: (w: number) => void;
+  topOffset: number;
+  setTopOffset: (t: number) => void;
+  bottomOffset: number;
+  setBottomOffset: (b: number) => void;
+}
+
 export interface EdgeInspectorTunerControlsProps {
   isLight: boolean;
   feedbackToast: string | null;
@@ -200,16 +213,7 @@ export interface EdgeInspectorTunerControlsProps {
   isEscMenuOpen: boolean;
   setEscMenuRoute: React.Dispatch<React.SetStateAction<EscMenuRoute>>;
   handleResetParams: () => void;
-  drawerSide: EdgeDrawerSide;
-  setDrawerSide: (side: EdgeDrawerSide) => void;
-  expandedWidth: number;
-  setExpandedWidth: (w: number) => void;
-  collapsedWidth: number;
-  setCollapsedWidth: (w: number) => void;
-  topOffset: number;
-  setTopOffset: (t: number) => void;
-  bottomOffset: number;
-  setBottomOffset: (b: number) => void;
+  geometry: EdgeInspectorDrawerGeometryControls;
 }
 
 export const EdgeInspectorTunerControls: React.FC<
@@ -225,16 +229,18 @@ export const EdgeInspectorTunerControls: React.FC<
   isEscMenuOpen,
   setEscMenuRoute,
   handleResetParams,
-  drawerSide,
-  setDrawerSide,
-  expandedWidth,
-  setExpandedWidth,
-  collapsedWidth,
-  setCollapsedWidth,
-  topOffset,
-  setTopOffset,
-  bottomOffset,
-  setBottomOffset,
+  geometry: {
+    drawerSide,
+    setDrawerSide,
+    expandedWidth,
+    setExpandedWidth,
+    collapsedWidth,
+    setCollapsedWidth,
+    topOffset,
+    setTopOffset,
+    bottomOffset,
+    setBottomOffset,
+  },
 }) => {
   return (
       <div

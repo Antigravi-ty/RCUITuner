@@ -201,23 +201,16 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
             }
           }}
           onSpawnDiagnosticWindow={(win) => floatingStore.spawnWindow(win)}
-          onNavigateTrainingDetail={() => { setLastParentRoute('settings'); handleSelectRoute('training'); }}
-          onNavigateCameraDetail={() => { setLastParentRoute('settings'); handleSelectRoute('camera'); }}
-          onNavigateKeybindingsDetail={() => { setLastParentRoute('settings'); handleSelectRoute('keybindings'); }}
-          onNavigateAudioDetail={() => { setLastParentRoute('settings'); handleSelectRoute('audio-eq'); }}
-          onNavigateTrajectoryDetail={() => {
+          onNavigateRoute={(route) => {
             setLastParentRoute('settings');
-            setLiveAnimPhase('expanded');
-            handleSelectRoute('trajectory');
-            showToast('Enter Submenu: Ball Trajectory Predictor (support TAB Side collapsed real-time preview)');
+            if (route === 'trajectory') {
+              setLiveAnimPhase('expanded');
+              handleSelectRoute('trajectory');
+              showToast('Enter Submenu: Ball Trajectory Predictor (support TAB Side collapsed real-time preview)');
+            } else {
+              handleSelectRoute(route as ActiveMenuRoute);
+            }
           }}
-          onNavigateDevSandboxes={() => { setLastParentRoute('settings'); handleSelectRoute('dev-sandboxes'); }}
-          onNavigateExpMultiBots={() => { setLastParentRoute('settings'); handleSelectRoute('exp-multi-bots'); }}
-          onNavigateDevActiveTuners={() => { setLastParentRoute('settings'); handleSelectRoute('dev-active-tuners'); }}
-          onNavigateDevCalibratedPresets={() => { setLastParentRoute('settings'); handleSelectRoute('dev-calibrated-presets'); }}
-          onNavigateDevUnderDevelopment={() => { setLastParentRoute('settings'); handleSelectRoute('dev-under-development'); }}
-          onNavigateAdvancedAudio={() => { setLastParentRoute('settings'); handleSelectRoute('advanced-audio'); }}
-          onNavigateEventTriggerRules={() => { setLastParentRoute('settings'); handleSelectRoute('event-trigger-rules'); }}
         />
       )}
 

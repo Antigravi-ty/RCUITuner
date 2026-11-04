@@ -19,12 +19,12 @@ import {
   CLASSIC_BALL_RADIUS,
   KICKOFF_SLOT_PAIRS,
   projectWorldPoint,
-  renderNameTag3DScenePass,
   resolveNameTagCameraBasis,
   type KickoffCarSpawn,
   type KickoffSlotPair,
   type Vec3,
-} from './nameTagStageProjectionMath';
+} from './nameTagArenaProjectionMath';
+import { renderNameTag3DScenePass } from './nameTagArenaScenePainter';
 
 export {
   buildKickoffCars,

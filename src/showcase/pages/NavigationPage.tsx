@@ -197,8 +197,11 @@ export const NavigationPage: React.FC<{ isLight?: boolean }> = ({ isLight = fals
             isLight={isLight}
             onBack={goBack}
             initialTab={targetSettingsTab}
-            onNavigateAudioDetail={() => navigateTo('audio-eq')}
-            onNavigateTrajectoryDetail={() => navigateTo('trajectory')}
+            onNavigateRoute={(route) => {
+              if (route === 'audio-eq' || route === 'trajectory') {
+                navigateTo(route);
+              }
+            }}
           />
         )}
 
@@ -251,7 +254,7 @@ const ROUTES = {
   {activeRoute === 'main' && <Layer1MainMenuRecipe onResume={...} onNavigatePlay={...} onNavigateGarage={...} onNavigateSettings={...} />}
   {activeRoute === 'play' && <Layer2PlayRecipe onBack={goBack} />}
   {activeRoute === 'garage' && <Layer2GarageRecipe onBack={goBack} />}
-  {activeRoute === 'settings' && <Layer2SettingsRecipe onBack={goBack} onNavigateAudioDetail={() => setRoute('audio-eq')} />}
+  {activeRoute === 'settings' && <Layer2SettingsRecipe onBack={goBack} onNavigateRoute={(r) => setRoute(r)} />}
   {activeRoute === 'audio-eq' && <Layer3AudioEqRecipe onBack={goBack} />}
 </MorphingShell>`}
       />

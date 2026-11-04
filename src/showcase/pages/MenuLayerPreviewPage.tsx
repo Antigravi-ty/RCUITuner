@@ -1,36 +1,20 @@
 import React, { useState as useLocalState, useEffect, useRef } from 'react';
 import { ArrowRight, Info, Layers } from 'lucide-react';
-import { type ContainerTransitionMode } from '../../ui-core/tokens/easing';
 import type { MenuPanelWidthAdaptiveMode } from '../../ui-core/navigation/menuPanelAdaptive';
 import { createScopedSyncedState } from '../stores/crossClientSync';
-import { readUrlParams } from '../stores/urlSync';
 import { useViewportStore } from '../../ui-core/stores/viewportStore';
 const useState = createScopedSyncedState('page:menu-layer-v2');
 import { floatingStore, useFloatingStore } from '../../ui-core/stores/floatingStore';
 import { type PresetConfig } from '../../ui-core/stores/floatingPresets';
-import { resolveLayer1ContextSpec, type Layer1MenuContextMode } from '../../ui-core/recipes/layer1MenuContextSpecs';
 import { PageJumpDirectory, JumpDirectoryItem } from '../PageJumpDirectory';
 import {
   type ActiveMenuRoute,
-  type LayerRouteConfig,
-  type LivePreviewAnimPhase,
-  type MenuVisibilityTier,
-  ROUTE_TO_PANEL_ID,
   MENU_SANDBOX_JUMP_ITEMS,
-  MENU_ROUTE_CONFIG,
-  SETTINGS_QUICK_TABS,
-  USER_LINEAR_PLAYLIST,
-  DEV_LINEAR_PLAYLIST,
-  findPlaylistStepIndex,
-  resolveRouteAuditInfo,
-  isLayer3RouteAvailable,
 } from './menu-layer/menuLayerRouteConfig';
 import { MenuLayerRouteSelectorBar } from './menu-layer/MenuLayerRouteSelectorBar';
 import { MenuLayerAdaptiveControlDeck } from './menu-layer/MenuLayerAdaptiveControlDeck';
 import { MenuLayerScannerAndAuditSection } from './menu-layer/MenuLayerScannerAndAuditSection';
 import { MenuLayerStageCanvas } from './menu-layer/MenuLayerStageCanvas';
-import type { Layer3StepOverrideState } from './menu-layer/MenuLayerStageRecipeRouter';
-import { useMenuLayerUrlSync } from './menu-layer/useMenuLayerUrlSync';
 import { useMenuLayerAdaptiveMetrics } from './menu-layer/useMenuLayerAdaptiveMetrics';
 import { useMenuLayerNavigationHandlers } from './menu-layer/useMenuLayerNavigationHandlers';
 import { MenuLayerSandboxProvider } from './menu-layer/MenuLayerSandboxContext';
@@ -54,64 +38,54 @@ export const MenuLayerPreviewPage: React.FC<MenuLayerPreviewPageProps> = ({
   backdropDuration = 250,
 }) => {
   const { renderScale } = useViewportStore();
-  const [rawVisibilityTier, setVisibilityTier] = useState<MenuVisibilityTier>(() => {
-    const p = readUrlParams();
-    return p.tier === 'developer' ? 'developer' : 'user';
-  }, 'visibilityTier');
-  const visibilityTier: MenuVisibilityTier = rawVisibilityTier === 'developer' ? 'developer' : 'user';
-  const [rawLayer1ContextMode, setLayer1ContextMode] = useState<Layer1MenuContextMode>(() => {
-    const p = readUrlParams();
-    return resolveLayer1ContextSpec(p.ctx).id;
-  }, 'layer1ContextMode');
-  const layer1ContextMode: Layer1MenuContextMode = resolveLayer1ContextSpec(rawLayer1ContextMode).id;
   const [touchMode, setTouchMode] = useState<boolean>(false, 'touchMode');
-  const [rawCurrentRoute, setCurrentRoute] = useState<ActiveMenuRoute>(() => {
-    const p = readUrlParams();
-    return p.route && p.route in MENU_ROUTE_CONFIG ? (p.route as ActiveMenuRoute) : 'main-menu';
-  }, 'currentRoute');
-  const currentRoute: ActiveMenuRoute =
-    rawCurrentRoute && rawCurrentRoute in MENU_ROUTE_CONFIG ? rawCurrentRoute : 'main-menu';
-  const [transitionMode, setTransitionMode] = useState<ContainerTransitionMode>('fluid-morph', 'transitionMode');
-  const [settingsTab, setSettingsTab] = useState<string>(() => {
-    const p = readUrlParams();
-    return p.route !== 'garage' && p.subtab ? p.subtab : 'gameplay';
-  }, 'settingsTab');
-  const [garageTab, setGarageTab] = useState<string>(() => {
-    const p = readUrlParams();
-    return p.route === 'garage' && p.subtab ? p.subtab : 'car';
-  }, 'garageTab');
   const [bgRenderPaused, setBgRenderPaused] = useState<boolean>(true, 'bgRenderPaused');
   const [feedbackToast, setFeedbackToast] = useLocalState<string | null>(null);
   const [showInlineTuner, setShowInlineTuner] = useLocalState<boolean>(false);
-  const [lastParentRoute, setLastParentRoute] = useState<ActiveMenuRoute>('main-menu', 'lastParentRoute');
-  const [routeHistory, setRouteHistory] = useState<ActiveMenuRoute[]>([], 'routeHistory');
-  const [liveAnimPhase, setLiveAnimPhase] = useState<LivePreviewAnimPhase>('expanded', 'liveAnimPhase');
   const [isPillHovered, setIsPillHovered] = useLocalState(false);
   const [ballSimSpeed] = useState(128, 'ballSimSpeed');
   const { windows, isStackDismissed, minimizedCount, totalCount, closeWindow } = useFloatingStore();
   const hasStackIcon = !(isStackDismissed && minimizedCount === 0);
-  const isCursorHidden = currentRoute === 'layer-0' && !hasStackIcon;
-  const [stepPhase, setStepPhase] = useState<'idle' | 'fadeOut' | 'resize' | 'fadeIn'>('idle', 'stepPhase');
-  const [rawDisplayedRoute, setDisplayedRoute] = useState<ActiveMenuRoute>(() => {
-    const p = readUrlParams();
-    return p.route && p.route in MENU_ROUTE_CONFIG ? (p.route as ActiveMenuRoute) : 'main-menu';
-  }, 'displayedRoute');
-  const displayedRoute: ActiveMenuRoute =
-    rawDisplayedRoute && rawDisplayedRoute in MENU_ROUTE_CONFIG ? rawDisplayedRoute : currentRoute;
 
-  useMenuLayerUrlSync({
+  const showToast = (msg: string) => {
+    setFeedbackToast(msg);
+    setTimeout(() => {
+      setFeedbackToast(null);
+    }, 2400);
+  };
+
+  const {
     visibilityTier,
-    setVisibilityTier,
+    layer1ContextMode,
+    setLayer1ContextMode,
     currentRoute,
-    setCurrentRoute,
-    setDisplayedRoute,
+    displayedRoute,
+    transitionMode,
+    setTransitionMode,
     settingsTab,
     setSettingsTab,
     garageTab,
     setGarageTab,
-    layer1ContextMode,
-    setLayer1ContextMode,
-  });
+    lastParentRoute,
+    setLastParentRoute,
+    liveAnimPhase,
+    setLiveAnimPhase,
+    stepPhase,
+    layer3StepOverride,
+    setLayer3StepOverride,
+    activePlaylist,
+    activePlaylistIdx,
+    activePlaylistStep,
+    auditInfo,
+    handleChangeVisibilityTier,
+    handleSelectRoute,
+    handleTriggerCollapse,
+    handleTriggerExpand,
+    handleNavigateBack,
+    stepPlaylistBy,
+  } = useMenuLayerNavigationHandlers({ showToast });
+
+  const isCursorHidden = currentRoute === 'layer-0' && !hasStackIcon;
 
   const stageRef = useRef<HTMLDivElement | null>(null);
   const [stageSize, setStageSize] = useLocalState({ width: 900, height: 620 });
@@ -130,12 +104,6 @@ export const MenuLayerPreviewPage: React.FC<MenuLayerPreviewPageProps> = ({
       if (shakeTimerRef.current) clearTimeout(shakeTimerRef.current);
     };
   }, []);
-  const showToast = (msg: string) => {
-    setFeedbackToast(msg);
-    setTimeout(() => {
-      setFeedbackToast(null);
-    }, 2400);
-  };
   useEffect(() => {
     if (!stageRef.current) return;
     const update = () => {
@@ -192,52 +160,6 @@ export const MenuLayerPreviewPage: React.FC<MenuLayerPreviewPageProps> = ({
     manualBoundarySize,
     widthMode,
     manualMinWidths,
-  });
-
-  const [layer3StepOverride, setLayer3StepOverride] = useState<Layer3StepOverrideState>(
-    { progressStatus: 'idle', currentStep: 1, defaultEditingConfig: false },
-    'layer3StepOverride'
-  );
-  const activePlaylist = visibilityTier === 'user' ? USER_LINEAR_PLAYLIST : DEV_LINEAR_PLAYLIST;
-  const activePlaylistIdx = findPlaylistStepIndex(
-    activePlaylist,
-    currentRoute,
-    layer1ContextMode,
-    settingsTab,
-    garageTab,
-    layer3StepOverride
-  );
-  const activePlaylistStep = activePlaylist[activePlaylistIdx] || activePlaylist[0];
-  const auditInfo = resolveRouteAuditInfo(currentRoute, visibilityTier);
-
-  const {
-    handleChangeVisibilityTier,
-    handleSelectRoute,
-    handleTriggerCollapse,
-    handleTriggerExpand,
-    handleNavigateBack,
-    stepPlaylistBy,
-  } = useMenuLayerNavigationHandlers({
-    currentRoute,
-    setCurrentRoute,
-    setDisplayedRoute,
-    routeHistory,
-    setRouteHistory,
-    lastParentRoute,
-    transitionMode,
-    setStepPhase,
-    liveAnimPhase,
-    setLiveAnimPhase,
-    activePlaylist,
-    activePlaylistIdx,
-    setLayer1ContextMode,
-    setSettingsTab,
-    setGarageTab,
-    setLayer3StepOverride,
-    layer1ContextMode,
-    settingsTab,
-    setVisibilityTier,
-    showToast,
   });
 
   const handleAddPresetWindow = (preset: PresetConfig, e: React.MouseEvent<HTMLButtonElement>) => {
