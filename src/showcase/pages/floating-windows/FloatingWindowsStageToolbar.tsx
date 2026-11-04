@@ -17,14 +17,7 @@ import {
 } from '../../../ui-core/stores/floatingPresets';
 import { DEV_PRESET_WINDOWS } from '../../../ui-core/stores/devFloatingPresets';
 
-export interface FloatingWindowsStageToolbarProps {
-  isLight: boolean;
-  tier: FloatingWindowVisibilityTier;
-  fwMode: 'inspector' | 'matrix' | 'stack';
-  setFwMode: (mode: 'inspector' | 'matrix' | 'stack') => void;
-  currentIndex: number;
-  activeTierWindows: PresetConfig[];
-  currentPreset: PresetConfig | undefined;
+export interface FloatingWindowsBoundaryControls {
   containerPreset: 'full' | '1080p-compact' | 'small-squeeze';
   setContainerPreset: (preset: 'full' | '1080p-compact' | 'small-squeeze') => void;
   boundaryLocked: boolean;
@@ -33,6 +26,17 @@ export interface FloatingWindowsStageToolbarProps {
   setManualBoundarySize: (next: { width: number; height: number }) => void;
   handleChangeManualBoundarySize: (next: { width: number; height: number }) => void;
   handleToggleBoundaryLock: () => void;
+}
+
+export interface FloatingWindowsStageToolbarProps {
+  isLight: boolean;
+  tier: FloatingWindowVisibilityTier;
+  fwMode: 'inspector' | 'matrix' | 'stack';
+  setFwMode: (mode: 'inspector' | 'matrix' | 'stack') => void;
+  currentIndex: number;
+  activeTierWindows: PresetConfig[];
+  currentPreset: PresetConfig | undefined;
+  boundary: FloatingWindowsBoundaryControls;
   handleSwitchTier: (tier: FloatingWindowVisibilityTier) => void;
   handleStepWindow: (delta: number) => void;
   totalCount: number;
@@ -47,14 +51,16 @@ export const FloatingWindowsStageToolbar: React.FC<FloatingWindowsStageToolbarPr
   currentIndex,
   activeTierWindows,
   currentPreset,
-  containerPreset,
-  setContainerPreset,
-  boundaryLocked,
-  effectiveBoundaryW,
-  effectiveBoundaryH,
-  setManualBoundarySize,
-  handleChangeManualBoundarySize,
-  handleToggleBoundaryLock,
+  boundary: {
+    containerPreset,
+    setContainerPreset,
+    boundaryLocked,
+    effectiveBoundaryW,
+    effectiveBoundaryH,
+    setManualBoundarySize,
+    handleChangeManualBoundarySize,
+    handleToggleBoundaryLock,
+  },
   handleSwitchTier,
   handleStepWindow,
   totalCount,

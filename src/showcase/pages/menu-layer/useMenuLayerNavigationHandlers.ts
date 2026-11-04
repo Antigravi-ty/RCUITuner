@@ -1,63 +1,119 @@
 import { useEffect } from 'react';
 import { floatingStore } from '../../../ui-core/stores/floatingStore';
 import type { ContainerTransitionMode } from '../../../ui-core/tokens/easing';
-import type { Layer1MenuContextMode } from '../../../ui-core/recipes/layer1MenuContextSpecs';
+import {
+  resolveLayer1ContextSpec,
+  type Layer1MenuContextMode,
+} from '../../../ui-core/recipes/layer1MenuContextSpecs';
+import { createScopedSyncedState } from '../../stores/crossClientSync';
+import { readUrlParams } from '../../stores/urlSync';
 import type { Layer3StepOverrideState } from './MenuLayerStageRecipeRouter';
 import {
   MENU_ROUTE_CONFIG,
+  USER_LINEAR_PLAYLIST,
+  DEV_LINEAR_PLAYLIST,
+  findPlaylistStepIndex,
+  resolveRouteAuditInfo,
   type ActiveMenuRoute,
   type LivePreviewAnimPhase,
   type MenuVisibilityTier,
-  type LinearPlaylistStep,
 } from './menuLayerRouteConfig';
+import { useMenuLayerUrlSync } from './useMenuLayerUrlSync';
+
+const useState = createScopedSyncedState('page:menu-layer-v2');
 
 export interface UseMenuLayerNavigationHandlersParams {
-  currentRoute: ActiveMenuRoute;
-  setCurrentRoute: (next: ActiveMenuRoute | ((prev: ActiveMenuRoute) => ActiveMenuRoute)) => void;
-  setDisplayedRoute: (next: ActiveMenuRoute | ((prev: ActiveMenuRoute) => ActiveMenuRoute)) => void;
-  routeHistory: ActiveMenuRoute[];
-  setRouteHistory: (
-    next: ActiveMenuRoute[] | ((prev: ActiveMenuRoute[]) => ActiveMenuRoute[])
-  ) => void;
-  lastParentRoute: ActiveMenuRoute;
-  transitionMode: ContainerTransitionMode;
-  setStepPhase: (next: 'idle' | 'fadeOut' | 'resize' | 'fadeIn') => void;
-  liveAnimPhase: LivePreviewAnimPhase;
-  setLiveAnimPhase: (next: LivePreviewAnimPhase) => void;
-  activePlaylist: LinearPlaylistStep[];
-  activePlaylistIdx: number;
-  setLayer1ContextMode: (next: Layer1MenuContextMode) => void;
-  setSettingsTab: (next: string) => void;
-  setGarageTab: (next: string) => void;
-  setLayer3StepOverride: (next: Layer3StepOverrideState) => void;
-  layer1ContextMode: Layer1MenuContextMode;
-  settingsTab: string;
-  setVisibilityTier: (next: MenuVisibilityTier) => void;
   showToast: (msg: string) => void;
 }
 
 export function useMenuLayerNavigationHandlers({
-  currentRoute,
-  setCurrentRoute,
-  setDisplayedRoute,
-  routeHistory,
-  setRouteHistory,
-  lastParentRoute,
-  transitionMode,
-  setStepPhase,
-  liveAnimPhase,
-  setLiveAnimPhase,
-  activePlaylist,
-  activePlaylistIdx,
-  setLayer1ContextMode,
-  setSettingsTab,
-  setGarageTab,
-  setLayer3StepOverride,
-  layer1ContextMode,
-  settingsTab,
-  setVisibilityTier,
   showToast,
 }: UseMenuLayerNavigationHandlersParams) {
+  const [rawVisibilityTier, setVisibilityTier] = useState<MenuVisibilityTier>(() => {
+    const p = readUrlParams();
+    return p.tier === 'developer' ? 'developer' : 'user';
+  }, 'visibilityTier');
+  const visibilityTier: MenuVisibilityTier =
+    rawVisibilityTier === 'developer' ? 'developer' : 'user';
+
+  const [rawLayer1ContextMode, setLayer1ContextMode] = useState<Layer1MenuContextMode>(() => {
+    const p = readUrlParams();
+    return resolveLayer1ContextSpec(p.ctx).id;
+  }, 'layer1ContextMode');
+  const layer1ContextMode: Layer1MenuContextMode =
+    resolveLayer1ContextSpec(rawLayer1ContextMode).id;
+
+  const [rawCurrentRoute, setCurrentRoute] = useState<ActiveMenuRoute>(() => {
+    const p = readUrlParams();
+    return p.route && p.route in MENU_ROUTE_CONFIG ? (p.route as ActiveMenuRoute) : 'main-menu';
+  }, 'currentRoute');
+  const currentRoute: ActiveMenuRoute =
+    rawCurrentRoute && rawCurrentRoute in MENU_ROUTE_CONFIG ? rawCurrentRoute : 'main-menu';
+
+  const [rawDisplayedRoute, setDisplayedRoute] = useState<ActiveMenuRoute>(() => {
+    const p = readUrlParams();
+    return p.route && p.route in MENU_ROUTE_CONFIG ? (p.route as ActiveMenuRoute) : 'main-menu';
+  }, 'displayedRoute');
+  const displayedRoute: ActiveMenuRoute =
+    rawDisplayedRoute && rawDisplayedRoute in MENU_ROUTE_CONFIG ? rawDisplayedRoute : currentRoute;
+
+  const [transitionMode, setTransitionMode] = useState<ContainerTransitionMode>(
+    'fluid-morph',
+    'transitionMode'
+  );
+  const [settingsTab, setSettingsTab] = useState<string>(() => {
+    const p = readUrlParams();
+    return p.route !== 'garage' && p.subtab ? p.subtab : 'gameplay';
+  }, 'settingsTab');
+  const [garageTab, setGarageTab] = useState<string>(() => {
+    const p = readUrlParams();
+    return p.route === 'garage' && p.subtab ? p.subtab : 'car';
+  }, 'garageTab');
+
+  const [lastParentRoute, setLastParentRoute] = useState<ActiveMenuRoute>(
+    'main-menu',
+    'lastParentRoute'
+  );
+  const [routeHistory, setRouteHistory] = useState<ActiveMenuRoute[]>([], 'routeHistory');
+  const [liveAnimPhase, setLiveAnimPhase] = useState<LivePreviewAnimPhase>(
+    'expanded',
+    'liveAnimPhase'
+  );
+  const [stepPhase, setStepPhase] = useState<'idle' | 'fadeOut' | 'resize' | 'fadeIn'>(
+    'idle',
+    'stepPhase'
+  );
+  const [layer3StepOverride, setLayer3StepOverride] = useState<Layer3StepOverrideState>(
+    { progressStatus: 'idle', currentStep: 1, defaultEditingConfig: false },
+    'layer3StepOverride'
+  );
+
+  useMenuLayerUrlSync({
+    visibilityTier,
+    setVisibilityTier,
+    currentRoute,
+    setCurrentRoute,
+    setDisplayedRoute,
+    settingsTab,
+    setSettingsTab,
+    garageTab,
+    setGarageTab,
+    layer1ContextMode,
+    setLayer1ContextMode,
+  });
+
+  const activePlaylist = visibilityTier === 'user' ? USER_LINEAR_PLAYLIST : DEV_LINEAR_PLAYLIST;
+  const activePlaylistIdx = findPlaylistStepIndex(
+    activePlaylist,
+    currentRoute,
+    layer1ContextMode,
+    settingsTab,
+    garageTab,
+    layer3StepOverride
+  );
+  const activePlaylistStep = activePlaylist[activePlaylistIdx] || activePlaylist[0];
+  const auditInfo = resolveRouteAuditInfo(currentRoute, visibilityTier);
+
   const handleChangeVisibilityTier = (nextTier: MenuVisibilityTier) => {
     setVisibilityTier(nextTier);
     if (nextTier === 'developer') {
@@ -233,6 +289,28 @@ export function useMenuLayerNavigationHandlers({
   ]);
 
   return {
+    visibilityTier,
+    layer1ContextMode,
+    setLayer1ContextMode,
+    currentRoute,
+    displayedRoute,
+    transitionMode,
+    setTransitionMode,
+    settingsTab,
+    setSettingsTab,
+    garageTab,
+    setGarageTab,
+    lastParentRoute,
+    setLastParentRoute,
+    liveAnimPhase,
+    setLiveAnimPhase,
+    stepPhase,
+    layer3StepOverride,
+    setLayer3StepOverride,
+    activePlaylist,
+    activePlaylistIdx,
+    activePlaylistStep,
+    auditInfo,
     handleChangeVisibilityTier,
     handleSelectRoute,
     handleTriggerCollapse,

@@ -402,16 +402,18 @@ export const EdgeInspectorSimulationPage: React.FC<EdgeInspectorSimulationPagePr
         isEscMenuOpen={isEscMenuOpen}
         setEscMenuRoute={setEscMenuRoute}
         handleResetParams={handleResetParams}
-        drawerSide={drawerSide}
-        setDrawerSide={setDrawerSide}
-        expandedWidth={expandedWidth}
-        setExpandedWidth={setExpandedWidth}
-        collapsedWidth={collapsedWidth}
-        setCollapsedWidth={setCollapsedWidth}
-        topOffset={topOffset}
-        setTopOffset={setTopOffset}
-        bottomOffset={bottomOffset}
-        setBottomOffset={setBottomOffset}
+        geometry={{
+          drawerSide,
+          setDrawerSide,
+          expandedWidth,
+          setExpandedWidth,
+          collapsedWidth,
+          setCollapsedWidth,
+          topOffset,
+          setTopOffset,
+          bottomOffset,
+          setBottomOffset,
+        }}
       />
 
       <EdgeInspectorReferenceMatrix isLight={isLight} />

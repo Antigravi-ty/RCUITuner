@@ -54,47 +54,59 @@ export const TAKEOVER_DIRECTORY_ITEMS: JumpDirectoryItem[] = [
   },
 ];
 
-export interface TakeoverStageCanvasProps {
+export interface TakeoverStageBackdropState {
   stageBgMode: StageBgMode;
   arenaPreset: ArenaLightingPreset;
   stageBrightness: number;
   showPitchLines: boolean;
   showAnchorGuides: boolean;
-  bottomOffsetPx: number;
-  activeSignal: TakeoverSignal;
-  isCockpitVisible: boolean;
-  myTeamSide: 'blue' | 'orange';
-  activePayload: TakeoverHudPayload | null;
+  getStageBackgroundStyle: () => React.CSSProperties;
+}
+
+export interface TakeoverStageHudConfig {
   glowConfig: TakeoverGlowConfig;
   typoConfig: CenterUpperTypographyConfig;
   timingConfig: CenterUpperTimingConfig;
   vignetteConfig: TakeoverVignetteConfig;
   vignettePreviewActive: boolean;
+}
+
+export interface TakeoverStageCanvasProps {
+  backdrop: TakeoverStageBackdropState;
+  hudConfig: TakeoverStageHudConfig;
+  bottomOffsetPx: number;
+  activeSignal: TakeoverSignal;
+  isCockpitVisible: boolean;
+  myTeamSide: 'blue' | 'orange';
+  activePayload: TakeoverHudPayload | null;
   isSequencePlaying: boolean;
   setIsVisibleOnStage: (val: boolean) => void;
-  getStageBackgroundStyle: () => React.CSSProperties;
   channel: ReturnType<typeof createHudTransientChannel>;
 }
 
 export const TakeoverStageCanvas: React.FC<TakeoverStageCanvasProps> = ({
-  stageBgMode,
-  arenaPreset,
-  stageBrightness,
-  showPitchLines,
-  showAnchorGuides,
+  backdrop: {
+    stageBgMode,
+    arenaPreset,
+    stageBrightness,
+    showPitchLines,
+    showAnchorGuides,
+    getStageBackgroundStyle,
+  },
+  hudConfig: {
+    glowConfig,
+    typoConfig,
+    timingConfig,
+    vignetteConfig,
+    vignettePreviewActive,
+  },
   bottomOffsetPx,
   activeSignal,
   isCockpitVisible,
   myTeamSide,
   activePayload,
-  glowConfig,
-  typoConfig,
-  timingConfig,
-  vignetteConfig,
-  vignettePreviewActive,
   isSequencePlaying,
   setIsVisibleOnStage,
-  getStageBackgroundStyle,
   channel,
 }) => {
   const leftTeamColor = myTeamSide === 'blue' ? '#2563EB' : '#EA580C';

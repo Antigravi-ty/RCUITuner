@@ -1,52 +1,70 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useBoostGaugeStore } from '../../../ui-core/stores/boostGaugeStore';
+import { createScopedSyncedState } from '../../stores/crossClientSync';
+
+const useState = createScopedSyncedState('hud-5a-5-boost-config');
 
 export interface HudBoostGaugeGeometryControlsProps {
   isLight: boolean;
   inputCls: string;
-  ringInnerPct: number;
-  ringOuterPct: number;
-  setRingInnerPct: (v: number) => void;
-  setRingOuterPct: (v: number) => void;
-  updateTokens: (patch: { ringInnerPct?: number; ringOuterPct?: number }) => void;
-  cutoutAngleDeg: number;
-  cutoutInputText: string;
-  setCutoutInputText: (v: string) => void;
-  setCutoutAngleDeg: (v: number) => void;
-  handleSetCutoutDeg: (val: number) => void;
-  rotationDeg: number;
-  rotationInputText: string;
-  setRotationInputText: (v: string) => void;
-  setRotationDeg: (v: number) => void;
-  handleSetRotationDeg: (val: number) => void;
-  gaugeSize: number;
-  handleSetGaugeSize: (s: number) => void;
-  lineCap: 'round' | 'butt';
-  setLineCap: (cap: 'round' | 'butt') => void;
+  onGaugeSizeChange: (size: number) => void;
 }
 
 export const HudBoostGaugeGeometryControls: React.FC<HudBoostGaugeGeometryControlsProps> = ({
   isLight,
   inputCls,
-  ringInnerPct,
-  ringOuterPct,
-  setRingInnerPct,
-  setRingOuterPct,
-  updateTokens,
-  cutoutAngleDeg,
-  cutoutInputText,
-  setCutoutInputText,
-  setCutoutAngleDeg,
-  handleSetCutoutDeg,
-  rotationDeg,
-  rotationInputText,
-  setRotationInputText,
-  setRotationDeg,
-  handleSetRotationDeg,
-  gaugeSize,
-  handleSetGaugeSize,
-  lineCap,
-  setLineCap,
+  onGaugeSizeChange,
 }) => {
+  const {
+    ringInnerPct,
+    ringOuterPct,
+    lineCap,
+    cutoutAngleDeg,
+    rotationDeg,
+    size: gaugeSize,
+    setToken,
+    updateTokens,
+  } = useBoostGaugeStore();
+
+  const [cutoutInputText, setCutoutInputText] = useState<string>(
+    String(cutoutAngleDeg),
+    'cutoutInputText'
+  );
+  const [rotationInputText, setRotationInputText] = useState<string>(
+    String(rotationDeg),
+    'rotationInputText'
+  );
+
+  useEffect(() => {
+    setCutoutInputText(String(cutoutAngleDeg));
+  }, [cutoutAngleDeg]);
+
+  useEffect(() => {
+    setRotationInputText(String(rotationDeg));
+  }, [rotationDeg]);
+
+  const setRingInnerPct = (v: number) => setToken('ringInnerPct', v);
+  const setRingOuterPct = (v: number) => setToken('ringOuterPct', v);
+  const setLineCap = (v: 'round' | 'butt') => setToken('lineCap', v);
+  const setCutoutAngleDeg = (v: number) => setToken('cutoutAngleDeg', v);
+  const setRotationDeg = (v: number) => setToken('rotationDeg', v);
+
+  const handleSetGaugeSize = (s: number) => {
+    setToken('size', s);
+    onGaugeSizeChange(s);
+  };
+
+  const handleSetCutoutDeg = (val: number) => {
+    const clamped = Math.max(0, Math.min(359, val));
+    setCutoutAngleDeg(clamped);
+    setCutoutInputText(String(clamped));
+  };
+
+  const handleSetRotationDeg = (val: number) => {
+    setRotationDeg(val);
+    setRotationInputText(String(val));
+  };
+
   return (
     <>
       {/* 4. Outer Ring Thickness: Start % (ringInnerPct) & End % (ringOuterPct) */}

@@ -291,24 +291,28 @@ export const TakeoverPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }
       >
         {/* 16:9 HUD ANCHOR STAGE PREVIEW CANVAS (View Box — Pinned directly below static Page Header) */}
         <TakeoverStageCanvas
-          stageBgMode={stageBgMode}
-          arenaPreset={arenaPreset}
-          stageBrightness={stageBrightness}
-          showPitchLines={showPitchLines}
-          showAnchorGuides={showAnchorGuides}
+          backdrop={{
+            stageBgMode,
+            arenaPreset,
+            stageBrightness,
+            showPitchLines,
+            showAnchorGuides,
+            getStageBackgroundStyle,
+          }}
+          hudConfig={{
+            glowConfig,
+            typoConfig,
+            timingConfig,
+            vignetteConfig,
+            vignettePreviewActive,
+          }}
           bottomOffsetPx={bottomOffsetPx}
           activeSignal={activeSignal}
           isCockpitVisible={isCockpitVisible}
           myTeamSide={myTeamSide}
           activePayload={activePayload}
-          glowConfig={glowConfig}
-          typoConfig={typoConfig}
-          timingConfig={timingConfig}
-          vignetteConfig={vignetteConfig}
-          vignettePreviewActive={vignettePreviewActive}
           isSequencePlaying={isSequencePlaying}
           setIsVisibleOnStage={setIsVisibleOnStage}
-          getStageBackgroundStyle={getStageBackgroundStyle}
           channel={channelRef.current}
         />
 

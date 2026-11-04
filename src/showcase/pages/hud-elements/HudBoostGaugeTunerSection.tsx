@@ -1,6 +1,5 @@
 import React from 'react';
 import { useBoostGaugeStore } from '../../../ui-core/stores/boostGaugeStore';
-import { createScopedSyncedState } from '../../stores/crossClientSync';
 import { Flame, RotateCcw, Moon, Sun, Copy, Check, Code2 } from 'lucide-react';
 import { CircularBoostGauge, getBoostSegmentColor, STEP_12_TIER_PRESETS, type BoostColorScheme, type BoostColorMode, type BoostThemeOverride } from '../../../ui-core/hud/CircularBoostGauge';
 import { type HudBoostListener } from '../../../ui-core/stores/hudTransientTypes';
@@ -10,8 +9,6 @@ import { Badge } from '../../../ui-core/primitives/Badge';
 import { SectionErrorBoundary } from '../../../ui-core/primitives/SectionErrorBoundary';
 import { CodeBlock } from '../../CodeBlock';
 import { HudBoostGaugeGeometryControls } from './HudBoostGaugeGeometryControls';
-
-const useState = createScopedSyncedState('hud-5a-5-boost-config');
 
 export interface HudBoostGaugeTunerSectionProps {
   isLight: boolean;
@@ -36,7 +33,6 @@ export const HudBoostGaugeTunerSection: React.FC<HudBoostGaugeTunerSectionProps>
   setGaugeSize,
   subscribeBoostFn,
 }) => {
-  const boostStore = useBoostGaugeStore();
   const {
     colorScheme,
     colorMode,
@@ -52,10 +48,8 @@ export const HudBoostGaugeTunerSection: React.FC<HudBoostGaugeTunerSectionProps>
     updateTokens,
     resetTokens,
     exportConfigCode,
-  } = boostStore;
+  } = useBoostGaugeStore();
 
-  const [cutoutInputText, setCutoutInputText] = useState<string>(String(cutoutAngleDeg), 'cutoutInputText');
-  const [rotationInputText, setRotationInputText] = useState<string>(String(rotationDeg), 'rotationInputText');
   const [showCode, setShowCode] = React.useState<boolean>(false);
   const [copiedConfig, setCopiedConfig] = React.useState<boolean>(false);
 
@@ -63,32 +57,9 @@ export const HudBoostGaugeTunerSection: React.FC<HudBoostGaugeTunerSectionProps>
   const setColorMode = (v: BoostColorMode) => setToken('colorMode', v);
   const setFixedTextColor = (v: string) => setToken('fixedTextColor', v);
   const setThemeOverride = (v: BoostThemeOverride) => setToken('themeOverride', v);
-  const setRingInnerPct = (v: number) => setToken('ringInnerPct', v);
-  const setRingOuterPct = (v: number) => setToken('ringOuterPct', v);
-  const setLineCap = (v: 'round' | 'butt') => setToken('lineCap', v);
-  const setCutoutAngleDeg = (v: number) => setToken('cutoutAngleDeg', v);
-  const setRotationDeg = (v: number) => setToken('rotationDeg', v);
-
-  const handleSetGaugeSize = (s: number) => {
-    setToken('size', s);
-    setGaugeSize(s);
-  };
-
-  const handleSetCutoutDeg = (val: number) => {
-    const clamped = Math.max(0, Math.min(359, val));
-    setCutoutAngleDeg(clamped);
-    setCutoutInputText(String(clamped));
-  };
-
-  const handleSetRotationDeg = (val: number) => {
-    setRotationDeg(val);
-    setRotationInputText(String(val));
-  };
 
   const handleResetBoostGaugeConfig = () => {
     resetTokens();
-    setCutoutInputText('90');
-    setRotationInputText('-45');
     setGaugeSize(148);
   };
 
@@ -255,8 +226,6 @@ export const HudBoostGaugeTunerSection: React.FC<HudBoostGaugeTunerSectionProps>
                         rotationDeg: -45,
                         size: 148,
                       });
-                      setCutoutInputText('90');
-                      setRotationInputText('-45');
                       setGaugeSize(148);
                     }}
                     className={`px-2 py-0.5 rounded-lg border cursor-pointer transition-all ${
@@ -285,8 +254,6 @@ export const HudBoostGaugeTunerSection: React.FC<HudBoostGaugeTunerSectionProps>
                         rotationDeg: -45,
                         size: 148,
                       });
-                      setCutoutInputText('90');
-                      setRotationInputText('-45');
                       setGaugeSize(148);
                     }}
                     className={`px-2 py-0.5 rounded-lg border cursor-pointer transition-all ${
@@ -536,25 +503,7 @@ export const HudBoostGaugeTunerSection: React.FC<HudBoostGaugeTunerSectionProps>
               <HudBoostGaugeGeometryControls
                 isLight={isLight}
                 inputCls={inputCls}
-                ringInnerPct={ringInnerPct}
-                ringOuterPct={ringOuterPct}
-                setRingInnerPct={setRingInnerPct}
-                setRingOuterPct={setRingOuterPct}
-                updateTokens={updateTokens}
-                cutoutAngleDeg={cutoutAngleDeg}
-                cutoutInputText={cutoutInputText}
-                setCutoutInputText={setCutoutInputText}
-                setCutoutAngleDeg={setCutoutAngleDeg}
-                handleSetCutoutDeg={handleSetCutoutDeg}
-                rotationDeg={rotationDeg}
-                rotationInputText={rotationInputText}
-                setRotationInputText={setRotationInputText}
-                setRotationDeg={setRotationDeg}
-                handleSetRotationDeg={handleSetRotationDeg}
-                gaugeSize={gaugeSize}
-                handleSetGaugeSize={handleSetGaugeSize}
-                lineCap={lineCap}
-                setLineCap={setLineCap}
+                onGaugeSizeChange={setGaugeSize}
               />
             </div>
           </div>
