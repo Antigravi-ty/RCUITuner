@@ -47,9 +47,7 @@ export const StatsEventFeedPage: React.FC<{ isLight?: boolean }> = ({ isLight = 
   // Stacked Feed Queue Mode vs Single Stat Mode
   const [feedMode, setFeedMode] = useState<'single' | 'stacked'>('single');
   const [stackedIds, setStackedIds] = useState<string[]>([
-    'crossbar-outline',
-    'bounce-solid',
-    'high-five',
+    'crossbar-outline', 'bounce-solid', 'high-five',
   ]);
   const [triggerKey, setTriggerKey] = useState<number>(1);
   const [autoLifecycle, setAutoLifecycle] = useState<boolean>(false);
@@ -529,18 +527,20 @@ export const StatsEventFeedPage: React.FC<{ isLight?: boolean }> = ({ isLight = 
         isLight={isLight}
         previewColor={previewColor}
         setPreviewColor={setPreviewColor}
-        highFiveShowSparks={highFiveShowSparks}
-        setHighFiveShowSparks={setHighFiveShowSparks}
-        highFiveFillLeft={highFiveFillLeft}
-        setHighFiveFillLeft={setHighFiveFillLeft}
-        highFiveFillRight={highFiveFillRight}
-        setHighFiveFillRight={setHighFiveFillRight}
-        strategyTopLeftCircle={strategyTopLeftCircle}
-        setStrategyTopLeftCircle={setStrategyTopLeftCircle}
-        strategyBottomRightCircle={strategyBottomRightCircle}
-        setStrategyBottomRightCircle={setStrategyBottomRightCircle}
-        bombStrokeWidth={bombStrokeWidth}
-        setBombStrokeWidth={setBombStrokeWidth}
+        svgVariations={{
+          highFiveShowSparks,
+          setHighFiveShowSparks,
+          highFiveFillLeft,
+          setHighFiveFillLeft,
+          highFiveFillRight,
+          setHighFiveFillRight,
+          strategyTopLeftCircle,
+          setStrategyTopLeftCircle,
+          strategyBottomRightCircle,
+          setStrategyBottomRightCircle,
+          bombStrokeWidth,
+          setBombStrokeWidth,
+        }}
         customIconName={customIconName}
         setCustomIconName={setCustomIconName}
       />

@@ -299,7 +299,15 @@ export const HudElementsPage: React.FC<{ isLight?: boolean }> = ({ isLight = tru
           </Badge>
         </div>
         <p className={`text-xs ${isLight ? 'text-neutral-600' : 'text-neutral-400'}`}>
-          Each component is 100% Layout-agnostic presentation block (Internal never hardcoded <code className="font-mono">position: absolute</code>) . Low-frequency discrete component (<code className="font-mono text-red-500">BallCameraIndicator</code>) Adopt <code className="font-mono">React.memo</code> Isolation; High-frequency Continuous Component (<code className="font-mono text-emerald-500">VelocityProgressBar</code> and <code className="font-mono text-sky-500">CircularBoostGauge</code>) Support via <code className="font-mono">subscribeSpeed / subscribeBoost</code> or <code className="font-mono">ref</code> Transient Channel Direct Drive DOM/SVG, in <strong>0 React Re-renders at 120Hz</strong>. 
+          Each component is 100% Layout-agnostic presentation block (Internal never hardcoded{' '}
+          <code className="font-mono">position: absolute</code>) . Low-frequency discrete component (
+          <code className="font-mono text-red-500">BallCameraIndicator</code>) Adopt{' '}
+          <code className="font-mono">React.memo</code> Isolation; High-frequency Continuous Component (
+          <code className="font-mono text-emerald-500">VelocityProgressBar</code> and{' '}
+          <code className="font-mono text-sky-500">CircularBoostGauge</code>) Support via{' '}
+          <code className="font-mono">subscribeSpeed / subscribeBoost</code> or{' '}
+          <code className="font-mono">ref</code> Transient Channel Direct Drive DOM/SVG, in{' '}
+          <strong>0 React Re-renders at 120Hz</strong>.
         </p>
 
         {/* Top 120Hz Transient Engine Toggle + Contextual linkage test bar */}

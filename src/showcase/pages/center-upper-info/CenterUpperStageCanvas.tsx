@@ -18,12 +18,17 @@ import { ArenaBackdrop, ArenaLightingPreset } from '../../ArenaBackdrop';
 import { DEFAULT_INITIAL_ROSTER } from '../../../ui-core/stores/hudTransientTypes';
 import { HudAnchorStage, HudZone, HudSlot } from '../../../ui-core/layout/HudAnchorStage';
 import type { StageBgMode } from './CenterUpperStageBackdropBar';
-export interface CenterUpperStageCanvasProps {
+export interface CenterUpperStageBackdropState {
   stageBgMode: StageBgMode;
   arenaPreset: ArenaLightingPreset;
   stageBrightness: number;
   showPitchLines: boolean;
   showAnchorGuides: boolean;
+  getStageBackgroundStyle: () => React.CSSProperties;
+}
+
+export interface CenterUpperStageCanvasProps {
+  backdrop: CenterUpperStageBackdropState;
   upperCenterTopPct: number;
   showSurroundingHud: boolean;
   activePayload: CenterUpperInfoPayload | null;
@@ -34,15 +39,17 @@ export interface CenterUpperStageCanvasProps {
   activeVariant: CenterUpperInfoVariant;
   isSequencePlaying: boolean;
   setIsVisibleOnStage: (val: boolean) => void;
-  getStageBackgroundStyle: () => React.CSSProperties;
 }
 
 export const CenterUpperStageCanvas: React.FC<CenterUpperStageCanvasProps> = ({
-  stageBgMode,
-  arenaPreset,
-  stageBrightness,
-  showPitchLines,
-  showAnchorGuides,
+  backdrop: {
+    stageBgMode,
+    arenaPreset,
+    stageBrightness,
+    showPitchLines,
+    showAnchorGuides,
+    getStageBackgroundStyle,
+  },
   upperCenterTopPct,
   showSurroundingHud,
   activePayload,
@@ -53,7 +60,6 @@ export const CenterUpperStageCanvas: React.FC<CenterUpperStageCanvasProps> = ({
   activeVariant,
   isSequencePlaying,
   setIsVisibleOnStage,
-  getStageBackgroundStyle,
 }) => {
   return (
     <div

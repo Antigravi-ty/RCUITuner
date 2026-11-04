@@ -263,13 +263,26 @@ export const CenterUpperInfoPage: React.FC<{ isLight?: boolean }> = ({ isLight =
         isLight ? 'bg-white border-neutral-200 text-neutral-900 shadow-xs'
         : 'bg-neutral-900/80 border-neutral-800 text-neutral-100 shadow-xl' }`}>
         {/* 1. TOP-PINNED VIEW BOX: FULL 16:9 HUD ANCHOR STAGE PREVIEW CANVAS */}
-        <CenterUpperStageCanvas stageBgMode={stageBgMode} arenaPreset={arenaPreset}
-          stageBrightness={stageBrightness} showPitchLines={showPitchLines} showAnchorGuides={showAnchorGuides}
-          upperCenterTopPct={upperCenterTopPct} showSurroundingHud={showSurroundingHud}
-          activePayload={activePayload} glowConfig={glowConfig} winnerBlueConfig={winnerBlueConfig}
-          typoConfig={typoConfig} timingConfig={timingConfig}
-          activeVariant={activeVariant} isSequencePlaying={isSequencePlaying}
-          setIsVisibleOnStage={setIsVisibleOnStage} getStageBackgroundStyle={getStageBackgroundStyle} />
+        <CenterUpperStageCanvas
+          backdrop={{
+            stageBgMode,
+            arenaPreset,
+            stageBrightness,
+            showPitchLines,
+            showAnchorGuides,
+            getStageBackgroundStyle,
+          }}
+          upperCenterTopPct={upperCenterTopPct}
+          showSurroundingHud={showSurroundingHud}
+          activePayload={activePayload}
+          glowConfig={glowConfig}
+          winnerBlueConfig={winnerBlueConfig}
+          typoConfig={typoConfig}
+          timingConfig={timingConfig}
+          activeVariant={activeVariant}
+          isSequencePlaying={isSequencePlaying}
+          setIsVisibleOnStage={setIsVisibleOnStage}
+        />
 
         {/* 2. STAGE BACKDROP BAR & 5E-1 CONTROLS (Placed BELOW the View Box) */}
         <CenterUpperStageBackdropBar isLight={isLight} stageBgMode={stageBgMode} setStageBgMode={setStageBgMode}

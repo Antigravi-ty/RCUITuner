@@ -1,7 +1,10 @@
 import React from 'react';
 import { Plus, X } from 'lucide-react';
 import { CodeBlock } from '../../CodeBlock';
-import { floatingSandboxStore, type FloatingWindowItem } from '../../../ui-core/stores/floatingStore';
+import {
+  floatingSandboxStore,
+  useFloatingStore,
+} from '../../../ui-core/stores/floatingStore';
 import {
   type PresetConfig,
   type FloatingWindowVisibilityTier,
@@ -18,17 +21,12 @@ export interface FloatingWindowsCanvasStageProps {
   containerPreset: 'full' | '1080p-compact' | 'small-squeeze';
   boundaryLocked?: boolean;
   manualBoundarySize?: { width: number; height: number };
-  opacity: number;
-  totalCount: number;
-  minimizedCount: number;
   currentPreset: PresetConfig | undefined;
   activeSubTab: string;
   setActiveSubTab: (tab: string) => void;
   fwMode: 'inspector' | 'stack';
   tier: FloatingWindowVisibilityTier;
   activeTierWindows: PresetConfig[];
-  windows: FloatingWindowItem[];
-  closeWindow: (id: string) => void;
   handleAddPresetToStack: (preset: PresetConfig, e: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
@@ -38,19 +36,16 @@ export const FloatingWindowsCanvasStage: React.FC<FloatingWindowsCanvasStageProp
   containerPreset,
   boundaryLocked = false,
   manualBoundarySize,
-  opacity,
-  totalCount,
-  minimizedCount,
   currentPreset,
   activeSubTab,
   setActiveSubTab,
   fwMode,
   tier,
   activeTierWindows,
-  windows,
-  closeWindow,
   handleAddPresetToStack,
 }) => {
+  const { windows, minimizedCount, totalCount, opacity, closeWindow } =
+    useFloatingStore(floatingSandboxStore);
   const lockedW = boundaryLocked && manualBoundarySize ? manualBoundarySize.width : undefined;
   const lockedH = boundaryLocked && manualBoundarySize ? manualBoundarySize.height : undefined;
 

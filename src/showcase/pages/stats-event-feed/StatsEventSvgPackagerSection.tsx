@@ -100,10 +100,7 @@ import { createScopedSyncedState } from '../../stores/crossClientSync';
 
 const usePackagerPreviewState = createScopedSyncedState('hud-5f-stats-event-page');
 
-export interface StatsEventSvgPackagerSectionProps {
-  isLight: boolean;
-  previewColor: string;
-  setPreviewColor: React.Dispatch<React.SetStateAction<string>>;
+export interface PackagerSvgVariationState {
   highFiveShowSparks: boolean;
   setHighFiveShowSparks: React.Dispatch<React.SetStateAction<boolean>>;
   highFiveFillLeft: boolean;
@@ -116,6 +113,13 @@ export interface StatsEventSvgPackagerSectionProps {
   setStrategyBottomRightCircle: React.Dispatch<React.SetStateAction<boolean>>;
   bombStrokeWidth: number;
   setBombStrokeWidth: React.Dispatch<React.SetStateAction<number>>;
+}
+
+export interface StatsEventSvgPackagerSectionProps {
+  isLight: boolean;
+  previewColor: string;
+  setPreviewColor: React.Dispatch<React.SetStateAction<string>>;
+  svgVariations: PackagerSvgVariationState;
   customIconName: PackagedSvgId;
   setCustomIconName: React.Dispatch<React.SetStateAction<PackagedSvgId>>;
 }
@@ -124,18 +128,20 @@ export const StatsEventSvgPackagerSection: React.FC<StatsEventSvgPackagerSection
   isLight,
   previewColor,
   setPreviewColor,
-  highFiveShowSparks,
-  setHighFiveShowSparks,
-  highFiveFillLeft,
-  setHighFiveFillLeft,
-  highFiveFillRight,
-  setHighFiveFillRight,
-  strategyTopLeftCircle,
-  setStrategyTopLeftCircle,
-  strategyBottomRightCircle,
-  setStrategyBottomRightCircle,
-  bombStrokeWidth,
-  setBombStrokeWidth,
+  svgVariations: {
+    highFiveShowSparks,
+    setHighFiveShowSparks,
+    highFiveFillLeft,
+    setHighFiveFillLeft,
+    highFiveFillRight,
+    setHighFiveFillRight,
+    strategyTopLeftCircle,
+    setStrategyTopLeftCircle,
+    strategyBottomRightCircle,
+    setStrategyBottomRightCircle,
+    bombStrokeWidth,
+    setBombStrokeWidth,
+  },
   customIconName,
   setCustomIconName,
 }) => {

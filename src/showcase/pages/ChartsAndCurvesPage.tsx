@@ -181,7 +181,12 @@ export const ChartsAndCurvesPage: React.FC<{ isLight?: boolean }> = ({ isLight =
         </div>
         <h1 className="text-2xl font-bold tracking-tight">Charts & Curves High-performance clear chart and curve system</h1>
         <p className={`text-xs leading-relaxed ${isLight ? 'text-neutral-600' : 'text-neutral-400'}`}>
-          Targeting <code className="font-mono text-amber-500">RocketCompanion</code> 120Hz Zero-coupling reinforcement for physical frame timing and network telemetry. Remove legacy low-frequency React State Array-driven, Full adoption of pre-allocation <code className="font-mono text-emerald-500">TelemetryRingBuffer (Float32Array)</code> + Cached <code className="font-mono">CanvasGradient</code>, Achieved during long-term continuous operation<strong>0 React Repaints, 0 Heap memory and Skia Native shader allocation, Prevent periodic GC Frame drop</strong>. 
+          Targeting <code className="font-mono text-amber-500">RocketCompanion</code> 120Hz Zero-coupling reinforcement
+          for physical frame timing and network telemetry. Remove legacy low-frequency React State Array-driven, Full
+          adoption of pre-allocation{' '}
+          <code className="font-mono text-emerald-500">TelemetryRingBuffer (Float32Array)</code> + Cached{' '}
+          <code className="font-mono">CanvasGradient</code>, Achieved during long-term continuous operation
+          <strong>0 React Repaints, 0 Heap memory and Skia Native shader allocation, Prevent periodic GC Frame drop</strong>.
         </p>
       </div>
 
@@ -200,7 +205,12 @@ export const ChartsAndCurvesPage: React.FC<{ isLight?: boolean }> = ({ isLight =
           </div>
           <ul className="space-y-1.5 list-disc list-inside text-[11px] opacity-90">
             <li>
-              <strong>Create per frame <code className="font-mono">createLinearGradient</code> Trigger C++ Skia Memory accumulation</strong>: 120Hz Per minute generation 7200 Native shader objects, Run 2~3 Trigger after minutes V8 Major GC and GPU Cache centralized reclamation causes severe lag. 
+              <strong>
+                Create per frame <code className="font-mono">createLinearGradient</code> Trigger C++ Skia Memory
+                accumulation
+              </strong>
+              : 120Hz Per minute generation 7200 Native shader objects, Run 2~3 Trigger after minutes V8 Major GC and
+              GPU Cache centralized reclamation causes severe lag.
             </li>
             <li>
               <strong>Per Frame <code className="font-mono">.subarray()</code> with full sorting</strong>: 120Hz Create every frame TypedArray Wrap header and copy sort 240 float numbers. 
@@ -222,10 +232,19 @@ export const ChartsAndCurvesPage: React.FC<{ isLight?: boolean }> = ({ isLight =
           </div>
           <ul className="space-y-1.5 list-disc list-inside text-[11px] opacity-90">
             <li>
-              <strong>Shader and context resident cache (<code className="font-mono">CanvasRenderCache</code>)</strong>: <code className="font-mono">CanvasGradient</code> Global reuse with dashed arrays, Per Frame 0 Native object allocation. 
+              <strong>
+                Shader and context resident cache (<code className="font-mono">CanvasRenderCache</code>)
+              </strong>
+              : <code className="font-mono">CanvasGradient</code> Global reuse with dashed arrays, Per Frame 0 Native
+              object allocation.
             </li>
             <li>
-              <strong>O(1) Circular index direct read (<code className="font-mono">getAt(i)</code>) + 12Hz Downsampled quantile sort</strong>: 120Hz Waveform read directly via circular offset, P50/P95/P99 Quantile per 10 In-place frame insertion sort once. 
+              <strong>
+                O(1) Circular index direct read (<code className="font-mono">getAt(i)</code>) + 12Hz Downsampled
+                quantile sort
+              </strong>
+              : 120Hz Waveform read directly via circular offset, P50/P95/P99 Quantile per 10 In-place frame insertion
+              sort once.
             </li>
             <li>
               <strong>Dirty-Checked DOM Text update</strong>: Write only when the formatted string or alert boolean actually changes DOM, 0 Redundant style recalculation. 
@@ -352,7 +371,10 @@ export const ChartsAndCurvesPage: React.FC<{ isLight?: boolean }> = ({ isLight =
             icon={<Plus className="h-3.5 w-3.5 text-amber-500" />} onClick={emitCollisionBurst} >
             Trigger random physics collision (Emit Collision) </Button> </div>
             <p className={`text-xs ${isLight ? 'text-neutral-500' : 'text-neutral-400'}`}>
-            Use vertical pulse bar (Lollipop Stem) + Circular scatter plot, Clearly distinguish above audio threshold (Highlight stroke) Muted when below threshold (Translucent gray) collision events. Automatic snapping and locking when mouse nears scatter points:  </p>
+              Use vertical pulse bar (Lollipop Stem) + Circular scatter plot, Clearly distinguish above audio threshold
+              (Highlight stroke) Muted when below threshold (Translucent gray) collision events. Automatic snapping and
+              locking when mouse nears scatter points:
+            </p>
             <EventImpulseScatterChart events={events} threshold={threshold} onThresholdChange={setThreshold}
             onClear={() => setEvents([])} isLight={isLight} /> </div>
             {/* Chart 3 & 4: CubicBezierCurveEditor + ParametricTrajectoryChart */} <div id="chart-5b-3-bezier"
@@ -364,7 +386,12 @@ export const ChartsAndCurvesPage: React.FC<{ isLight?: boolean }> = ({ isLight =
             3 & 4. Interactive cubic Bezier curves and parametric physical trajectory extreme value analysis (CubicBezierCurveEditor & ParametricTrajectoryChart) </span> </div>
             <Badge size="sm" variant="amber" isLight={isLight}> Direct drag control points + Center positive/negative bidirectional slider linkage </Badge> </div>
             <p className={`text-xs ${isLight ? 'text-neutral-500' : 'text-neutral-400'}`}>
-            Left image supports direct SVG Drag on canvas <code className="font-mono text-amber-500">P1</code> and <code className="font-mono text-pink-500">P2</code> Handle (Or click preset button) , Real-time derivative analysis of right chart <code className="font-mono">dy/du = 0</code> Calculate the upward peak jump when picking up a large speed ball (<code className="font-mono">Peak Lift +uu</code>) and peak time. Bottom control bar uses center-outward bidirectional fill <code className="font-mono">variation="centered"</code> Adjust positive/negative control point coordinates: 
+              Left image supports direct SVG Drag on canvas <code className="font-mono text-amber-500">P1</code> and{' '}
+              <code className="font-mono text-pink-500">P2</code> Handle (Or click preset button) , Real-time derivative
+              analysis of right chart <code className="font-mono">dy/du = 0</code> Calculate the upward peak jump when
+              picking up a large speed ball (<code className="font-mono">Peak Lift +uu</code>) and peak time. Bottom
+              control bar uses center-outward bidirectional fill <code className="font-mono">variation="centered"</code>{' '}
+              Adjust positive/negative control point coordinates:
             </p> <div id="chart-5b-4-trajectory" className="scroll-mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
             <CubicBezierCurveEditor title="Orb Collect Easing (Drag P1 / P2)" p1x={orbBezier.p1x}
             p1y={orbBezier.p1y} p2x={orbBezier.p2x} p2y={orbBezier.p2y} onChange={setOrbBezier} isLight={isLight} />

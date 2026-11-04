@@ -291,7 +291,6 @@ export const ComposableNestingPage: React.FC<ComposableNestingPageProps> = ({ is
                       <TelemetrySparklineChart
                         ringBuffer={miniRingBufferRef.current!}
                         height={95}
-                        compact
                         title="Dropdown Embedded Frame Pacing"
                         isLight={isLight}
                       />

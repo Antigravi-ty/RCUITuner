@@ -30,12 +30,8 @@ export const FloatingWindowsSimulationPage: React.FC<FloatingWindowsSimulationPa
   isLight = false,
 }) => {
   const {
-    windows,
-    minimizedCount,
     totalCount,
-    opacity,
     spawnWithFlight,
-    closeWindow,
     clearAll,
   } = useFloatingStore(floatingSandboxStore);
 
@@ -324,17 +320,12 @@ export const FloatingWindowsSimulationPage: React.FC<FloatingWindowsSimulationPa
           containerPreset={containerPreset}
           boundaryLocked={boundaryLocked}
           manualBoundarySize={manualBoundarySize}
-          opacity={opacity}
-          totalCount={totalCount}
-          minimizedCount={minimizedCount}
           currentPreset={currentPreset}
           activeSubTab={activeSubTab}
           setActiveSubTab={setActiveSubTab}
           fwMode={fwMode}
           tier={tier}
           activeTierWindows={activeTierWindows}
-          windows={windows}
-          closeWindow={closeWindow}
           handleAddPresetToStack={handleAddPresetToStack}
         />
       )}

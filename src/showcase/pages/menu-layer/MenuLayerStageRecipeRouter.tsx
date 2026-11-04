@@ -130,9 +130,6 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
             handleSelectRoute('settings');
           }}
           onNavigateRoomControl={() => handleSelectRoute('room-host-control')}
-          onNavigateTrainingConfig={() => handleSelectRoute('training')}
-          onNavigateKickoffConfig={() => handleSelectRoute('kickoff-training')}
-          onNavigateStaticTrainingPack={() => handleSelectRoute('static-training-pack')}
           onNavigateExpMultiBots={() => handleSelectRoute('exp-multi-bots')}
           onReturnToFreeplay={() => {
             onChangeLayer1ContextMode?.('freeplay');
@@ -146,7 +143,6 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
             handleSelectRoute('static-training-pack');
             showToast('Exited Edit Training Pack Return to training pack browser');
           }}
-          onOpenFloatingWindow={(id) => spawnPresetById(id)}
           menuPowerSave={bgRenderPaused ? 'extreme' : '30'}
         />
       )}

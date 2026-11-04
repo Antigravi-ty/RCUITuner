@@ -83,7 +83,10 @@ export const TabsPage: React.FC<{ isLight?: boolean }> = ({ isLight = false }) =
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Tabs & Controls Atomic controls and setting row primitives</h1>
         <p className={`text-xs mt-1 ${isLight ? 'text-neutral-600' : 'text-neutral-400'}`}>
-          Lightweight high-order atomic interaction controls: Contains decoupled setting navigation row primitives (<code className="font-mono">SettingActionRow</code>), Warm orange underline, Rounded rectangle segmented controller, Supports bidirectional filling from center zero point SliderControl, Dual-slider deadzone controller (DualGrabberSlider), Decimal step precision selector (PrecisionDigitPicker) And physical switch. 
+          Lightweight high-order atomic interaction controls: Contains decoupled setting navigation row primitives (
+          <code className="font-mono">SettingActionRow</code>), Warm orange underline, Rounded rectangle segmented
+          controller, Supports bidirectional filling from center zero point SliderControl, Dual-slider deadzone
+          controller (DualGrabberSlider), Decimal step precision selector (PrecisionDigitPicker) And physical switch.
         </p>
       </div>
 
@@ -148,7 +151,11 @@ export const TabsPage: React.FC<{ isLight?: boolean }> = ({ isLight = false }) =
           <Badge size="sm" variant="neutral" isLight={isLight}>rounded rectangle / Multi-instance isolation</Badge>
         </div>
         <p className={`text-xs leading-relaxed ${isLight ? 'text-neutral-500' : 'text-neutral-400'}`}>
-          Fix over-rounded capsule issue, Adopt standard rounded rectangle (<code className="font-mono text-amber-500">rounded-lg / rounded-md</code>) ; Comprehensive solution for multi-instance indicator conflicts; Supports <strong>Auto Compact</strong>, <strong>Equidistant (Equal)</strong>, <strong>Content proportional distribution (Proportional)</strong> Three width distributions. 
+          Fix over-rounded capsule issue, Adopt standard rounded rectangle (
+          <code className="font-mono text-amber-500">rounded-lg / rounded-md</code>) ; Comprehensive solution for
+          multi-instance indicator conflicts; Supports <strong>Auto Compact</strong>,{' '}
+          <strong>Equidistant (Equal)</strong>, <strong>Content proportional distribution (Proportional)</strong> Three
+          width distributions.
         </p>
 
         {/* Feature 1: Multi-instance Coexistence Demonstration */}
@@ -226,7 +233,11 @@ export const TabsPage: React.FC<{ isLight?: boolean }> = ({ isLight = false }) =
           <Badge size="sm" variant="amber" isLight={isLight}>support Centered Bidirectional fill / Input enabled</Badge>
         </div>
         <p className={`text-xs ${isLight ? 'text-neutral-500' : 'text-neutral-400'}`}>
-          Completely remove harsh blue highlights. Support standard left-to-right fill (<code className="font-mono text-amber-500">variation="default"</code>) Reference from center zero or arbitrary anchor point to the left/Bidirectional right fill (<code className="font-mono text-amber-500">variation="centered"</code>), Supports one-click reset to baseline and direct inline input (<code className="font-mono text-amber-500">editable={'{true}'}</code>). 
+          Completely remove harsh blue highlights. Support standard left-to-right fill (
+          <code className="font-mono text-amber-500">variation="default"</code>) Reference from center zero or arbitrary
+          anchor point to the left/Bidirectional right fill (
+          <code className="font-mono text-amber-500">variation="centered"</code>), Supports one-click reset to baseline
+          and direct inline input (<code className="font-mono text-amber-500">editable={'{true}'}</code>).
         </p>
 
         {/* Neutral Monochrome Default */}
@@ -251,7 +262,11 @@ export const TabsPage: React.FC<{ isLight?: boolean }> = ({ isLight = false }) =
             <Badge size="sm" variant="amber" isLight={isLight}>variation="centered" · Bidirectional fill</Badge>
           </div>
           <p className={`text-[11px] ${isLight ? 'text-neutral-500' : 'text-neutral-400'}`}>
-            When slider has positive/negative values (e.g. <code className="font-mono">-50 ~ +50</code> or <code className="font-mono">-180° ~ +180°</code>) Or specific unit reference point (e.g. <code className="font-mono">100%</code> Standard gain) Time, No longer rigidly filling from the far left, Instead of <code className="font-mono">origin</code> Center-to-left (Negative offset) Or to the right (Positive offset) Dynamic fill, Double-click the track segment or click the zero-badge to reset to zero: 
+            When slider has positive/negative values (e.g. <code className="font-mono">-50 ~ +50</code> or{' '}
+            <code className="font-mono">-180° ~ +180°</code>) Or specific unit reference point (e.g.{' '}
+            <code className="font-mono">100%</code> Standard gain) Time, No longer rigidly filling from the far left,
+            Instead of <code className="font-mono">origin</code> Center-to-left (Negative offset) Or to the right
+            (Positive offset) Dynamic fill, Double-click the track segment or click the zero-badge to reset to zero:
           </p>
 
           <SliderControl label="Steering Trim (Balance fine-tuning · Center 0 Point)" description="By center 0% As base point: Positive fill right, Negative fill left, Support color-coded positive/negative"
@@ -280,7 +295,17 @@ export const TabsPage: React.FC<{ isLight?: boolean }> = ({ isLight = false }) =
           <Badge size="sm" variant="amber" isLight={isLight}>Decoupled Deadband Control / [-α .. +α]</Badge>
         </div>
         <p className={`text-xs leading-relaxed ${isLight ? 'text-neutral-500' : 'text-neutral-400'}`}>
-          Decoupled network input buffer dead-zone controller. support <strong>Center-split deadzone mode (<code className="font-mono">mode="centered-deadband"</code>)</strong> (Left slider limit <code className="font-mono">[-α .. 0]</code> Control Catch-up Catch-up threshold, Right slider limited to <code className="font-mono">[0 .. +α]</code> Control Skip Frame drop threshold, Both can be centered 0 Point convergence) and <strong>Free range mode (<code className="font-mono">mode="free-range"</code>)</strong>. 
+          Decoupled network input buffer dead-zone controller. support{' '}
+          <strong>
+            Center-split deadzone mode (<code className="font-mono">mode="centered-deadband"</code>)
+          </strong>{' '}
+          (Left slider limit <code className="font-mono">[-α .. 0]</code> Control Catch-up Catch-up threshold, Right
+          slider limited to <code className="font-mono">[0 .. +α]</code> Control Skip Frame drop threshold, Both can be
+          centered 0 Point convergence) and{' '}
+          <strong>
+            Free range mode (<code className="font-mono">mode="free-range"</code>)
+          </strong>
+          .
         </p>
 
         <div className="flex items-center justify-between gap-2 text-xs">
@@ -349,7 +374,12 @@ export const TabsPage: React.FC<{ isLight?: boolean }> = ({ isLight = false }) =
           <Badge size="sm" variant="success" isLight={isLight}>1 . 0 0 0 0 0 Precision decoupled context</Badge>
         </div>
         <p className={`text-xs leading-relaxed ${isLight ? 'text-neutral-500' : 'text-neutral-400'}`}>
-          Standardized multi-decimal precision controller for stadium texture and physics tuners. click <code className="font-mono">1 . 0 0 0 0 0</code> Click any digit to toggle stepping granularity (from <code className="font-mono">±1.0</code> Until <code className="font-mono">±0.00001</code>) , Combine with <code className="font-mono">TunerPrecisionContext</code> Set children <code className="font-mono">SliderControl</code> Supports lossless decimal fine-tuning via keyboard arrow keys. 
+          Standardized multi-decimal precision controller for stadium texture and physics tuners. click{' '}
+          <code className="font-mono">1 . 0 0 0 0 0</code> Click any digit to toggle stepping granularity (from{' '}
+          <code className="font-mono">±1.0</code> Until <code className="font-mono">±0.00001</code>) , Combine with{' '}
+          <code className="font-mono">TunerPrecisionContext</code> Set children{' '}
+          <code className="font-mono">SliderControl</code> Supports lossless decimal fine-tuning via keyboard arrow
+          keys.
         </p>
 
         <TunerPrecisionContext.Provider value={{ step: precisionStep, setStep: setPrecisionStep }}>

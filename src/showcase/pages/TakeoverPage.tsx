@@ -276,7 +276,12 @@ export const TakeoverPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }
           Takeover - Player Handoff & Reconnect Countdown System
         </h1>
         <p className={`text-xs leading-relaxed ${isLight ? 'text-neutral-600' : 'text-neutral-400'}`}>
-          Cloned and evolved from 5E (Five Echo) for bot takeover and disconnect-reconnect handoffs: keeps Scoreboard and Team Roster visible, hides Cockpit HUD (BallCam, Speedometer, Flip Indicator, Boost Gauge) on replacing-in signal with a seamless rounded-rectangle 4-edge vignette mask underneath the UI layer, anchors relative to bottom-center with upward offset, renders Top Regular (Takeover in...) in Team Color (Blue vs Orange) + Glowing Stroke while Bottom Thin (3 -&gt; 2 -&gt; 1) pops, and slides all Cockpit HUD gauges back in upon completion.
+          Cloned and evolved from 5E (Five Echo) for bot takeover and disconnect-reconnect handoffs: keeps Scoreboard
+          and Team Roster visible, hides Cockpit HUD (BallCam, Speedometer, Flip Indicator, Boost Gauge) on replacing-in
+          signal with a seamless rounded-rectangle 4-edge vignette mask underneath the UI layer, anchors relative to
+          bottom-center with upward offset, renders Top Regular (Takeover in...) in Team Color (Blue vs Orange) +
+          Glowing Stroke while Bottom Thin (3 -&gt; 2 -&gt; 1) pops, and slides all Cockpit HUD gauges back in upon
+          completion.
         </p>
       </div>
 
