@@ -39,8 +39,6 @@ const HUD_5A_DIRECTORY_ITEMS: JumpDirectoryItem[] = [
     name: 'Decoupled 3-Widget Stage', label: 'high frequency Speed/Boost + low frequency BallCam Zero-coupling slot layout test bench' },
   { id: 'hud-5a-6-telemetry-flip', code: '5A.6 & 5A.7',
     name: 'CompactTelemetryBarHUD & FlipIndicatorPillHUD', label: 'Top-Left 4 Metric Micro-capsule + Double-jump countdown status light' },
-  { id: 'hud-5a-8-replay-banner', code: '5A.8',
-    name: 'ReplayControlBannerHUD', label: 'Goal Replay Top Bar + 120Hz Progress bar Scrubber Ref' },
   { id: 'hud-5a-9-kickoff-rhythm', code: '5A.9',
     name: 'KickoffRhythmOverlayHUD', label: '120Hz Zero Allocation Canvas Kickoff Rhythm Track + 9Key Hit Row' },
 ];

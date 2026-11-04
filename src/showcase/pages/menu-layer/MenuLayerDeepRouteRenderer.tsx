@@ -110,9 +110,9 @@ export const MenuLayerDeepRouteRenderer: React.FC<MenuLayerDeepRouteRendererProp
                   panel: 'layer3-kickoff-training' as const,
                 },
                 {
-                  route: 'training' as const,
+                  route: 'training-config' as const,
                   label: 'Training Config (Training & Replay)',
-                  panel: 'layer3-training' as const,
+                  panel: 'layer3-training-config' as const,
                 },
                 {
                   route: 'camera' as const,

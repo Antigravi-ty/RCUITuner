@@ -4,7 +4,7 @@ import type { Layer1MenuContextMode } from '../../../ui-core/recipes/layer1MenuC
 import { Layer2PlayRecipe } from '../../../ui-core/recipes/Layer2PlayRecipe';
 import { Layer2GarageRecipe } from '../../../ui-core/recipes/Layer2GarageRecipe';
 import { Layer2SettingsRecipe } from '../../../ui-core/recipes/Layer2SettingsRecipe';
-import { Layer2OnlineRoomControlRecipe, resolveOnlineSessionContextId } from '../../../ui-core/recipes/Layer2OnlineRoomControlRecipe';
+import { Layer2ManageRoomRecipe, resolveOnlineSessionContextId } from '../../../ui-core/recipes/Layer2ManageRoomRecipe';
 import { Layer3AudioEqRecipe } from '../../../ui-core/recipes/Layer3AudioEqRecipe';
 import { Layer3BallTrajectoryRecipe } from '../../../ui-core/recipes/Layer3BallTrajectoryRecipe';
 import { Layer3HostMatchRecipe } from '../../../ui-core/recipes/Layer3HostMatchRecipe';
@@ -14,7 +14,7 @@ import { Layer3JoinRoomRecipe } from '../../../ui-core/recipes/Layer3JoinRoomRec
 import { Layer3ExhibitionRecipe } from '../../../ui-core/recipes/Layer3ExhibitionRecipe';
 import { Layer3SelfTrainingRecipe } from '../../../ui-core/recipes/Layer3SelfTrainingRecipe';
 import { Layer3KickoffTrainingRecipe } from '../../../ui-core/recipes/Layer3KickoffTrainingRecipe';
-import { Layer3TrainingRecipe } from '../../../ui-core/recipes/Layer3TrainingRecipe';
+import { Layer3TrainingConfigRecipe } from '../../../ui-core/recipes/Layer3TrainingConfigRecipe';
 import { Layer3CameraRecipe } from '../../../ui-core/recipes/Layer3CameraRecipe';
 import { Layer3KeybindingsRecipe } from '../../../ui-core/recipes/Layer3KeybindingsRecipe';
 import { Layer3ExpMultiBotsRecipe } from '../../../ui-core/recipes/Layer3ExpMultiBotsRecipe';
@@ -129,7 +129,7 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
             if (tab) setSettingsTab(tab);
             handleSelectRoute('settings');
           }}
-          onNavigateRoomControl={() => handleSelectRoute('room-host-control')}
+          onNavigateManageRoom={() => handleSelectRoute('manage-room')}
           onNavigateExpMultiBots={() => handleSelectRoute('exp-multi-bots')}
           onReturnToFreeplay={() => {
             onChangeLayer1ContextMode?.('freeplay');
@@ -210,8 +210,8 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
         />
       )}
 
-      {displayedRoute === 'room-host-control' && (
-        <Layer2OnlineRoomControlRecipe
+      {displayedRoute === 'manage-room' && (
+        <Layer2ManageRoomRecipe
           isLight={isLight}
           developerMode={visibilityTier === 'developer'}
           sessionContext={resolveOnlineSessionContextId(layer1ContextMode)}
@@ -221,7 +221,7 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
           }}
           onOpenNetHud={() => spawnPresetById('network-monitor')}
           onNavigateAdvancedSettings={() => {
-            setLastParentRoute('room-host-control');
+            setLastParentRoute('manage-room');
             handleSelectRoute('exp-multi-bots');
           }}
           onCloseRoom={() => {
@@ -256,7 +256,7 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
           onStartHost={() => {
             onChangeLayer1ContextMode?.('match-lobby-host');
             setLastParentRoute('main-menu');
-            handleSelectRoute('room-host-control');
+            handleSelectRoute('manage-room');
             showToast('[ok] Completed 5 Step Create and Enter Room Configure Room (Match Lobby · Host)');
           }}
           onBack={goBack}
@@ -272,7 +272,7 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
           onStartTraining={() => {
             onChangeLayer1ContextMode?.('online-warmup-host');
             setLastParentRoute('main-menu');
-            handleSelectRoute('room-host-control');
+            handleSelectRoute('manage-room');
             showToast('[ok] Created Online Warmup Room and Enter Configure Room (Warmup · Host)');
           }}
           onBack={goBack}
@@ -295,7 +295,7 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
           onJoinRoom={() => {
             onChangeLayer1ContextMode?.('match-lobby-client');
             setLastParentRoute('main-menu');
-            handleSelectRoute('room-host-control');
+            handleSelectRoute('manage-room');
             showToast('[ok] Joined room and entered Room Info (Match Lobby · Client)');
           }}
           onBack={goBack}
@@ -332,7 +332,7 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
               handleSelectRoute('main-menu');
               showToast('Entered Free Play Free training context');
             } else {
-              handleSelectRoute('training');
+              handleSelectRoute('training-config');
             }
           }}
         />
@@ -345,12 +345,12 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
         />
       )}
 
-      {displayedRoute === 'training' && (
-        <Layer3TrainingRecipe
+      {displayedRoute === 'training-config' && (
+        <Layer3TrainingConfigRecipe
           isLight={isLight}
           onBack={goBack}
           onNavigateTrajectory={() => {
-            setLastParentRoute('training');
+            setLastParentRoute('training-config');
             handleSelectRoute('trajectory');
           }}
           onAddPresetWindow={handleAddPresetWindow}

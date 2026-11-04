@@ -2,18 +2,13 @@ import React, { useEffect, useRef } from 'react';
 import { createScopedSyncedState } from '../stores/crossClientSync';
 
 const useState = createScopedSyncedState('page:temporal-overlay');
-import { Clock, Compass, Flame, Gauge, Hash, Hourglass, Play, RotateCcw, Zap, } from 'lucide-react';
+import { Hourglass, Play, RotateCcw, Zap } from 'lucide-react';
 import { Badge } from '../../ui-core/primitives/Badge';
 import { Button } from '../../ui-core/primitives/Button';
 import { SliderControl } from '../../ui-core/primitives/SliderControl';
 import { createHudTransientChannel } from '../../ui-core/stores/hudTransientChannel';
 import { TemporalReplayFooterHUD } from '../../ui-core/hud/TemporalReplayFooterHUD';
 import { DemolishHourglassTimerHUD } from '../../ui-core/hud/DemolishHourglassTimerHUD';
-import { PitchMiniMapHUD } from '../../ui-core/hud/PitchMiniMapHUD';
-import { DualLayerBoostPieHUD } from '../../ui-core/hud/DualLayerBoostPieHUD';
-import { STEP_12_TIER_PRESETS } from '../../ui-core/hud/CircularBoostGauge';
-import { DigitSlotReelHUD } from '../../ui-core/hud/DigitSlotReelHUD';
-import { KickoffCountdownFlashHUD } from '../../ui-core/hud/KickoffCountdownFlashHUD';
 import { ArenaBackdrop } from '../ArenaBackdrop';
 import { PageJumpDirectory, JumpDirectoryItem } from '../PageJumpDirectory';
 
@@ -21,15 +16,10 @@ const T5A_DIRECTORY_ITEMS: JumpDirectoryItem[] = [
   { id: 't5a-1-replay-footer', code: 'T5A.1', name: 'TemporalReplayFooterHUD', label: 'Beveled glass playback bottom bar + Dynamic SVG Glow Top Edge' },
   { id: 't5a-2-respawn-hourglass', code: 'T5A.2',
     name: 'DemolishHourglassTimerHUD', label: '3Stage-color-changing hourglass respawn countdown (3s→0s Inset Sides)' },
-  { id: 't5a-3-pitch-minimap', code: 'T5A.3', name: 'PitchMiniMapHUD', label: '34Placeholder octagonal field minimap + Ball Speed Ring + 180°Flip' },
-  { id: 't5a-4-boost-pie', code: 'T5A.4', name: 'DualLayerBoostPieHUD', label: 'Dual-layer sector ghost shadow pie chart (120Hz SVG Path Ref)' },
-  { id: 't5a-5-digit-slot-reel', code: 'T5A.5', name: 'DigitSlotReelHUD', label: 'Three-column slot machine digit counter (0Rearrange translate3d)' },
-  { id: 't5a-6-countdown-flash', code: 'T5A.6',
-    name: 'KickoffCountdownFlashHUD', label: 'Kickoff countdown double-stroke scaled flash text (4-3-2-1-GO!)' },
 ];
 
 export const TemporalOverlayPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }) => {
-  // Unified 120Hz Transient Channel driving all 6 T5A components with 0 React re-renders during high-freq streaming
+  // Unified 120Hz Transient Channel driving active T5A components with 0 React re-renders during high-freq streaming
   const channelRef = useRef(
     createHudTransientChannel({
       boostAmount: 74,
@@ -45,15 +35,6 @@ export const TemporalOverlayPage: React.FC<{ isLight?: boolean }> = ({ isLight =
         totalSeconds: 3.0,
         active: true,
       },
-      miniMap: {
-        ballX: 62,
-        ballY: 34,
-        ballHitKph: 114,
-        isFlipped: false,
-      },
-      countdownFlash: {
-        value: 3,
-      },
     })
   );
 
@@ -68,18 +49,9 @@ export const TemporalOverlayPage: React.FC<{ isLight?: boolean }> = ({ isLight =
   const [respawnRemSec, setRespawnRemSec] = useState(2.35);
   const [respawnAutoLoop, setRespawnAutoLoop] = useState(true);
 
-  const [miniMapFlipped, setMiniMapFlipped] = useState(false);
-  const [ballHitKph, setBallHitKph] = useState(114);
-  const [ballX, setBallX] = useState(62);
-  const [ballY, setBallY] = useState(34);
-
-  const [boostVal, setBoostVal] = useState(74);
-  const [countdownVal, setCountdownVal] = useState<4 | 3 | 2 | 1 | 0 | null>(3);
-
   const respawnReadoutRef = useRef<HTMLSpanElement | null>(null);
-  const boostReadoutRef = useRef<HTMLSpanElement | null>(null);
 
-  // 120Hz Transient rAF Loop (updates Respawn Timer, MiniMap Ball Trajectory, Boost Pie & Slot Reel without React re-renders!)
+  // 120Hz Transient rAF Loop (updates Respawn Timer without React re-renders!)
   useEffect(() => {
     if (!autoStream120Hz) return;
     const ch = channelRef.current;
@@ -118,24 +90,6 @@ export const TemporalOverlayPage: React.FC<{ isLight?: boolean }> = ({ isLight =
           respawnReadoutRef.current.textContent = `${rem.toFixed(2)}s / 3.00s · ${stage}`;
         }
       }
-
-      // 2. MiniMap ball orbital trajectory (`T5A.3`)
-      const phase = now * 0.0014;
-      const simBx = 50 + Math.cos(phase) * 28;
-      const simBy = 50 + Math.sin(phase * 1.3) * 32;
-      const simKph = Math.round(95 + Math.abs(Math.cos(phase * 1.7)) * 65);
-      ch.setMiniMap({
-        ballX: simBx,
-        ballY: simBy,
-        ballHitKph: simKph,
-      });
-
-      // 3. Boost Pie & Slot Reel synchronized 120Hz wave (`T5A.4` & `T5A.5`)
-      const simBoost = Math.round(50 + Math.sin(phase * 0.85) * 48);
-      ch.setBoost(simBoost, false);
-      if (boostReadoutRef.current) {
-        boostReadoutRef.current.textContent = `${simBoost}%`;
-      }
     };
 
     rafId = requestAnimationFrame(tick);
@@ -162,7 +116,7 @@ export const TemporalOverlayPage: React.FC<{ isLight?: boolean }> = ({ isLight =
         {/* Top Jump Directory */}
         <PageJumpDirectory layerTag="Layer T5A · High-Frequency Temporal HUD Widgets"
           title="Temporal Overlay HUD Catalog (0-React-Rerender Transient Architecture)"
-          subtitle="Redundancy Removed Integrated Panels; All 6 Core widgets decoupled into src/ui-core/hud/ Standalone Component, Connect hudTransientChannel 120Hz DOM/SVG Ref Direct write and full adaptation Light/Dark Mode. "
+          subtitle="Active high-frequency temporal HUD widgets decoupled into src/ui-core/hud/ standalone components, connected via hudTransientChannel 120Hz DOM/SVG Ref direct write and full Light/Dark Mode adaptation."
           items={T5A_DIRECTORY_ITEMS} isLight={isLight} />
 
         {/* Global 120Hz Transient Stream Switch */}
@@ -336,198 +290,6 @@ export const TemporalOverlayPage: React.FC<{ isLight?: boolean }> = ({ isLight =
               <span className="text-[10px] font-mono opacity-65">
                 Left and right progress bars converge to the center hourglass (`transform-origin: 100% 50%` & `0% 50%`)
               </span>
-            </div>
-          </div>
-        </section>
-
-        {/* =====================================================================
-            T5A.3: PitchMiniMapHUD
-           ===================================================================== */}
-        <section id="t5a-3-pitch-minimap"
-          className={`p-5 rounded-3xl border flex flex-col gap-4 scroll-mt-24 ${cardClass}`}>
-          <div className="flex items-center justify-between border-b pb-3 border-neutral-200 dark:border-neutral-800 flex-wrap gap-2">
-            <div className="flex items-center gap-2 flex-wrap">
-              <Badge variant="amber" size="sm" isLight={isLight}>
-                T5A.3
-              </Badge>
-              <h2 className="text-base font-bold font-mono flex items-center gap-1.5">
-                <Compass className="h-4 w-4 text-sky-500" />
-                <span>PitchMiniMapHUD (`src/ui-core/hud/PitchMiniMapHUD.tsx`)</span>
-              </h2>
-              <Badge variant="primary" size="sm" isLight={isLight}>
-                subscribeMiniMap · 34 Boost Pads · 180° Perspective Flip
-              </Badge>
-            </div>
-            <Button
-              variant={miniMapFlipped ? 'primary' : 'secondary'}
-              size="sm"
-              isLight={isLight}
-              onClick={() => {
-                const next = !miniMapFlipped;
-                setMiniMapFlipped(next);
-                channelRef.current.setMiniMap({ isFlipped: next });
-              }}
-            >
-              Flip View: {miniMapFlipped ? 'Orange Perspective (180° Flipped)' : 'Blue Perspective (0° Normal)'}
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center">
-            <div className={`p-4 rounded-2xl border flex flex-col gap-3 ${subPanelClass}`}>
-              <SliderControl label="Ball Hit Speed Ring (HSL 60° Yellow → 0° Red)" value={ballHitKph} min={0}
-                max={180} step={1} unit=" KPH" isLight={isLight} onChange={(v) => { setAutoStream120Hz(false);
-                setBallHitKph(v); channelRef.current.setMiniMap({ ballHitKph: v }); }} />
-              <div className="grid grid-cols-2 gap-3">
-                <SliderControl label="Ball X (%)" value={ballX} min={10} max={90} step={1} unit="%"
-                  isLight={isLight} onChange={(v) => { setAutoStream120Hz(false); setBallX(v);
-                  channelRef.current.setMiniMap({ ballX: v }); }} />
-                <SliderControl label="Ball Y (%)" value={ballY} min={10} max={90} step={1} unit="%"
-                  isLight={isLight} onChange={(v) => { setAutoStream120Hz(false); setBallY(v);
-                  channelRef.current.setMiniMap({ ballY: v }); }} />
-              </div>
-            </div>
-
-            <div className={`p-4 rounded-2xl border flex items-center justify-center ${previewStageClass}`}>
-              <PitchMiniMapHUD
-                isLight={isLight}
-                ballX={ballX}
-                ballY={ballY}
-                ballHitKph={ballHitKph}
-                isFlipped={miniMapFlipped}
-                subscribeMiniMap={channelRef.current.subscribeMiniMap}
-              />
-            </div>
-          </div>
-        </section>
-
-        {/* =====================================================================
-            T5A.4 & T5A.5: DualLayerBoostPieHUD & DigitSlotReelHUD
-           ===================================================================== */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* T5A.4: DualLayerBoostPieHUD */}
-          <section id="t5a-4-boost-pie"
-            className={`p-5 rounded-3xl border flex flex-col gap-4 scroll-mt-24 ${cardClass}`}>
-            <div className="flex items-center justify-between border-b pb-3 border-neutral-200 dark:border-neutral-800 flex-wrap gap-2">
-              <div className="flex items-center gap-2 flex-wrap">
-                <Badge variant="amber" size="sm" isLight={isLight}>
-                  T5A.4
-                </Badge>
-                <h2 className="text-base font-bold font-mono flex items-center gap-1.5">
-                  <Gauge className="h-4 w-4 text-emerald-500" />
-                  <span>DualLayerBoostPieHUD (each 12 level · 9 7-Color Segment+Red flash)</span>
-                </h2>
-              </div>
-              <span ref={boostReadoutRef} className="text-xs font-mono font-bold text-emerald-500 tabular-nums">
-                {boostVal}%
-              </span>
-            </div>
-
-            <div className={`p-3.5 rounded-2xl border flex flex-col gap-2.5 ${subPanelClass}`}>
-              <SliderControl label="Boost Amount (Drag to quickly adjust observation Ghost Sector Motion Trail)" value={boostVal} min={0} max={100}
-                step={1} unit="%" isLight={isLight} onChange={(v) => { setAutoStream120Hz(false); setBoostVal(v);
-                channelRef.current.setBoost(v, false); }} />
-              <div className="flex items-center gap-1 flex-wrap font-mono text-[10px]">
-                <span className="opacity-70 mr-1">12-Step Tiers:</span>
-                {STEP_12_TIER_PRESETS.map((tier) => (
-                  <button key={tier.range} type="button" onClick={() => {
-                      setAutoStream120Hz(false); setBoostVal(tier.val);
-                      channelRef.current.setBoost(tier.val, false);
-                    }}
-                    className="px-1.5 py-0.5 rounded border cursor-pointer font-bold transition-all hover:scale-105"
-                    style={{
-                      backgroundColor: `${tier.hex}22`,
-                      borderColor: `${tier.hex}88`,
-                      color: isLight ? '#0f172a' : '#f8fafc',
-                    }}
-                    title={`${tier.range}: ${tier.label}`}>
-                    {tier.range} {tier.label.split(' ')[0]}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className={`h-[170px] rounded-2xl border flex items-center justify-center ${previewStageClass}`}>
-              <DualLayerBoostPieHUD isLight={isLight} boostAmount={boostVal}
-                subscribeBoost={channelRef.current.subscribeBoost} size={132} colorScheme="step-12" />
-            </div>
-          </section>
-
-          {/* T5A.5: DigitSlotReelHUD */}
-          <section id="t5a-5-digit-slot-reel"
-            className={`p-5 rounded-3xl border flex flex-col gap-4 scroll-mt-24 ${cardClass}`}>
-            <div className="flex items-center justify-between border-b pb-3 border-neutral-200 dark:border-neutral-800 flex-wrap gap-2">
-              <div className="flex items-center gap-2 flex-wrap">
-                <Badge variant="amber" size="sm" isLight={isLight}>T5A.5</Badge>
-                <h2 className="text-base font-bold font-mono flex items-center gap-1.5">
-                  <Hash className="h-4 w-4 text-amber-500" />
-                  <span>DigitSlotReelHUD</span>
-                </h2>
-              </div>
-              <Badge variant="primary" size="sm" isLight={isLight}>0-Reflow translate3d Reel</Badge>
-            </div>
-
-            <div className={`p-3.5 rounded-2xl border flex items-center justify-between flex-wrap gap-2 ${subPanelClass}`}>
-              <span className="text-xs font-mono opacity-80">Quick preset jump test:</span>
-              <div className="flex items-center gap-1.5">
-                {[0, 12, 33, 54, 78, 100].map((preset) => (
-                  <button key={preset} type="button" onClick={() => {
-                      setAutoStream120Hz(false); setBoostVal(preset);
-                      channelRef.current.setBoost(preset, false);
-                    }}
-                    className={`px-2 py-1 rounded-lg text-xs font-mono font-bold border cursor-pointer ${
-                      isLight ? 'bg-white hover:bg-neutral-100 border-neutral-300 text-neutral-800'
-                        : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-700 text-neutral-200' }`}>
-                    {preset}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className={`h-[170px] rounded-2xl border flex items-center justify-center ${previewStageClass}`}>
-              <DigitSlotReelHUD isLight={isLight} value={boostVal} subscribeBoost={channelRef.current.subscribeBoost} />
-            </div>
-          </section>
-        </div>
-
-        {/* T5A.6: KickoffCountdownFlashHUD */}
-        <section id="t5a-6-countdown-flash"
-          className={`p-5 rounded-3xl border flex flex-col gap-4 scroll-mt-24 ${cardClass}`}>
-          <div className="flex items-center justify-between border-b pb-3 border-neutral-200 dark:border-neutral-800 flex-wrap gap-2">
-            <div className="flex items-center gap-2 flex-wrap">
-              <Badge variant="amber" size="sm" isLight={isLight}>T5A.6</Badge>
-              <h2 className="text-base font-bold font-mono flex items-center gap-1.5">
-                <Flame className="h-4 w-4 text-rose-500" />
-                <span>KickoffCountdownFlashHUD (`src/ui-core/hud/KickoffCountdownFlashHUD.tsx`)</span>
-              </h2>
-              <Badge variant="primary" size="sm" isLight={isLight}>
-                subscribeCountdownFlash · Web Animations API GPU Scale-Pop
-              </Badge>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center">
-            <div className={`p-4 rounded-2xl border flex flex-col gap-3 ${subPanelClass}`}>
-              <span className="text-xs font-mono opacity-80">
-                Click to Trigger `subscribeCountdownFlash` Transient Scale Flash (`4 → 3 → 2 → 1 → GO!`):
-              </span>
-              <div className="flex items-center gap-2 flex-wrap">
-                {([4, 3, 2, 1, 0, null] as const).map((val) => (
-                  <button key={String(val)} type="button" onClick={() => {
-                      setCountdownVal(val); channelRef.current.setCountdownFlash({ value: val });
-                    }}
-                    className={`px-3 py-1.5 rounded-xl font-mono text-xs font-bold border cursor-pointer transition-all ${
-                      countdownVal === val ? 'bg-amber-500 text-neutral-950 border-amber-400 shadow-xs'
-                        : isLight ? 'bg-white hover:bg-neutral-100 border-neutral-300 text-neutral-800'
-                        : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-700 text-neutral-200' }`}>
-                    {val === null ? 'Hidden' : val === 0 ? '0 (GO!)' : String(val)}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className={`h-[148px] rounded-2xl border flex items-center justify-center ${previewStageClass}`}>
-              <KickoffCountdownFlashHUD isLight={isLight} value={countdownVal}
-                subscribeCountdownFlash={channelRef.current.subscribeCountdownFlash} />
             </div>
           </div>
         </section>

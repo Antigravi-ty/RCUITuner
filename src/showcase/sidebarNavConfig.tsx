@@ -8,7 +8,6 @@ import {
   LayoutTemplate,
   Compass,
   FileCode2,
-  FolderTree,
   Activity,
   Eye,
   AppWindow,
@@ -48,7 +47,6 @@ export type ShowcaseTab =
   | 'hud-elements'
   | 'center-upper-info'
   | 'takeover'
-  | 'stats-event-feed'
   | 'temporal-overlay'
   | 'charts-curves'
   | 'viewport-safe-area'
@@ -56,11 +54,9 @@ export type ShowcaseTab =
   | 'name-tag-tuner'
   // L6. Patterns (Scene templates and reference recipes)
   | 'recipes'
-  | 'post-match-menus'
   | 'live-preview'
   | 'edge-inspector'
   | 'floating-windows'
-  | 'floating-window-3stage'
   // L7. Sandboxes (Integrated drill and sandbox)
   | 'layer-preview'
   | 'notification-integration';
@@ -257,12 +253,6 @@ export const SIDEBAR_NAV_ITEMS: SidebarNavItem[] = [
     layer: 'L5',
   },
   {
-    id: 'stats-event-feed',
-    label: '5F · Stats Event Status Event Stream',
-    icon: <Activity className="h-4 w-4 text-rose-500" />,
-    layer: 'L5',
-  },
-  {
     id: 'takeover',
     label: '5G · Takeover Handoff & Vignette',
     icon: <Crosshair className="h-4 w-4 text-emerald-500" />,
@@ -283,12 +273,6 @@ export const SIDEBAR_NAV_ITEMS: SidebarNavItem[] = [
     layer: 'L6',
   },
   {
-    id: 'post-match-menus',
-    label: '6B · Post-Match Battle Report Candidates',
-    icon: <FolderTree className="h-4 w-4" />,
-    layer: 'L6',
-  },
-  {
     id: 'live-preview',
     label: '6C · Live Preview Sidebar Storage',
     icon: <Eye className="h-4 w-4 text-amber-500" />,
@@ -298,12 +282,6 @@ export const SIDEBAR_NAV_ITEMS: SidebarNavItem[] = [
     id: 'floating-windows',
     label: '6D · Floating Window orchestration',
     icon: <AppWindow className="h-4 w-4 text-amber-500" />,
-    layer: 'L6',
-  },
-  {
-    id: 'floating-window-3stage',
-    label: '6D+ · Floating 3-Stage Variant Test',
-    icon: <LayoutTemplate className="h-4 w-4 text-sky-500" />,
     layer: 'L6',
   },
   {

@@ -5,7 +5,6 @@ import { VelocityProgressBar } from '../../../ui-core/hud/VelocityProgressBar';
 import { CircularBoostGauge } from '../../../ui-core/hud/CircularBoostGauge';
 import { CompactTelemetryBarHUD } from '../../../ui-core/hud/CompactTelemetryBarHUD';
 import { FlipIndicatorPillHUD } from '../../../ui-core/hud/FlipIndicatorPillHUD';
-import { ReplayControlBannerHUD } from '../../../ui-core/hud/ReplayControlBannerHUD';
 import { KickoffRhythmOverlayHUD } from '../../../ui-core/hud/KickoffRhythmOverlayHUD';
 import { StaticTrainingPackHUD } from '../../../ui-core/hud/StaticTrainingPackHUD';
 import { ArenaBackdrop } from '../../ArenaBackdrop';
@@ -278,37 +277,6 @@ export const HudStageAndFollowupSection = React.memo<HudStageAndFollowupSectionP
                 <code className="font-mono text-amber-500">subscribeTelemetry</code> and{' '}
                 <code className="font-mono text-amber-500">subscribeFlip</code> Direct Modification DOM Node text and progress bar width. 
               </p>
-            </div>
-          </SectionErrorBoundary>
-
-          <SectionErrorBoundary title="5A.8 ReplayControlBannerHUD" isLight={isLight}>
-            <div
-              id="hud-5a-8-replay-banner"
-              className={`p-6 rounded-3xl border flex flex-col justify-between gap-4 scroll-mt-24 ${
-                isLight
-                  ? 'bg-neutral-50 border-neutral-200 text-neutral-900 shadow-xs'
-                  : 'bg-neutral-950 border-neutral-800/90 text-neutral-100'
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <span
-                  className={`text-xs font-bold font-mono uppercase tracking-wider ${
-                    isLight ? 'text-amber-600' : 'text-amber-400'
-                  }`}
-                >
-                  [5A.8] ReplayControlBannerHUD (Goal Scorer Pill + Scrubber)
-                </span>
-                <span className="text-[11px] font-mono text-sky-500 font-bold">
-                  subscribeReplayBanner Ref
-                </span>
-              </div>
-
-              <ReplayControlBannerHUD
-                isLight={isLight}
-                subscribeReplayBanner={
-                  is120HzLive ? transientChannel.subscribeReplayBanner : undefined
-                }
-              />
             </div>
           </SectionErrorBoundary>
         </div>

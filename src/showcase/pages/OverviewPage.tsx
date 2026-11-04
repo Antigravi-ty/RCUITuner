@@ -147,7 +147,7 @@ const PYRAMID_SPEC: PyramidRow[] = [
       {
         label: '5A · Match HUD Independent Gauge',
         tab: 'hud-elements',
-        items: 'StepperScoreboardHUD, EdgePlayerHudStrip, BallCameraIndicator, VelocityProgressBar, CircularBoostGauge, CompactTelemetryBarHUD, FlipIndicatorPillHUD, ReplayControlBannerHUD, KickoffRhythmOverlayHUD, StaticTrainingPackHUD',
+        items: 'StepperScoreboardHUD, EdgePlayerHudStrip, BallCameraIndicator, VelocityProgressBar, CircularBoostGauge, CompactTelemetryBarHUD, FlipIndicatorPillHUD, KickoffRhythmOverlayHUD, StaticTrainingPackHUD',
       },
       {
         label: '5B · High-Clarity Telemetry Chart',
@@ -168,11 +168,6 @@ const PYRAMID_SPEC: PyramidRow[] = [
         label: '5E · Center-Upper Alert Message',
         tab: 'center-upper-info',
         items: 'CenterUpperInfoHUD (HudAnchorStage upper-center · JetBrains Mono Thin 3-2-1-GO 750ms · Regular+Thin Winner · Out Glow)',
-      },
-      {
-        label: '5F · Stats Event Status Event Stream',
-        tab: 'stats-event-feed',
-        items: 'StatsEventFeedHUD (Icon + Text + Capsule + Footnote · Crossbar / Bounce Single line solid / High-Five 2³=8 / Tactics 1:1 / Strategy 2²=4)',
       },
       {
         label: '5G · Takeover Handoff & Vignette',
@@ -196,12 +191,7 @@ const PYRAMID_SPEC: PyramidRow[] = [
       {
         label: '6A · Layer 1-2-3 Menu Code Map',
         tab: 'recipes',
-        items: 'Layer1MainMenuRecipe, Layer2PlayRecipe, Layer2GarageRecipe, Layer2SettingsRecipe, Layer3KeybindingsRecipe, Layer3AudioEqRecipe',
-      },
-      {
-        label: '6B · Post-Match Post-match Candidate List',
-        tab: 'post-match-menus',
-        items: 'Layer1MatchPostRecipe (420px), Layer2MatchStatsRecipe (580px)',
+        items: 'Layer1MainMenuRecipe, Layer2PlayRecipe, Layer2GarageRecipe, Layer2SettingsRecipe, Layer2ManageRoomRecipe, Layer3TrainingConfigRecipe, Layer3KeybindingsRecipe, Layer3AudioEqRecipe',
       },
       {
         label: '6C · Live Preview Sidebar Storage',
@@ -212,11 +202,6 @@ const PYRAMID_SPEC: PyramidRow[] = [
         label: '6D · Floating Window Multi-window layout',
         tab: 'floating-windows',
         items: 'FloatingWindowManager, FloatingStackIcon, floatingStore, QuickNotificationSystem',
-      },
-      {
-        label: '6D+ · Floating 3-Stage Variant Test',
-        tab: 'floating-window-3stage',
-        items: 'FloatingThreeStageWindowManager (L2 PanelHeader + PanelContent + PanelFooter + Carved Footer Resize Grip / Edge Resize)',
       },
       {
         label: '6E · Edge Inspector Side hover inspection',
