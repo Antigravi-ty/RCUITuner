@@ -8,7 +8,7 @@ import { Badge } from '../../../ui-core/primitives/Badge';
 import { SliderControl } from '../../../ui-core/primitives/SliderControl';
 import { SegmentedSwitch } from '../../../ui-core/primitives/SegmentedSwitch';
 import { ToggleSwitch } from '../../../ui-core/primitives/ToggleSwitch';
-import { ColorSwatchInput } from '../../../ui-core/compounds/tuner/ColorSwatchInput';
+import { ColorSwatchInput } from '../../components/tuner/ColorSwatchInput';
 import { CodeBlock } from '../../CodeBlock';
 import { RL_GLOW_SWATCHES } from './CenterUpperStageBackdropBar';
 import { CenterUpperBlueTeamColorMenu } from './CenterUpperBlueTeamColorMenu';

@@ -6,7 +6,7 @@ import { Eye, X } from 'lucide-react';
 import { Button } from '../../ui-core/primitives/Button';
 import { KeycapBadge } from '../../ui-core/primitives/KeycapBadge';
 import { CodeBlock } from '../CodeBlock';
-import { useLivePreviewStore } from '../../ui-core/stores/livePreviewStore';
+import { useAppStore } from '../../ui-core/stores/appStore';
 import { MorphingStageShell } from '../../ui-core/navigation/MorphingStageShell';
 import { Layer3BallTrajectoryRecipe } from '../../ui-core/recipes/Layer3BallTrajectoryRecipe';
 
@@ -32,13 +32,14 @@ export type LivePreviewAnimPhase =
 export const LivePreviewSimulationPage: React.FC<LivePreviewSimulationPageProps> = ({
   isLight = false,
 }) => {
-  const {
-    activePreviewId,
-    isCollapsed,
-    enterPreview,
-    setCollapsed,
-    exitPreview,
-  } = useLivePreviewStore();
+  const isCollapsed = useAppStore((s) => s.isLivePreviewCollapsed);
+  const setCollapsed = useAppStore((s) => s.setLivePreviewCollapsed);
+  const [activePreviewId, setActivePreviewId] = useState<string | null>('ball-trajectory-predictor');
+  const enterPreview = (id: string, _title?: string) => setActivePreviewId(id);
+  const exitPreview = () => {
+    setActivePreviewId(null);
+    setCollapsed(false);
+  };
 
   const [animPhase, setAnimPhase] = useState<LivePreviewAnimPhase>(
     isCollapsed ? 'collapsed' : 'expanded'

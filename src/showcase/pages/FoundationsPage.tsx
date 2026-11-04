@@ -17,7 +17,7 @@ import {
 import { UI_RADIUS } from '../../ui-core/tokens/radius';
 import { UI_SPACING } from '../../ui-core/tokens/spacing';
 import { UI_EASING } from '../../ui-core/tokens/easing';
-import { useAccentStore } from '../../ui-core/stores/themeStore';
+import { useAccentStore } from '../stores/themeStore';
 import { CodeBlock } from '../CodeBlock';
 
 export const FoundationsPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }) => {
@@ -169,7 +169,7 @@ export const FoundationsPage: React.FC<{ isLight?: boolean }> = ({ isLight = tru
           <span>2. Semantic corner radius system (radius.ts · UI_RADIUS)</span>
         </div>
         <p className={`text-xs ${isLight ? 'text-neutral-600' : 'text-neutral-400'}`}>
-          Deprecate Capsule Shape (Pill) Menu and unordered rounded corners, Strictly decreasing from outer to inner container hierarchy (Window 16px → Card/MenuItem 12px → Button 8px → Keycap/Badge 6px) : 
+          Deprecate Capsule Shape (Pill) Menu and unordered rounded corners, Strictly decreasing from outer to inner container hierarchy (Window 16px → Card/MainMenuRow 12px → Button 8px → Keycap/Badge 6px) : 
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">

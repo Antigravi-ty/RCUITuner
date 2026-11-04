@@ -4,7 +4,6 @@ import { Square, CheckCircle, ExternalLink } from 'lucide-react';
 
 const useState = createScopedSyncedState('page:cards');
 import { Card, CardHeader, CardBody, CardFooter, SelectableCard } from '../../ui-core/layout/Card';
-import { GridStack } from '../../ui-core/layout/GridStack';
 import { Badge } from '../../ui-core/primitives/Badge';
 import { Button } from '../../ui-core/primitives/Button';
 import { CodeBlock } from '../CodeBlock';
@@ -83,7 +82,7 @@ export const CardsPage: React.FC<{
         isLight ? 'bg-white border-neutral-200 shadow-2xs' : 'bg-neutral-900/60 border-neutral-800'
       }`}>
         <span className="font-bold text-sm">2. Vehicle and item selection cards (SelectableCard)</span>
-        <GridStack cols={2} gap="md">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 w-full">
           <SelectableCard
             id="octane"
             title="Octane Standard"
@@ -107,7 +106,7 @@ export const CardsPage: React.FC<{
             tags={['Boxy Hitbox', 'Meta']}
             preview={<span className="text-3xl">[Car]</span>}
           />
-        </GridStack>
+        </div>
         <p className={`text-xs font-mono ${isLight ? 'text-neutral-500' : 'text-neutral-400'}`}>
           Currently Selected Vehicle ID: <span className="text-amber-500 font-bold">{selectedCar}</span>
         </p>

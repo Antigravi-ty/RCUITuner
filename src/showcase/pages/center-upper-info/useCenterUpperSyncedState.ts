@@ -11,7 +11,7 @@ import {
   DEFAULT_CENTER_UPPER_TYPOGRAPHY,
   DEFAULT_CENTER_UPPER_TIMING,
 } from '../../../ui-core/hud/CenterUpperInfoHUD';
-import { hexToRgbTuple } from '../../../ui-core/compounds/tuner/ColorSwatchInput';
+import { hexToRgbTuple } from '../../components/tuner/ColorSwatchInput';
 import { ArenaLightingPreset } from '../../ArenaBackdrop';
 import { useSyncedState, crossClientSync } from '../../stores/crossClientSync';
 import type { StageBgMode } from './CenterUpperStageBackdropBar';

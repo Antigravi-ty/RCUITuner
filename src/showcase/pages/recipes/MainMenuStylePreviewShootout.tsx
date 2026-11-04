@@ -3,7 +3,7 @@ import { Image as ImageIcon, Eye } from 'lucide-react';
 import { Badge } from '../../../ui-core/primitives/Badge';
 import { Button } from '../../../ui-core/primitives/Button';
 import { Layer1MainMenuRecipe } from '../../../ui-core/recipes/Layer1MainMenuRecipe';
-import { Layer1ContextGroupedSelector } from '../../../ui-core/recipes/Layer1ContextGroupedSelector';
+import { Layer1ContextGroupedSelector } from './Layer1ContextGroupedSelector';
 import type {
   Layer1ContextVariation,
   Layer1ContextMeta,

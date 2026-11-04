@@ -8,7 +8,6 @@ import {
   Wrench,
 } from 'lucide-react';
 import { type FloatingThreeStageRenderContext } from '../../../ui-core/navigation/FloatingThreeStageWindow';
-import { FloatingWindowToolbar } from '../../../ui-core/panels/FloatingWindowToolbar';
 import { Button } from '../../../ui-core/primitives/Button';
 import { SliderControl } from '../../../ui-core/primitives/SliderControl';
 import { ToggleSwitch } from '../../../ui-core/primitives/ToggleSwitch';
@@ -90,31 +89,6 @@ export const ThreeStageCapabilityProbeContent: React.FC<ThreeStageCapabilityProb
 
   return (
     <div className="flex flex-col gap-3">
-      {showFloatingToolbar && (
-        <div
-          onMouseEnter={() =>
-            setHoveredDescription(
-              'FloatingWindowToolbar: Precision step selector + Copy/Export/Reset JSON bar nested inside Stage 2 Content.'
-            )
-          }
-          onMouseLeave={() => setHoveredDescription(null)}
-        >
-          <FloatingWindowToolbar
-            title="3-Stage Probe Telemetry"
-            subtitle="Hover any control below to see Stage 3 Footer switch to high-contrast help"
-            step={step}
-            onStepChange={setStep}
-            presets={['120Hz Lock', '240Hz OC']}
-            activePreset="120Hz Lock"
-            onReset={() => {
-              setSimHz(120);
-              setSpringStiffness(0.65);
-              setDeterministicLock(true);
-            }}
-            isLight={isLight}
-          />
-        </div>
-      )}
 
       {showSubTabsBar && (
         <div

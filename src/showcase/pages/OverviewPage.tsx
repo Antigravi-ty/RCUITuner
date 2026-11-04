@@ -104,7 +104,7 @@ const PYRAMID_SPEC: PyramidRow[] = [
       {
         label: 'Dropdown & Tuner Composite Control',
         tab: 'composable-nesting',
-        items: 'DropdownMenu, TunerControls, UVTransformControl, ColorSwatchInput, PriorityQueueList, EventFilterMatrix, CollapsibleNumberedRailList, SettingActionRow, MenuItem',
+        items: 'DropdownMenu, TunerControls, UVTransformControl, ColorSwatchInput, PriorityQueueList, EventFilterMatrix, CollapsibleNumberedRailList, SettingActionRow, MainMenuRow',
       },
       {
         label: 'Dialogue Modaless Popup',
@@ -386,7 +386,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ isLight = true, onSe
               <span>2. Zero lateral coupling between same-layer primitives and layout</span>
             </div>
             <p className={`leading-relaxed ${isLight ? 'text-neutral-700' : 'text-neutral-300'}`}>
-              L1 of <code className="font-mono">DualGrabberSlider</code> and <code className="font-mono">SliderControl</code> Completely Independent; L2 of <code className="font-mono">VStack</code>, <code className="font-mono">HStack</code>, <code className="font-mono">GridStack</code> Individually consumed L0 <code className="font-mono">spacing.ts</code>, No cross-referencing. 
+              L1 of <code className="font-mono">DualGrabberSlider</code> and <code className="font-mono">SliderControl</code> Completely Independent; L2 of <code className="font-mono">Panel</code>, <code className="font-mono">MenuContainer</code>, <code className="font-mono">HudAnchorStage</code> Individually consumed L1 tokens, No cross-referencing. 
             </p>
           </div>
 
@@ -400,7 +400,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ isLight = true, onSe
               <span>3. L5 Four major professional domains 100% Orthogonal Isolation</span>
             </div>
             <p className={`leading-relaxed ${isLight ? 'text-neutral-700' : 'text-neutral-300'}`}>
-              5A (<code className="font-mono">src/ui-core/hud</code>), 5B (<code className="font-mono">src/ui-core/charts</code>), 5C (<code className="font-mono">src/ui-core/viewport</code>), 5D (<code className="font-mono">src/ui-core/loading</code>) No cross-module lines between import; Wherein 5B Chart library even for L1~L4 Also Zero Dependency, Single file copy-and-use. 
+              5A (<code className="font-mono">src/ui-core/hud</code>), 5B (<code className="font-mono">src/ui-core/charts</code>), 5C (<code className="font-mono">src/ui-core/viewport</code>) No cross-module lines between import; Wherein 5B Chart library even for L1~L4 Also Zero Dependency, Single file copy-and-use. 
             </p>
           </div>
 

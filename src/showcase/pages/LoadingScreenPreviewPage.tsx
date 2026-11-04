@@ -8,10 +8,10 @@ import {
   Ruler, Check, ShieldAlert, Sun,
   Moon, Sparkles, Sliders,
 } from 'lucide-react';
-import { LoadingStep, LoadingError } from '../../ui-core/loading/types';
-import { DualProgressBar, calculateOverallProgress, formatBytes, formatSpeed } from '../../ui-core/loading/DualProgressBar';
-import { LoadingScreen } from '../../ui-core/loading/LoadingScreen';
-import { GameViewport } from '../../ui-core/viewport/GameViewport';
+import { LoadingStep, LoadingError } from '../components/loading/types';
+import { DualProgressBar, calculateOverallProgress, formatBytes, formatSpeed } from '../components/loading/DualProgressBar';
+import { LoadingScreen } from '../components/loading/LoadingScreen';
+import { GameViewport } from '../components/GameViewport';
 import { SliderControl } from '../../ui-core/primitives/SliderControl';
 
 export interface LoadingScreenPreviewPageProps {

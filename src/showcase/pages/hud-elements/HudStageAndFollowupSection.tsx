@@ -16,9 +16,9 @@ import {
   type HudBallCamListener,
   type EditSubMode,
 } from '../../../ui-core/stores/hudTransientTypes';
-import { GameViewport } from '../../../ui-core/viewport/GameViewport';
+import { GameViewport } from '../../components/GameViewport';
 import { Badge } from '../../../ui-core/primitives/Badge';
-import { SectionErrorBoundary } from '../../../ui-core/primitives/SectionErrorBoundary';
+import { SectionErrorBoundary } from '../../components/SectionErrorBoundary';
 import { CodeBlock } from '../../CodeBlock';
 
 export type SlotLayoutPreset = 'classic-triad' | 'bottom-cluster' | 'edge-flush';

@@ -11,12 +11,11 @@ import { PrecisionDigitPicker, TunerPrecisionContext } from '../../ui-core/primi
 import { DropdownMenu } from '../../ui-core/compounds/DropdownMenu';
 import { ToggleSwitch } from '../../ui-core/primitives/ToggleSwitch';
 import { SegmentedSwitch } from '../../ui-core/primitives/SegmentedSwitch';
-import { ColorSwatchInput } from '../../ui-core/compounds/tuner/ColorSwatchInput';
-import { UVTransformControl, type UVTransformState } from '../../ui-core/compounds/tuner/UVTransformControl';
+import { ColorSwatchInput } from '../components/tuner/ColorSwatchInput';
+import { UVTransformControl, type UVTransformState } from '../components/tuner/UVTransformControl';
 import { PriorityQueueList, type PriorityQueueItem } from '../../ui-core/compounds/tuner/PriorityQueueList';
 import { EventFilterMatrix, type EventCatalogEntry } from '../../ui-core/compounds/tuner/EventFilterMatrix';
 import { TeamRosterCard } from '../../ui-core/compounds/TeamRosterCard';
-import { PeerRosterCard } from '../../ui-core/compounds/PeerRosterCard';
 import { PhaseVariationMatrix } from '../../ui-core/compounds/PhaseVariationMatrix';
 import { TelemetryConfigCard, TelemetryConfigState } from '../../ui-core/compounds/TelemetryConfigCard';
 import { CameraSwivelSimulatorCard } from '../../ui-core/compounds/CameraSwivelSimulatorCard';
@@ -24,9 +23,6 @@ import { KickoffDuelMatrixCard } from '../../ui-core/compounds/KickoffDuelMatrix
 import { TelemetryRingBuffer } from '../../ui-core/charts/telemetryRingBuffer';
 import { TelemetrySparklineChart } from '../../ui-core/charts/TelemetrySparklineChart';
 import { CubicBezierCurveEditor, CubicBezierValue } from '../../ui-core/charts/CubicBezierCurveEditor';
-import { VStack } from '../../ui-core/layout/VStack';
-import { HStack } from '../../ui-core/layout/HStack';
-import { GridStack } from '../../ui-core/layout/GridStack';
 import { Layers, Sparkles, Sliders, Palette, Filter, MousePointerClick } from 'lucide-react';
 import { PageJumpDirectory, JumpDirectoryItem } from '../PageJumpDirectory';
 
@@ -47,8 +43,8 @@ const L3_DIRECTORY_ITEMS: JumpDirectoryItem[] = [
   {
     id: 'l3-9-roster-cards',
     code: 'L3.9 & L3.10',
-    name: 'TeamRosterCard & PeerRosterCard',
-    label: 'multi Bot Team roster (`compounds/TeamRosterCard`) + Room connection roster (`compounds/PeerRosterCard`)',
+    name: 'TeamRosterCard (Blue & Orange Rosters)',
+    label: 'Multi-Bot & Room Team Roster Cards (`compounds/TeamRosterCard`)',
   },
   { id: 'l3-11-swivel-kickoff-duel', code: 'L3.11 & L3.12',
     name: 'CameraSwivelSimulatorCard & KickoffDuelMatrixCard', label: 'View rotation simulator + Kickoff AI Matchup 5 Origin anchor matrix' },
@@ -233,7 +229,7 @@ export const ComposableNestingPage: React.FC<ComposableNestingPageProps> = ({ is
 
         <div className={`p-6 rounded-xl border ${
           isLight ? 'bg-neutral-100/70 border-neutral-200/80' : 'bg-neutral-900/40 border-neutral-800/80' }`}>
-          <HStack gap="md" wrap className="items-center justify-between">
+          <div className="flex flex-wrap gap-3.5 items-center justify-between">
             <div className="flex flex-wrap items-center gap-3">
               {/* Mode A: Standard Options Dropdown */}
               <DropdownMenu
@@ -303,7 +299,7 @@ export const ComposableNestingPage: React.FC<ComposableNestingPageProps> = ({ is
             <div className="text-xs font-mono text-neutral-500">
               Active Preset: <strong className="text-amber-500">{presetMode}</strong> · Bias: <strong>{dropdownBias > 0 ? `+${dropdownBias}` : dropdownBias}°</strong>
             </div>
-          </HStack>
+          </div>
         </div>
       </section>
 
@@ -331,7 +327,7 @@ export const ComposableNestingPage: React.FC<ComposableNestingPageProps> = ({ is
           onClick={() => setButtonClicks((c) => c + 1)}
           className="w-full p-5 rounded-2xl text-left border-2 border-dashed border-amber-500/40 hover:border-amber-500/80 transition-all"
         >
-          <VStack gap="md">
+          <div className="flex flex-col gap-3.5 w-full">
             {/* Top Banner inside the Button */}
             <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-3 border-neutral-200/80 dark:border-neutral-800">
               <div className="flex items-center gap-2.5">
@@ -395,7 +391,7 @@ export const ComposableNestingPage: React.FC<ComposableNestingPageProps> = ({ is
                 />
               </div>
             </div>
-          </VStack>
+          </div>
         </Button>
       </section>
 
@@ -423,7 +419,7 @@ export const ComposableNestingPage: React.FC<ComposableNestingPageProps> = ({ is
         </div>
 
         <TunerPrecisionContext.Provider value={{ step: globalStep, setStep: setGlobalStep }}>
-          <GridStack cols={2} gap="md">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 w-full">
             {/* UVTransformControl */}
             <UVTransformControl
               title="Decal UV Scale & Offset Matrix"
@@ -470,17 +466,17 @@ export const ComposableNestingPage: React.FC<ComposableNestingPageProps> = ({ is
                 <span className="text-[10px] font-mono text-neutral-500">Live Shader Gradient</span>
               </div>
             </div>
-          </GridStack>
+          </div>
         </TunerPrecisionContext.Provider>
 
         {/* PriorityQueueList for Garage Team Colors */}
         <div id="l3-5-priority-event-matrix" className="space-y-4 scroll-mt-24">
-          <GridStack cols={2} gap="md">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 w-full">
             <PriorityQueueList title="Blue Team Paint Fallback Priority" subtitle="Primary -> Fallback 1 -> Fallback 2"
               items={blueQueue} accentDotColor="#0284c7" onReorder={(idx, dir) => handleReorder(setBlueQueue, idx, dir)} isLight={isLight} />
             <PriorityQueueList title="Orange Team Paint Fallback Priority" subtitle="Reorder preferred paint slots with zero coupling"
               items={orangeQueue} accentDotColor="#f59e0b" onReorder={(idx, dir) => handleReorder(setOrangeQueue, idx, dir)} isLight={isLight} />
-          </GridStack>
+          </div>
 
           {/* EventFilterMatrix */}
           <div className={`p-5 rounded-xl border space-y-3 ${
@@ -524,7 +520,7 @@ export const ComposableNestingPage: React.FC<ComposableNestingPageProps> = ({ is
 
         <div id="l3-9-roster-cards" className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start scroll-mt-24">
           <TeamRosterCard team={0} isLight={isLight} />
-          <PeerRosterCard isHosting={true} isLight={isLight} />
+          <TeamRosterCard team={1} isLight={isLight} />
         </div>
 
         <div id="l3-11-swivel-kickoff-duel" className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start scroll-mt-24">

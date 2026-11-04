@@ -30,7 +30,7 @@ export const EdgeInspectorReferenceMatrix: React.FC<EdgeInspectorReferenceMatrix
 {isEscMenuOpen && (
   <Layer1MainMenuRecipe
     onResume={() => setEscMenuRoute('none')}
-    extraBottomAction={<MenuItem title="Exit Edit Mode" variant="danger" ... />}
+    extraBottomAction={<MainMenuRow title="Exit Edit Mode" variant="danger" ... />}
   />
 )}`}
         />

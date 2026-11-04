@@ -11,7 +11,7 @@ import { Button } from '../../../ui-core/primitives/Button';
 import { KeycapBadge } from '../../../ui-core/primitives/KeycapBadge';
 import { SliderControl } from '../../../ui-core/primitives/SliderControl';
 import { SegmentedSwitch } from '../../../ui-core/primitives/SegmentedSwitch';
-import { MenuItem } from '../../../ui-core/compounds/MenuItem';
+import { MainMenuRow } from '../../../ui-core/layout/MainMenuRow';
 import { MenuDivider } from '../../../ui-core/layout/MenuContainer';
 import type { EdgeDrawerSide } from '../../../ui-core/navigation/EdgeInspectorDrawer';
 import {
@@ -115,7 +115,7 @@ export const EdgeInspectorSceneOverlayAndMenu: React.FC<
                 extraBottomAction={
                   <>
                     <MenuDivider isLight={isLight} />
-                    <MenuItem
+                    <MainMenuRow
                       icon={<LogOut className="h-5 w-5" />}
                       title="Exit Edit Mode"
                       subtitle="Save or discard training pack edits & leave editor"
