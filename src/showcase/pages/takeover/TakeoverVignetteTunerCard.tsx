@@ -11,7 +11,7 @@ import { CubicBezierCurveEditor, type CubicBezierPreset } from '../../../ui-core
 import { SliderControl } from '../../../ui-core/primitives/SliderControl';
 import { SegmentedSwitch } from '../../../ui-core/primitives/SegmentedSwitch';
 import { ToggleSwitch } from '../../../ui-core/primitives/ToggleSwitch';
-import { ColorSwatchInput } from '../../../ui-core/compounds/tuner/ColorSwatchInput';
+import { ColorSwatchInput } from '../../components/tuner/ColorSwatchInput';
 export const VIGNETTE_BEZIER_PRESETS: CubicBezierPreset[] = [
   { name: 'Smooth Seamless (Default)', value: { p1x: 0.64, p1y: 0.0, p2x: 0.28, p2y: 1.0 } },
   { name: 'Classic Ease-Out', value: { p1x: 0.36, p1y: 0.0, p2x: 0.22, p2y: 1.0 } },

@@ -6,7 +6,7 @@ import { type HudBoostListener } from '../../../ui-core/stores/hudTransientTypes
 import { SliderControl } from '../../../ui-core/primitives/SliderControl';
 import { ToggleSwitch } from '../../../ui-core/primitives/ToggleSwitch';
 import { Badge } from '../../../ui-core/primitives/Badge';
-import { SectionErrorBoundary } from '../../../ui-core/primitives/SectionErrorBoundary';
+import { SectionErrorBoundary } from '../../components/SectionErrorBoundary';
 import { CodeBlock } from '../../CodeBlock';
 import { HudBoostGaugeGeometryControls } from './HudBoostGaugeGeometryControls';
 

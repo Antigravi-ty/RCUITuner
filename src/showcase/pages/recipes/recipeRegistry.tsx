@@ -61,11 +61,13 @@ const ROUTE_PARAM_TO_RECIPE_ID: Record<string, string> = {
   'dev-sandboxes': 'recipe-6a-20-dev-isolation',
   'dev-active-tuners': 'recipe-6a-21-dev-tuners',
   'dev-calibrated-presets': 'recipe-6a-22-dev-presets',
+  'dev-self-test': 'recipe-6a-24-dev-self-test',
   'dev-under-development': 'recipe-6a-23-dev-under-dev',
   'static-training-pack': 'recipe-6a-14-rcspack',
   'advanced-audio': 'recipe-6a-15-adv-audio',
   'controller-settings': 'recipe-6a-16-adv-ctrl',
   'event-trigger-rules': 'recipe-6a-17-triggers',
+  'dev-signaling-lab': 'recipe-6a-25-dev-signaling-lab',
 };
 
 export interface ResolvedRecipeTarget {

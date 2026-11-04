@@ -5,7 +5,7 @@ import { LocalPanelSizingTuner } from './LocalPanelSizingTuner';
 import {
   LAYER3_HOST_MATCH_STATES,
   LAYER3_JOIN_ROOM_STATES,
-} from '../../../ui-core/recipes/recipeStateMatrixSpecs';
+} from './recipeStateMatrixSpecs';
 
 const Layer3AudioEqRecipe = lazy(() =>
   import('../../../ui-core/recipes/Layer3AudioEqRecipe').then((m) => ({

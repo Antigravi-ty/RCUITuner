@@ -5,7 +5,7 @@ import { LocalPanelSizingTuner } from './LocalPanelSizingTuner';
 import {
   LAYER2_GARAGE_STATES,
   LAYER2_SETTINGS_STATES,
-} from '../../../ui-core/recipes/recipeStateMatrixSpecs';
+} from './recipeStateMatrixSpecs';
 
 const Layer2PlayRecipe = lazy(() =>
   import('../../../ui-core/recipes/Layer2PlayRecipe').then((m) => ({

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Badge } from '../../../ui-core/primitives/Badge';
-import { SectionErrorBoundary } from '../../../ui-core/primitives/SectionErrorBoundary';
+import { SectionErrorBoundary } from '../../components/SectionErrorBoundary';
 import { StepperScoreboardHUD } from '../../../ui-core/hud/StepperScoreboardHUD';
 import { EdgePlayerHudStrip } from '../../../ui-core/hud/EdgePlayerHudStrip';
 import {

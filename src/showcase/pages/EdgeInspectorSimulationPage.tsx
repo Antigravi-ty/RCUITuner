@@ -5,7 +5,6 @@ const useState = createScopedSyncedState('page:edge-inspector');
 import { PanelRightClose, PanelLeftClose, RotateCcw, Check, Maximize2, LogOut } from 'lucide-react';
 import { EdgeInspectorDrawer, type EdgeDrawerSide } from '../../ui-core/navigation/EdgeInspectorDrawer';
 import { MenuDivider } from '../../ui-core/layout/MenuContainer';
-import { MenuItem } from '../../ui-core/compounds/MenuItem';
 import {
   Layer5StaticTrainingPackEditRecipe, openStaticTrainingExitConfirmDialogue,
 } from '../../ui-core/recipes/Layer5StaticTrainingPackEditRecipe';

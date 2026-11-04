@@ -8,7 +8,6 @@ import { UI_EASING, ContainerTransitionMode } from '../../ui-core/tokens/easing'
 import { Button } from '../../ui-core/primitives/Button';
 import { Badge } from '../../ui-core/primitives/Badge';
 import { KeycapBadge } from '../../ui-core/primitives/KeycapBadge';
-import { HStack } from '../../ui-core/layout/HStack';
 import { MorphContainer, TransitionPhase } from '../../ui-core/navigation/transitions';
 import { CodeBlock } from '../CodeBlock';
 
@@ -94,7 +93,7 @@ export const AnimationPage: React.FC<{ isLight?: boolean }> = ({ isLight = true 
                 <p className={`text-xs leading-relaxed ${isLight ? 'text-neutral-600' : 'text-neutral-400'}`}>
                   Expanded State: For Secondary Garage/Configure Complex Forms. in SequencedStepTransition Experience in Mode 100ms fade out → 150ms Container width transition → 100ms Fade In. 
                 </p>
-                <HStack gap="sm">
+                <div className="flex items-center gap-2">
                   <Button
                     size="sm"
                     variant="secondary"
@@ -115,7 +114,7 @@ export const AnimationPage: React.FC<{ isLight?: boolean }> = ({ isLight = true 
                   >
                     Replay Transition
                   </Button>
-                </HStack>
+                </div>
               </div>
             )}
           </MorphContainer>
@@ -319,7 +318,7 @@ export const AnimationPage: React.FC<{ isLight?: boolean }> = ({ isLight = true 
           Click the button below or trigger the key to experience millisecond haptic feedback (active:scale-[0.98] With shadowless flat highlight, Physical Spring Damping) : 
         </p>
 
-        <HStack gap="md" wrap>
+        <div className="flex items-center gap-3.5 flex-wrap">
           <Button
             variant="primary"
             shortcut="ENTER"
@@ -337,7 +336,7 @@ export const AnimationPage: React.FC<{ isLight?: boolean }> = ({ isLight = true 
           >
             Reset
           </Button>
-        </HStack>
+        </div>
       </div>
 
       {/* 3. Interactive Spring Physics Playground */}

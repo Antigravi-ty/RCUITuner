@@ -57,6 +57,27 @@ const ROOT_ENTRY_FILES = new Set([
   'src/ui-core/hud/InGameHUD.tsx',
 ]);
 
+// Stream B Guard: Forbidden orphan / showcase-only files inside src/ui-core/
+const FORBIDDEN_UI_CORE_PATHS = new Set([
+  'src/ui-core/layout/VStack.tsx',
+  'src/ui-core/layout/HStack.tsx',
+  'src/ui-core/layout/GridStack.tsx',
+  'src/ui-core/compounds/MenuItem.tsx',
+  'src/ui-core/compounds/PeerRosterCard.tsx',
+  'src/ui-core/compounds/tuner/ColorSwatchInput.tsx',
+  'src/ui-core/compounds/tuner/UVTransformControl.tsx',
+  'src/ui-core/loading/LoadingScreen.tsx',
+  'src/ui-core/loading/DualProgressBar.tsx',
+  'src/ui-core/loading/types.ts',
+  'src/ui-core/panels/FloatingWindowToolbar.tsx',
+  'src/ui-core/primitives/SectionErrorBoundary.tsx',
+  'src/ui-core/recipes/Layer1ContextGroupedSelector.tsx',
+  'src/ui-core/recipes/recipeStateMatrixSpecs.ts',
+  'src/ui-core/stores/livePreviewStore.ts',
+  'src/ui-core/stores/themeStore.ts',
+  'src/ui-core/viewport/GameViewport.tsx',
+]);
+
 // Pure L1 domain/style state schema interfaces that end in *Params but represent
 // persisted configuration payloads rather than function/component parameter bags.
 const L1_STATE_SCHEMA_INTERFACES = new Set([
@@ -81,7 +102,6 @@ const LAYER_RULES = [
   { prefix: 'src/ui-core/charts/', rank: 3, name: 'L3:Charts' },
   { prefix: 'src/ui-core/viewport/', rank: 4, name: 'L4:Viewport' },
   { prefix: 'src/ui-core/hud/', rank: 5, name: 'L5:HUD' },
-  { prefix: 'src/ui-core/loading/', rank: 6, name: 'L6:Loading' },
   { prefix: 'src/ui-core/recipes/', rank: 6, name: 'L6:Recipes' },
   { prefix: 'src/ui-core/panels/', rank: 6, name: 'L6:Panels' },
   { prefix: 'src/ui-core/navigation/', rank: 7, name: 'L7:Navigation' },
@@ -341,7 +361,6 @@ function analyzeWideWaist(content, relPath) {
     relPath.startsWith('src/ui-core/primitives/') ||
     relPath.startsWith('src/ui-core/compounds/') ||
     relPath.startsWith('src/ui-core/hud/') ||
-    relPath.startsWith('src/ui-core/loading/') ||
     relPath.startsWith('src/ui-core/navigation/') ||
     /^src\/ui-core\/panels\/(user|dev)\/\w+FloatingWindow\.tsx$/.test(relPath);
 
@@ -682,10 +701,10 @@ for (const absFile of allFiles) {
   gutSharingErrors.push(...gutFindings);
 }
 
-// 4.8 Dead File / Unused Module Detection (0 incoming references)
+// 4.8 Dead File / Unused Module & Forbidden UI-Core Orphan Detection
 const deadFiles = [];
 for (const [relFile, refCount] of incomingRefCounts.entries()) {
-  if (refCount === 0 && !ROOT_ENTRY_FILES.has(relFile)) {
+  if ((refCount === 0 && !ROOT_ENTRY_FILES.has(relFile)) || FORBIDDEN_UI_CORE_PATHS.has(relFile)) {
     deadFiles.push(relFile);
   }
 }

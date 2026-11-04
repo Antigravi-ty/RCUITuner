@@ -3,9 +3,8 @@ import { createScopedSyncedState } from '../stores/crossClientSync';
 import { Layers, Columns, Rows, Crosshair } from 'lucide-react';
 
 const useState = createScopedSyncedState('page:stacks');
-import { VStack, StackGap } from '../../ui-core/layout/VStack';
-import { HStack } from '../../ui-core/layout/HStack';
-import { GridStack } from '../../ui-core/layout/GridStack';
+type StackGap = 'sm' | 'md' | 'lg';
+const GAP_CLASS_MAP: Record<StackGap, string> = { sm: 'gap-2', md: 'gap-3.5', lg: 'gap-5' };
 import {
   HudAnchorStage,
   HudTopSplitBand,
@@ -73,11 +72,8 @@ export const StacksPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }) 
           </div>
         </div>
 
-        <VStack
-          gap={vGap}
-          divider={showDivider}
-          isLight={isLight}
-          className={`p-4 rounded-xl border transition-colors ${
+        <div
+          className={`flex flex-col ${GAP_CLASS_MAP[vGap]} ${showDivider ? (isLight ? 'divide-y divide-neutral-200' : 'divide-y divide-neutral-800') : ''} p-4 rounded-xl border transition-colors ${
             isLight ? 'bg-neutral-50/80 border-neutral-200' : 'bg-neutral-950/40 border-neutral-800'
           }`}
         >
@@ -108,7 +104,7 @@ export const StacksPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }) 
           >
             VStack Element C (Bottom Section)
           </div>
-        </VStack>
+        </div>
       </div>
 
       {/* 2. HStack */}
@@ -135,10 +131,8 @@ export const StacksPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }) 
           />
         </div>
 
-        <HStack
-          gap={hGap}
-          isLight={isLight}
-          className={`p-4 rounded-xl border transition-colors ${
+        <div
+          className={`flex items-center ${GAP_CLASS_MAP[hGap]} p-4 rounded-xl border transition-colors ${
             isLight ? 'bg-neutral-50/80 border-neutral-200' : 'bg-neutral-950/40 border-neutral-800'
           }`}
         >
@@ -163,7 +157,7 @@ export const StacksPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }) 
           >
             Item 3
           </div>
-        </HStack>
+        </div>
       </div>
 
       {/* 3. GridStack */}
@@ -190,7 +184,7 @@ export const StacksPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }) 
           />
         </div>
 
-        <GridStack cols={cols} gap="md">
+        <div className={`grid ${cols === 2 ? "grid-cols-2" : cols === 3 ? "grid-cols-3" : "grid-cols-4"} gap-3.5`}>
           {Array.from({ length: cols * 2 }).map((_, i) => (
             <div
               key={i}
@@ -203,7 +197,7 @@ export const StacksPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }) 
               Grid Item #{i + 1}
             </div>
           ))}
-        </GridStack>
+        </div>
       </div>
 
       {/* 4. HudAnchorStage + HudTopSplitBand + HudZone + HudSlot + HudRelativeAnchor */}
@@ -374,14 +368,12 @@ export const StacksPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }) 
         isLight={isLight}
         title="Agent code recipe (Stack & HudAnchorStage Layout Recipe)"
         code={`import {
-  VStack,
-  HStack,
-  GridStack,
   HudAnchorStage,
+  HudTopSplitBand,
   HudZone,
   HudSlot,
   HudRelativeAnchor,
-} from '@/ui-core/layout/VStack';
+} from '@/ui-core/layout/HudAnchorStage';
 
 // 1. top bar 56px Shared vertical space (left Telemetry With right 40x40 Stack Icon + Bubble Vertically centered)
 <HudAnchorStage strategy="reserve">

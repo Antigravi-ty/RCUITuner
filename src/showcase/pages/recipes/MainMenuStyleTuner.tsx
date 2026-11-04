@@ -11,7 +11,7 @@ import { Badge } from '../../../ui-core/primitives/Badge';
 import { Button } from '../../../ui-core/primitives/Button';
 import { CodeBlock } from '../../CodeBlock';
 import { Layer1MainMenuRecipe } from '../../../ui-core/recipes/Layer1MainMenuRecipe';
-import { Layer1ContextGroupedSelector } from '../../../ui-core/recipes/Layer1ContextGroupedSelector';
+import { Layer1ContextGroupedSelector } from './Layer1ContextGroupedSelector';
 import {
   resolveLayer1ContextSpec,
   type Layer1ContextVariation,

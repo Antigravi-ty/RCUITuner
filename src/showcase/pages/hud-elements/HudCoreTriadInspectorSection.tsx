@@ -11,7 +11,7 @@ import {
 import { SliderControl } from '../../../ui-core/primitives/SliderControl';
 import { ToggleSwitch } from '../../../ui-core/primitives/ToggleSwitch';
 import { Badge } from '../../../ui-core/primitives/Badge';
-import { SectionErrorBoundary } from '../../../ui-core/primitives/SectionErrorBoundary';
+import { SectionErrorBoundary } from '../../components/SectionErrorBoundary';
 import { HudBoostGaugeTunerSection } from './HudBoostGaugeTunerSection';
 
 const useState = createScopedSyncedState('page:hud-elements');

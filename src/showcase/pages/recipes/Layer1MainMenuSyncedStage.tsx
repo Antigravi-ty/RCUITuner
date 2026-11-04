@@ -4,7 +4,7 @@ import { CodeBlock } from '../../CodeBlock';
 import { Badge } from '../../../ui-core/primitives/Badge';
 import { AuditTicketHeader } from '../../components/AuditTicketHeader';
 import { LocalPanelSizingTuner } from './LocalPanelSizingTuner';
-import { Layer1ContextGroupedSelector } from '../../../ui-core/recipes/Layer1ContextGroupedSelector';
+import { Layer1ContextGroupedSelector } from './Layer1ContextGroupedSelector';
 import { resolveLayer1ContextSpec } from '../../../ui-core/recipes/layer1MenuContextSpecs';
 import { useMainMenuStyleStore } from '../../../ui-core/stores/mainMenuStyleStore';
 

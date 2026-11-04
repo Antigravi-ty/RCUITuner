@@ -6,7 +6,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
 } from 'lucide-react';
-import { useAccentStore } from '../ui-core/stores/themeStore';
+import { useAccentStore } from './stores/themeStore';
 import { AccentColor } from '../ui-core/tokens/colors';
 import {
   PYRAMID_LAYERS,

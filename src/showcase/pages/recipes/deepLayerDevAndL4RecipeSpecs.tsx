@@ -21,6 +21,11 @@ const Layer3DevCalibratedPresetsRecipe = lazy(() =>
     default: m.Layer3DevCalibratedPresetsRecipe,
   }))
 );
+const Layer3DevSelfTestRecipe = lazy(() =>
+  import('../../../ui-core/recipes/Layer3DevSelfTestRecipe').then((m) => ({
+    default: m.Layer3DevSelfTestRecipe,
+  }))
+);
 const Layer3DevUnderDevelopmentRecipe = lazy(() =>
   import('../../../ui-core/recipes/Layer3DevUnderDevelopmentRecipe').then((m) => ({
     default: m.Layer3DevUnderDevelopmentRecipe,
@@ -44,6 +49,11 @@ const Layer4ControllerSettingsRecipe = lazy(() =>
 const Layer4EventTriggerRulesRecipe = lazy(() =>
   import('../../../ui-core/recipes/Layer4EventTriggerRulesRecipe').then((m) => ({
     default: m.Layer4EventTriggerRulesRecipe,
+  }))
+);
+const Layer4DevSignalingLabRecipe = lazy(() =>
+  import('../../../ui-core/recipes/Layer4DevSignalingLabRecipe').then((m) => ({
+    default: m.Layer4DevSignalingLabRecipe,
   }))
 );
 
@@ -139,5 +149,25 @@ export const DEEP_LAYER_DEV_AND_L4_RECIPE_SPECS: DeepLayerRecipeSpec[] = [
     tunerLabel: 'Layer 3 Under Development (Experimental features lab)',
     recommendation: '3-Wheel Mode, Retro Arena, Bike Boost Fine-tuning and collision camera shake parameter panel',
     renderPreview: (isLight) => <Layer3DevUnderDevelopmentRecipe isLight={isLight} onBack={noop} />,
+  },
+  {
+    id: 'recipe-6a-24-dev-self-test',
+    code: '6A.24',
+    badgeColor: 'amber',
+    title: 'Layer 3 Developer Self Test (Automated subsystem self-test suites and verification harnesses)',
+    panelId: 'layer3-dev-self-test',
+    tunerLabel: 'Layer 3 Developer Self Test',
+    recommendation: 'Automated diagnostic and self-test suites available for the active developer environment',
+    renderPreview: (isLight) => <Layer3DevSelfTestRecipe isLight={isLight} onBack={noop} />,
+  },
+  {
+    id: 'recipe-6a-25-dev-signaling-lab',
+    code: '6A.25',
+    badgeColor: 'sky',
+    title: 'Layer 4 4-Server Signaling & Dual Bridge Lab (emqx_cn · emqx_gb · supabase_jp · supabase_sg Full-Mesh Diagnostic)',
+    panelId: 'layer4-dev-signaling-lab',
+    tunerLabel: 'Layer 4 4-Server Signaling & Dual Bridge Lab',
+    recommendation: '4-Server Full-Mesh, Dual Edge Function fanout, 5-layer anti-loop guards, and One-Click Full Diagnostic',
+    renderPreview: (isLight) => <Layer4DevSignalingLabRecipe isLight={isLight} onBack={noop} />,
   },
 ];

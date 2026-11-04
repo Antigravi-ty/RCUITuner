@@ -4,7 +4,7 @@ import { ArenaLightingPreset } from '../../ArenaBackdrop';
 import { SliderControl } from '../../../ui-core/primitives/SliderControl';
 import { SegmentedSwitch } from '../../../ui-core/primitives/SegmentedSwitch';
 import { ToggleSwitch } from '../../../ui-core/primitives/ToggleSwitch';
-import { ColorSwatchInput } from '../../../ui-core/compounds/tuner/ColorSwatchInput';
+import { ColorSwatchInput } from '../../components/tuner/ColorSwatchInput';
 import { JumpDirectoryItem } from '../../PageJumpDirectory';
 export type StageBgMode = 'solid' | 'gradient' | 'arena' | 'flow';
 

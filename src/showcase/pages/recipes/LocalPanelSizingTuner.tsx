@@ -51,6 +51,8 @@ export const RECIPES_JUMP_ITEMS: JumpDirectoryItem[] = [
   { id: 'recipe-6a-21-dev-tuners', code: '6A.21', name: 'Layer3DevActiveTunersRecipe', label: 'Active tuner and phase matrix', badge: 'Layer 3 · Dev', category: 'layer3-dev' },
   { id: 'recipe-6a-22-dev-presets', code: '6A.22', name: 'Layer3DevCalibratedPresetsRecipe', label: 'Tuner library calibrated', badge: 'Layer 3 · Dev', category: 'layer3-dev' },
   { id: 'recipe-6a-23-dev-under-dev', code: '6A.23', name: 'Layer3DevUnderDevelopmentRecipe', label: 'Feature in Development (Camera Shake)', badge: 'Layer 3 · Dev', category: 'layer3-dev' },
+  { id: 'recipe-6a-24-dev-self-test', code: '6A.24', name: 'Layer3DevSelfTestRecipe', label: 'Developer Self Test Suites', badge: 'Layer 3 · Dev', category: 'layer3-dev' },
+  { id: 'recipe-6a-25-dev-signaling-lab', code: '6A.25', name: 'Layer4DevSignalingLabRecipe', label: '4-Server Signaling & Dual Bridge Lab', badge: 'Layer 4 · Dev', category: 'layer4' },
 ];
 
 export interface LocalPanelSizingTunerProps {

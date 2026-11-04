@@ -152,6 +152,11 @@ export const MenuLayerDeepRouteRenderer: React.FC<MenuLayerDeepRouteRendererProp
                   panel: 'layer3-dev-calibrated-presets' as const,
                 },
                 {
+                  route: 'dev-self-test' as const,
+                  label: 'Self Test (Self-Test Suites)',
+                  panel: 'layer3-dev-self-test' as const,
+                },
+                {
                   route: 'dev-under-development' as const,
                   label: 'Under Development (Feature in Development)',
                   panel: 'layer3-dev-under-development' as const,
@@ -369,6 +374,11 @@ export const MenuLayerDeepRouteRenderer: React.FC<MenuLayerDeepRouteRendererProp
                   route: 'event-trigger-rules' as const,
                   label: 'Event & Trigger Rules (Trigger rule engine)',
                   panel: 'layer4-event-trigger-rules' as const,
+                },
+                {
+                  route: 'dev-signaling-lab' as const,
+                  label: '4-Server Signaling Lab (Full-Mesh & Dual Bridge)',
+                  panel: 'layer4-dev-signaling-lab' as const,
                 },
               ]
           ).map((item) => {

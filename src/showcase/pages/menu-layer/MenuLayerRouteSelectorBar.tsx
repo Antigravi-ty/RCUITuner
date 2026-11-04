@@ -10,7 +10,7 @@ import { useMenuLayoutStore } from '../../../ui-core/stores/menuLayoutStore';
 import { DEFAULT_PANEL_SIZING, type MenuPanelId } from '../../../ui-core/tokens/menuLayoutTokens';
 import { usePlayCardStyleStore, type PlayCardStyleVariant } from '../../../ui-core/stores/playCardStyleStore';
 import { useMainMenuStyleStore, MAIN_MENU_STYLE_PRESETS } from '../../../ui-core/stores/mainMenuStyleStore';
-import { Layer1ContextGroupedSelector } from '../../../ui-core/recipes/Layer1ContextGroupedSelector';
+import { Layer1ContextGroupedSelector } from '../recipes/Layer1ContextGroupedSelector';
 import { resolveLayer1ContextSpec, type Layer1MenuContextMode } from '../../../ui-core/recipes/layer1MenuContextSpecs';
 import { ONLINE_SESSION_CONTEXT_SPECS, resolveOnlineSessionContextId } from '../../../ui-core/recipes/Layer2ManageRoomRecipe';
 import type { ShowcaseTab } from '../../sidebarNavConfig';

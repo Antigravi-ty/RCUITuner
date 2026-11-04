@@ -33,9 +33,9 @@ const NameTagTunerPage = lazy(() => import('./showcase/pages/NameTagTunerPage').
 import { SafeAreaHud } from './ui-core/viewport/SafeAreaHud';
 import { useViewportStore, viewportStore } from './ui-core/stores/viewportStore';
 import { DialogueStackContainer } from './ui-core/compounds/Dialogue';
-import { SectionErrorBoundary } from './ui-core/primitives/SectionErrorBoundary';
+import { SectionErrorBoundary } from './showcase/components/SectionErrorBoundary';
 import { ShieldAlert, ArrowLeft } from 'lucide-react';
-import { useAccentStore } from './ui-core/stores/themeStore';
+import { useAccentStore } from './showcase/stores/themeStore';
 import { readUrlParams, updateUrlParams } from './showcase/stores/urlSync';
 import { useSyncedState } from './showcase/stores/crossClientSync';
 

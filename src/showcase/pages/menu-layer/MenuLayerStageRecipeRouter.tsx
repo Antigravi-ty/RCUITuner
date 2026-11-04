@@ -21,11 +21,13 @@ import { Layer3ExpMultiBotsRecipe } from '../../../ui-core/recipes/Layer3ExpMult
 import { Layer3DevSandboxesRecipe } from '../../../ui-core/recipes/Layer3DevSandboxesRecipe';
 import { Layer3DevActiveTunersRecipe } from '../../../ui-core/recipes/Layer3DevActiveTunersRecipe';
 import { Layer3DevCalibratedPresetsRecipe } from '../../../ui-core/recipes/Layer3DevCalibratedPresetsRecipe';
+import { Layer3DevSelfTestRecipe } from '../../../ui-core/recipes/Layer3DevSelfTestRecipe';
 import { Layer3DevUnderDevelopmentRecipe } from '../../../ui-core/recipes/Layer3DevUnderDevelopmentRecipe';
 import { Layer4StaticTrainingPackBrowseRecipe } from '../../../ui-core/recipes/Layer4StaticTrainingPackBrowseRecipe';
 import { Layer4AdvancedAudioRecipe } from '../../../ui-core/recipes/Layer4AdvancedAudioRecipe';
 import { Layer4ControllerSettingsRecipe } from '../../../ui-core/recipes/Layer4ControllerSettingsRecipe';
 import { Layer4EventTriggerRulesRecipe } from '../../../ui-core/recipes/Layer4EventTriggerRulesRecipe';
+import { Layer4DevSignalingLabRecipe } from '../../../ui-core/recipes/Layer4DevSignalingLabRecipe';
 import { floatingStore, type FloatingWindowItem } from '../../../ui-core/stores/floatingStore';
 import { type PresetConfig } from '../../../ui-core/stores/floatingPresets';
 import { PRESET_WINDOWS } from '../../../ui-core/stores/devFloatingPresets';
@@ -433,6 +435,17 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
         />
       )}
 
+      {displayedRoute === 'dev-self-test' && (
+        <Layer3DevSelfTestRecipe
+          isLight={isLight}
+          onBack={goBack}
+          onNavigateSignalingLab={() => {
+            setLastParentRoute('dev-self-test');
+            handleSelectRoute('dev-signaling-lab');
+          }}
+        />
+      )}
+
       {displayedRoute === 'dev-under-development' && (
         <Layer3DevUnderDevelopmentRecipe
           isLight={isLight}
@@ -464,6 +477,13 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
 
       {displayedRoute === 'event-trigger-rules' && (
         <Layer4EventTriggerRulesRecipe
+          isLight={isLight}
+          onBack={goBack}
+        />
+      )}
+
+      {displayedRoute === 'dev-signaling-lab' && (
+        <Layer4DevSignalingLabRecipe
           isLight={isLight}
           onBack={goBack}
         />

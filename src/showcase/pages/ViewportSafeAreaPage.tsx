@@ -12,7 +12,7 @@ import {
   Eye,
   CheckCircle2,
 } from 'lucide-react';
-import { GameViewport } from '../../ui-core/viewport/GameViewport';
+import { GameViewport } from '../components/GameViewport';
 import { SafeAreaHud } from '../../ui-core/viewport/SafeAreaHud';
 import { useViewportStore, viewportStore } from '../../ui-core/stores/viewportStore';
 import { SliderControl } from '../../ui-core/primitives/SliderControl';
@@ -279,7 +279,7 @@ export const ViewportSafeAreaPage: React.FC<{ isLight?: boolean }> = ({ isLight 
       <CodeBlock
         isLight={isLight}
         title="5C. GameViewport & SafeAreaHud Standard Call Example"
-        code={`import { GameViewport } from '@/ui-core/viewport/GameViewport';
+        code={`import { GameViewport } from '../components/GameViewport';
 import { SafeAreaHud } from '@/ui-core/viewport/SafeAreaHud';
 import { useViewportStore } from '@/ui-core/stores/viewportStore';
 

@@ -12,7 +12,7 @@ import {
   rgbTupleToHex,
   parseColorStringToHex,
   clampRgbChannel,
-} from '../../../ui-core/compounds/tuner/ColorSwatchInput';
+} from '../../components/tuner/ColorSwatchInput';
 
 export interface BlueColorPreset {
   id: string;

@@ -10,7 +10,7 @@ import {
   resolveSkipIndicatorConfig,
 } from '../../ui-core/stores/hudTransientTypes';
 import { Badge } from '../../ui-core/primitives/Badge';
-import { SectionErrorBoundary } from '../../ui-core/primitives/SectionErrorBoundary';
+import { SectionErrorBoundary } from '../components/SectionErrorBoundary';
 import { PageJumpDirectory, JumpDirectoryItem } from '../PageJumpDirectory';
 import { HudSpatialChoreographySandbox } from './hud-elements/HudSpatialChoreographySandbox';
 import { EdgeDemoInspectorSection } from './hud-elements/EdgeDemoInspectorSection';

@@ -3,7 +3,7 @@ import { AuditTicketHeader } from '../../components/AuditTicketHeader';
 import {
   LAYER2_MANAGE_ROOM_STATES,
   LAYER3_HOST_TRAINING_STATES,
-} from '../../../ui-core/recipes/recipeStateMatrixSpecs';
+} from './recipeStateMatrixSpecs';
 import type { MenuPanelId } from '../../../ui-core/tokens/menuLayoutTokens';
 
 export interface DeepLayerRecipeSpec {

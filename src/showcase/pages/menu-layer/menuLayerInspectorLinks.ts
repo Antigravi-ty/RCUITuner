@@ -172,6 +172,13 @@ const ROUTE_TO_6A_RECIPE_TARGET: Record<ActiveMenuRoute, InspectorJumpTarget> = 
     tab: 'recipes',
     targetId: 'recipe-6a-22-dev-presets',
   },
+  'dev-self-test': {
+    code: '6A.24',
+    componentName: 'Layer3DevSelfTestRecipe',
+    label: '6A.24 Developer self-test suites',
+    tab: 'recipes',
+    targetId: 'recipe-6a-24-dev-self-test',
+  },
   'dev-under-development': {
     code: '6A.23',
     componentName: 'Layer3DevUnderDevelopmentRecipe',
@@ -206,6 +213,13 @@ const ROUTE_TO_6A_RECIPE_TARGET: Record<ActiveMenuRoute, InspectorJumpTarget> = 
     label: '6A.17 Trigger rule engine panel tuning',
     tab: 'recipes',
     targetId: 'recipe-6a-17-triggers',
+  },
+  'dev-signaling-lab': {
+    code: '6A.25',
+    componentName: 'Layer4DevSignalingLabRecipe',
+    label: '6A.25 4-Server Signaling & Dual Bridge Lab',
+    tab: 'recipes',
+    targetId: 'recipe-6a-25-dev-signaling-lab',
   },
 };
 

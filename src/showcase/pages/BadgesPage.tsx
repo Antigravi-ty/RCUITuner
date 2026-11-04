@@ -6,8 +6,6 @@ const useState = createScopedSyncedState('page:badges');
 import { Badge } from '../../ui-core/primitives/Badge';
 import { KeycapBadge } from '../../ui-core/primitives/KeycapBadge';
 import { Button } from '../../ui-core/primitives/Button';
-import { HStack } from '../../ui-core/layout/HStack';
-import { VStack } from '../../ui-core/layout/VStack';
 import { CodeBlock } from '../CodeBlock';
 
 export const BadgesPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }) => {
@@ -82,12 +80,12 @@ export const BadgesPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }) 
         </div>
 
         {/* Size Modifiers */}
-        <HStack gap="md" align="center" className="mt-2 pt-3 border-t border-dashed border-neutral-200 dark:border-neutral-800">
+        <div className="flex items-center gap-3.5 mt-2 pt-3 border-t border-dashed border-neutral-200 dark:border-neutral-800">
           <span className={`text-xs ${isLight ? 'text-neutral-500' : 'text-neutral-400'}`}>Dimensions (Modifiers): </span>
           <Badge size="sm" variant="primary" isLight={isLight}>Small (sm)</Badge>
           <Badge size="md" variant="primary" isLight={isLight}>Medium (md)</Badge>
           <Badge size="lg" variant="primary" isLight={isLight}>Large (lg)</Badge>
-        </HStack>
+        </div>
       </div>
 
       {/* 2. Keycaps Showcase */}
@@ -104,10 +102,8 @@ export const BadgesPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }) 
           Discard abrupt bottom 3D sunken shadows, Flat, clean, and refined badge design. Clear contrast between background color and gray base, Support real-time tap highlight: 
         </p>
 
-        <HStack
-          gap="sm"
-          wrap
-          className={`p-4 rounded-xl border transition-colors ${
+        <div
+          className={`flex items-center gap-2 flex-wrap p-4 rounded-xl border transition-colors ${
             isLight ? 'bg-neutral-50/80 border-neutral-200' : 'bg-neutral-900/90 border-neutral-700/80'
           }`}
         >
@@ -120,14 +116,14 @@ export const BadgesPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }) 
               pressed={activeKey === k}
             />
           ))}
-        </HStack>
+        </div>
 
-        <HStack gap="md" align="center" className="mt-1">
+        <div className="flex items-center gap-3.5 mt-1">
           <span className={`text-xs ${isLight ? 'text-neutral-500' : 'text-neutral-400'}`}>Size Modifier: </span>
           <KeycapBadge shortcut="TAB" size="sm" isLight={isLight} />
           <KeycapBadge shortcut="TAB" size="md" isLight={isLight} />
           <KeycapBadge shortcut="TAB" size="lg" isLight={isLight} />
-        </HStack>
+        </div>
       </div>
 
       {/* 3. Gamepad Badges */}
@@ -144,10 +140,8 @@ export const BadgesPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }) 
           Match Xbox / PlayStation Controller color specification, No Thick Bottom Shadow, Clear and Distinct: 
         </p>
 
-        <HStack
-          gap="sm"
-          wrap
-          className={`p-4 rounded-xl border transition-colors ${
+        <div
+          className={`flex items-center gap-2 flex-wrap p-4 rounded-xl border transition-colors ${
             isLight ? 'bg-neutral-50/80 border-neutral-200' : 'bg-neutral-900/90 border-neutral-700/80'
           }`}
         >
@@ -160,7 +154,7 @@ export const BadgesPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }) 
               isLight={isLight}
             />
           ))}
-        </HStack>
+        </div>
       </div>
 
       {/* 4. Button with Keycap Integration */}
@@ -173,7 +167,7 @@ export const BadgesPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }) 
         <p className={`text-xs ${isLight ? 'text-neutral-600' : 'text-neutral-400'}`}>
           Button auto-embeds flat style KeycapBadge, Farewell to abrupt shadows, Smooth and clean visual hierarchy: 
         </p>
-        <HStack gap="md" wrap>
+        <div className="flex items-center gap-3.5 flex-wrap">
           <Button variant="primary" shortcut="ESC" isLight={isLight}>
             Resume Game
           </Button>
@@ -186,7 +180,7 @@ export const BadgesPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }) 
           <Button variant="danger" shortcut="F4" isLight={isLight}>
             Forfeit Match
           </Button>
-        </HStack>
+        </div>
       </div>
 
       {/* Code Snippet for AI Agents */}
