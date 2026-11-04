@@ -12,7 +12,7 @@ import { usePlayCardStyleStore, type PlayCardStyleVariant } from '../../../ui-co
 import { useMainMenuStyleStore, MAIN_MENU_STYLE_PRESETS } from '../../../ui-core/stores/mainMenuStyleStore';
 import { Layer1ContextGroupedSelector } from '../../../ui-core/recipes/Layer1ContextGroupedSelector';
 import { resolveLayer1ContextSpec, type Layer1MenuContextMode } from '../../../ui-core/recipes/layer1MenuContextSpecs';
-import { ONLINE_SESSION_CONTEXT_SPECS, resolveOnlineSessionContextId } from '../../../ui-core/recipes/Layer2OnlineRoomControlRecipe';
+import { ONLINE_SESSION_CONTEXT_SPECS, resolveOnlineSessionContextId } from '../../../ui-core/recipes/Layer2ManageRoomRecipe';
 import type { ShowcaseTab } from '../../sidebarNavConfig';
 import {
   type ActiveMenuRoute, type MenuVisibilityTier, USER_SETTINGS_QUICK_TABS,
@@ -356,14 +356,14 @@ export const MenuLayerRouteSelectorBar = React.memo<MenuLayerRouteSelectorBarPro
                   <span className="font-mono text-[10px] opacity-75">{getPanelWidth('layer2-settings')}px</span>
                 </button>
 
-                <button type="button" onClick={() => handleSelectRoute('room-host-control')}
+                <button type="button" onClick={() => handleSelectRoute('manage-room')}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
-                    currentRoute === 'room-host-control' ? 'bg-amber-500 text-white border-amber-500 font-semibold shadow-2xs'
+                    currentRoute === 'manage-room' ? 'bg-amber-500 text-white border-amber-500 font-semibold shadow-2xs'
                       : isLight ? 'bg-neutral-50 hover:bg-neutral-100 border-neutral-200 text-neutral-800'
                       : 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-neutral-200'}`}>
                   <Server className="h-3.5 w-3.5" />
                   <span>Room Host Control (Host Console)</span>
-                  <span className="font-mono text-[10px] opacity-75">{getPanelWidth('layer2-room-host-control')}px</span>
+                  <span className="font-mono text-[10px] opacity-75">{getPanelWidth('layer2-manage-room')}px</span>
                 </button>
               </>
             ) : (
@@ -473,7 +473,7 @@ export const MenuLayerRouteSelectorBar = React.memo<MenuLayerRouteSelectorBarPro
         )}
 
         {/* Sub-tab bar when Room Host Control is active */}
-        {currentRoute === 'room-host-control' && (
+        {currentRoute === 'manage-room' && (
           <div className="w-full pt-2 flex flex-col gap-1.5 border-t border-neutral-100 dark:border-neutral-800/60 mt-1">
             <div className="flex items-center justify-between text-[11px] text-neutral-500 dark:text-neutral-400 font-mono">
               <span>Online Room Control 6 State Context Synchronization (Match Lobby / During Match / Online Warmup · Host & Client):</span>

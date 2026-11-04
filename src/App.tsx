@@ -16,9 +16,7 @@ const NotificationIntegrationPage = lazy(() => import('./showcase/pages/Notifica
 const HudElementsPage = lazy(() => import('./showcase/pages/HudElementsPage').then((m) => ({ default: m.HudElementsPage })));
 const CenterUpperInfoPage = lazy(() => import('./showcase/pages/CenterUpperInfoPage').then((m) => ({ default: m.CenterUpperInfoPage })));
 const TakeoverPage = lazy(() => import('./showcase/pages/TakeoverPage').then((m) => ({ default: m.TakeoverPage })));
-const StatsEventFeedPage = lazy(() => import('./showcase/pages/StatsEventFeedPage').then((m) => ({ default: m.StatsEventFeedPage })));
 const TemporalOverlayPage = lazy(() => import('./showcase/pages/TemporalOverlayPage').then((m) => ({ default: m.TemporalOverlayPage })));
-const PostMatchMenusPage = lazy(() => import('./showcase/pages/PostMatchMenusPage').then((m) => ({ default: m.PostMatchMenusPage })));
 const MenuLayerPreviewPage = lazy(() => import('./showcase/pages/MenuLayerPreviewPage').then((m) => ({ default: m.MenuLayerPreviewPage })));
 const LoadingScreenPreviewPage = lazy(() => import('./showcase/pages/LoadingScreenPreviewPage').then((m) => ({ default: m.LoadingScreenPreviewPage })));
 const NavigationPage = lazy(() => import('./showcase/pages/NavigationPage').then((m) => ({ default: m.NavigationPage })));
@@ -27,7 +25,6 @@ const RecipesPage = lazy(() => import('./showcase/pages/RecipesPage').then((m) =
 const LivePreviewSimulationPage = lazy(() => import('./showcase/pages/LivePreviewSimulationPage').then((m) => ({ default: m.LivePreviewSimulationPage })));
 const EdgeInspectorSimulationPage = lazy(() => import('./showcase/pages/EdgeInspectorSimulationPage').then((m) => ({ default: m.EdgeInspectorSimulationPage })));
 const FloatingWindowsSimulationPage = lazy(() => import('./showcase/pages/FloatingWindowsSimulationPage').then((m) => ({ default: m.FloatingWindowsSimulationPage })));
-const FloatingWindowVariationPage = lazy(() => import('./showcase/pages/FloatingWindowVariationPage').then((m) => ({ default: m.FloatingWindowVariationPage })));
 const ChartsAndCurvesPage = lazy(() => import('./showcase/pages/ChartsAndCurvesPage').then((m) => ({ default: m.ChartsAndCurvesPage })));
 const ComposableNestingPage = lazy(() => import('./showcase/pages/ComposableNestingPage').then((m) => ({ default: m.ComposableNestingPage })));
 const FoundationsPage = lazy(() => import('./showcase/pages/FoundationsPage').then((m) => ({ default: m.FoundationsPage })));
@@ -309,7 +306,6 @@ export const App: React.FC = () => {
                   {activeTab === 'center-upper-info' && <CenterUpperInfoPage isLight={isLight} />}
                   {activeTab === 'takeover' && <TakeoverPage isLight={isLight} />}
                   {activeTab === 'name-tag-tuner' && <NameTagTunerPage isLight={isLight} />}
-                  {activeTab === 'stats-event-feed' && <StatsEventFeedPage isLight={isLight} />}
                   {activeTab === 'temporal-overlay' && <TemporalOverlayPage isLight={isLight} />}
                   {activeTab === 'viewport-safe-area' && <ViewportSafeAreaPage isLight={isLight} />}
                   {activeTab === 'stacks' && <StacksPage isLight={isLight} />}
@@ -340,7 +336,6 @@ export const App: React.FC = () => {
                   {activeTab === 'layer-preview' && (
                     <MenuLayerPreviewPage 
                       isLight={isLight} 
-                      onNavigateToReserved={() => handleNavigateShowcase('post-match-menus')} 
                       onNavigateToPlayCards={() => handleNavigateShowcase('play-cards')}
                       onNavigateShowcase={handleNavigateShowcase}
                     />
@@ -348,17 +343,10 @@ export const App: React.FC = () => {
                   {activeTab === 'loading-preview' && (
                     <LoadingScreenPreviewPage isLight={isLight} />
                   )}
-                  {activeTab === 'post-match-menus' && (
-                    <PostMatchMenusPage 
-                      isLight={isLight} 
-                      onNavigateToLayers={() => handleNavigateShowcase('layer-preview')} 
-                    />
-                  )}
                   {activeTab === 'navigation' && <NavigationPage isLight={isLight} />}
                   {activeTab === 'live-preview' && <LivePreviewSimulationPage isLight={isLight} />}
                   {activeTab === 'edge-inspector' && <EdgeInspectorSimulationPage isLight={isLight} />}
                   {activeTab === 'floating-windows' && <FloatingWindowsSimulationPage isLight={isLight} />}
-                  {activeTab === 'floating-window-3stage' && <FloatingWindowVariationPage isLight={isLight} />}
                   {activeTab === 'animation' && <AnimationPage isLight={isLight} />}
                   {activeTab === 'recipes' && <RecipesPage isLight={isLight} />}
                 </Suspense>

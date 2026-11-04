@@ -1,5 +1,5 @@
 import React, { useState as useLocalState, useEffect, useRef } from 'react';
-import { ArrowRight, Info, Layers } from 'lucide-react';
+import { Layers } from 'lucide-react';
 import type { MenuPanelWidthAdaptiveMode } from '../../ui-core/navigation/menuPanelAdaptive';
 import { createScopedSyncedState } from '../stores/crossClientSync';
 import { useViewportStore } from '../../ui-core/stores/viewportStore';
@@ -22,7 +22,6 @@ import type { ShowcaseTab } from '../sidebarNavConfig';
 
 export interface MenuLayerPreviewPageProps {
   isLight?: boolean;
-  onNavigateToReserved?: () => void;
   onNavigateToPlayCards?: () => void;
   /** Cross-page anchor jump callback: from 7A Jump directly to the independent tuning page for the currently active node (6A / L1 / L2 etc) and scroll to */
   onNavigateShowcase?: (tab: ShowcaseTab, targetId?: string) => void;
@@ -32,7 +31,6 @@ export interface MenuLayerPreviewPageProps {
 
 export const MenuLayerPreviewPage: React.FC<MenuLayerPreviewPageProps> = ({
   isLight = true,
-  onNavigateToReserved,
   onNavigateToPlayCards,
   onNavigateShowcase,
   backdropDuration = 250,
@@ -391,29 +389,6 @@ export const MenuLayerPreviewPage: React.FC<MenuLayerPreviewPageProps> = ({
           }}
           isLight={isLight}
         />
-
-        {onNavigateToReserved && (
-          <div
-            className={`p-3.5 rounded-xl border flex items-center justify-between text-xs transition-colors ${
-              isLight ? 'bg-white border-neutral-200' : 'bg-neutral-900/60 border-neutral-800'
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <Info className="h-4 w-4 text-amber-500 shrink-0" />
-              <span className={isLight ? 'text-neutral-600' : 'text-neutral-400'}>
-                Post-game summary (Match Post) and telemetry data (Match Stats) Candidates not yet included in the main match are kept on the candidate page.
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={onNavigateToReserved}
-              className="flex items-center gap-1 font-semibold text-amber-500 hover:text-amber-400 cursor-pointer shrink-0 transition-colors"
-            >
-              <span>View battle report standards</span>
-              <ArrowRight className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        )}
       </div>
     </MenuLayerSandboxProvider>
   );

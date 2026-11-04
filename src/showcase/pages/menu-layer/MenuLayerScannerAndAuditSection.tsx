@@ -262,7 +262,7 @@ export const MenuLayerScannerAndAuditSection: React.FC<
           activeProps={{
             route: currentRoute,
             tier: visibilityTier,
-            ...(currentRoute === 'main-menu' || currentRoute === 'room-host-control'
+            ...(currentRoute === 'main-menu' || currentRoute === 'manage-room'
               ? { contextMode: layer1ContextMode }
               : {}),
             ...(currentRoute === 'settings' ? { activeTab: settingsTab } : {}),

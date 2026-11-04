@@ -196,11 +196,13 @@ export const NavigationPage: React.FC<{ isLight?: boolean }> = ({ isLight = fals
           <Layer2SettingsRecipe
             isLight={isLight}
             onBack={goBack}
-            initialTab={targetSettingsTab}
-            onNavigateRoute={(route) => {
-              if (route === 'audio-eq' || route === 'trajectory') {
-                navigateTo(route);
-              }
+            stateOverride={{
+              initialTab: targetSettingsTab,
+              onNavigateRoute: (route) => {
+                if (route === 'audio-eq' || route === 'trajectory') {
+                  navigateTo(route);
+                }
+              },
             }}
           />
         )}

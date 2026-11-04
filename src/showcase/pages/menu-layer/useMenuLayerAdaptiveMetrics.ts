@@ -69,7 +69,7 @@ export function useMenuLayerAdaptiveMetrics({
     if (route === 'main-menu') return `main-menu:${layer1ContextMode}`;
     if (route === 'settings') return `settings:${visibilityTier}`;
     if (route === 'garage') return 'garage';
-    if (route === 'room-host-control') return `room-host-control:${layer1ContextMode}`;
+    if (route === 'manage-room') return `manage-room:${layer1ContextMode}`;
     return route;
   };
 

@@ -1,7 +1,7 @@
 import React, { lazy } from 'react';
 import { AuditTicketHeader } from '../../components/AuditTicketHeader';
 import {
-  LAYER2_ROOM_HOST_CONTROL_STATES,
+  LAYER2_MANAGE_ROOM_STATES,
   LAYER3_HOST_TRAINING_STATES,
 } from '../../../ui-core/recipes/recipeStateMatrixSpecs';
 import type { MenuPanelId } from '../../../ui-core/tokens/menuLayoutTokens';
@@ -17,9 +17,9 @@ export interface DeepLayerRecipeSpec {
   renderPreview: (isLight: boolean) => React.ReactNode;
 }
 
-const Layer2OnlineRoomControlRecipe = lazy(() =>
-  import('../../../ui-core/recipes/Layer2OnlineRoomControlRecipe').then((m) => ({
-    default: m.Layer2OnlineRoomControlRecipe,
+const Layer2ManageRoomRecipe = lazy(() =>
+  import('../../../ui-core/recipes/Layer2ManageRoomRecipe').then((m) => ({
+    default: m.Layer2ManageRoomRecipe,
   }))
 );
 const Layer3HostTrainingRecipe = lazy(() =>
@@ -42,9 +42,9 @@ const Layer3KickoffTrainingRecipe = lazy(() =>
     default: m.Layer3KickoffTrainingRecipe,
   }))
 );
-const Layer3TrainingRecipe = lazy(() =>
-  import('../../../ui-core/recipes/Layer3TrainingRecipe').then((m) => ({
-    default: m.Layer3TrainingRecipe,
+const Layer3TrainingConfigRecipe = lazy(() =>
+  import('../../../ui-core/recipes/Layer3TrainingConfigRecipe').then((m) => ({
+    default: m.Layer3TrainingConfigRecipe,
   }))
 );
 const Layer3CameraRecipe = lazy(() =>
@@ -71,14 +71,14 @@ export const DEEP_LAYER_ONLINE_AND_USER_RECIPE_SPECS: DeepLayerRecipeSpec[] = [
     code: '6A.8',
     badgeColor: 'emerald',
     title: 'Layer 2 Online Room Control Hub (6-State Flat Matrix · Match Lobby / During Match / Online Warmup · Host & Client)',
-    panelId: 'layer2-room-host-control',
+    panelId: 'layer2-manage-room',
     tunerLabel: 'Layer 2 Online Room Control Hub (Online Room Console)',
     recommendation: 'Flat 6-state matrix rendering Match Lobby, During Match, and Online Warmup for both Host and Client roles simultaneously.',
     renderPreview: (isLight) => (
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 w-full items-start">
-        {LAYER2_ROOM_HOST_CONTROL_STATES.map((st, idx) => (
+        {LAYER2_MANAGE_ROOM_STATES.map((st, idx) => (
           <div key={st.id} className="flex flex-col gap-2 items-center w-full">
-            <Layer2OnlineRoomControlRecipe
+            <Layer2ManageRoomRecipe
               isLight={isLight}
               {...st.props}
               onBack={noop}
@@ -88,8 +88,8 @@ export const DEEP_LAYER_ONLINE_AND_USER_RECIPE_SPECS: DeepLayerRecipeSpec[] = [
               label={st.label}
               description={st.description}
               referenceCode="6A.8"
-              componentName={st.componentName || 'Layer2OnlineRoomControlRecipe'}
-              sourceFile={st.sourceFile || 'src/ui-core/recipes/Layer2OnlineRoomControlRecipe.tsx'}
+              componentName={st.componentName || 'Layer2ManageRoomRecipe'}
+              sourceFile={st.sourceFile || 'src/ui-core/recipes/Layer2ManageRoomRecipe.tsx'}
               subViewFile={st.subViewFile}
               stateId={st.id}
               activeProps={st.props}
@@ -201,9 +201,9 @@ export const DEEP_LAYER_ONLINE_AND_USER_RECIPE_SPECS: DeepLayerRecipeSpec[] = [
     code: '6A.18',
     badgeColor: 'emerald',
     title: 'Layer 3 Training Configuration (Trajectory Prediction Toggle, Goal Barrier and TAS Rewinder Timeline Access)',
-    panelId: 'layer3-training',
+    panelId: 'layer3-training-config',
     tunerLabel: 'Layer 3 Training Configuration',
     recommendation: 'Trajectory Prediction Toggle, Goal Barrier and TAS Rewinder Timeline Access',
-    renderPreview: (isLight) => <Layer3TrainingRecipe isLight={isLight} onBack={noop} />,
+    renderPreview: (isLight) => <Layer3TrainingConfigRecipe isLight={isLight} onBack={noop} />,
   },
 ];

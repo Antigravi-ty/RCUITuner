@@ -53,9 +53,9 @@ const ROUTE_TO_6A_RECIPE_TARGET: Record<ActiveMenuRoute, InspectorJumpTarget> = 
     tab: 'recipes',
     targetId: 'recipe-6a-4-settings',
   },
-  'room-host-control': {
+  'manage-room': {
     code: '6A.8',
-    componentName: 'Layer2OnlineRoomControlRecipe',
+    componentName: 'Layer2ManageRoomRecipe',
     label: '6A.8 Online room control console tuning',
     tab: 'recipes',
     targetId: 'recipe-6a-8-host-ctrl',
@@ -123,9 +123,9 @@ const ROUTE_TO_6A_RECIPE_TARGET: Record<ActiveMenuRoute, InspectorJumpTarget> = 
     tab: 'recipes',
     targetId: 'recipe-6a-11-kickoff',
   },
-  training: {
+  'training-config': {
     code: '6A.18',
-    componentName: 'Layer3TrainingRecipe',
+    componentName: 'Layer3TrainingConfigRecipe',
     label: '6A.18 Training Training configuration panel tuning',
     tab: 'recipes',
     targetId: 'recipe-6a-18-training',
@@ -491,7 +491,7 @@ export function resolveNodePathInspectorLinks(
   }
 
   if (
-    currentRoute === 'training' ||
+    currentRoute === 'training-config' ||
     currentRoute === 'dev-sandboxes' ||
     currentRoute === 'dev-active-tuners' ||
     currentRoute === 'dev-calibrated-presets'

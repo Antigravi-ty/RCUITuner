@@ -14,7 +14,7 @@ export type ActiveMenuRoute =
   | 'play'
   | 'garage'
   | 'settings'
-  | 'room-host-control'
+  | 'manage-room'
   | 'audio-eq'
   | 'trajectory'
   | 'host-match'
@@ -24,7 +24,7 @@ export type ActiveMenuRoute =
   | 'exhibition'
   | 'self-training'
   | 'kickoff-training'
-  | 'training'
+  | 'training-config'
   | 'camera'
   | 'keybindings'
   | 'exp-multi-bots'
@@ -42,7 +42,7 @@ export const ROUTE_TO_PANEL_ID: Record<Exclude<ActiveMenuRoute, 'layer-0'>, Menu
   'play': 'layer2-play',
   'garage': 'layer2-garage',
   'settings': 'layer2-settings',
-  'room-host-control': 'layer2-room-host-control',
+  'manage-room': 'layer2-manage-room',
   'audio-eq': 'layer3-audio-eq',
   'trajectory': 'layer3-ball-trajectory',
   'host-match': 'layer3-host-match',
@@ -52,7 +52,7 @@ export const ROUTE_TO_PANEL_ID: Record<Exclude<ActiveMenuRoute, 'layer-0'>, Menu
   'exhibition': 'layer3-exhibition',
   'self-training': 'layer3-self-training',
   'kickoff-training': 'layer3-kickoff-training',
-  'training': 'layer3-training',
+  'training-config': 'layer3-training-config',
   'camera': 'layer3-camera',
   'keybindings': 'layer3-keybindings',
   'exp-multi-bots': 'layer3-exp-multi-bots',
@@ -78,7 +78,7 @@ export const MENU_SANDBOX_JUMP_ITEMS: SandboxJumpEntry[] = [
   { code: '7A.2', componentName: 'Layer2PlayRecipe', label: 'Mode Selection 2×3 Grid (Play)', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 2 · User', route: 'play', tier: 'user' },
   { code: '7A.3', componentName: 'Layer2GarageRecipe', label: 'Garage Preset (5 Tabs includes Loadout)', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 2 · User', route: 'garage', tier: 'user' },
   { code: '7A.4', componentName: 'Layer2SettingsRecipe', label: '5-Tab icon+Text Settings (User 4 Tabs)', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 2 · User', route: 'settings', tier: 'user' },
-  { code: '7A.5', componentName: 'Layer2OnlineRoomControlRecipe', label: 'Online room control console (6 Contexts)', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 2 · User', route: 'room-host-control', tier: 'user' },
+  { code: '7A.5', componentName: 'Layer2ManageRoomRecipe', label: 'Online room control console (6 Contexts)', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 2 · User', route: 'manage-room', tier: 'user' },
   { code: '7A.6', componentName: 'Layer3HostMatchRecipe', label: 'Create online room page (Host Match)', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 3 · User', route: 'host-match', tier: 'user' },
   { code: '7A.6T', componentName: 'Layer3HostTrainingRecipe', label: 'Create online training room (Host Training)', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 3 · User', route: 'host-training', tier: 'user' },
   { code: '7A.6C', componentName: 'Layer3CustomPlayRecipe', label: 'Custom mode under development (Custom · In Development)', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 3 · User', route: 'custom-play', tier: 'user' },
@@ -86,7 +86,7 @@ export const MENU_SANDBOX_JUMP_ITEMS: SandboxJumpEntry[] = [
   { code: '7A.8', componentName: 'Layer3ExhibitionRecipe', label: 'Exhibition Offline Race Config', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 3 · User', route: 'exhibition', tier: 'user' },
   { code: '7A.9', componentName: 'Layer3SelfTrainingRecipe', label: 'Single-player training vertical five-item entry (Self-Training)', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 3 · User', route: 'self-training', tier: 'user' },
   { code: '7A.10', componentName: 'Layer3KickoffTrainingRecipe', label: 'Kickoff rhythm training config (Kickoff)', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 3 · User', route: 'kickoff-training', tier: 'user' },
-  { code: '7A.11', componentName: 'Layer3TrainingRecipe', label: 'Training Assist & Rewinder config (Training)', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 3 · User', route: 'training', tier: 'user' },
+  { code: '7A.11', componentName: 'Layer3TrainingConfigRecipe', label: 'Training Assist & Rewinder config (Training)', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 3 · User', route: 'training-config', tier: 'user' },
   { code: '7A.12', componentName: 'Layer3CameraRecipe', label: 'Camera Geometry Settings (Camera)', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 3 · User', route: 'camera', tier: 'user' },
   { code: '7A.13', componentName: 'Layer3KeybindingsRecipe', label: 'Key binding and advanced controller entry (Keybindings)', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 3 · User', route: 'keybindings', tier: 'user' },
   { code: '7A.14', componentName: 'Layer3BallTrajectoryRecipe', label: 'Side-docked trajectory prediction (Live Preview)', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 3 · User', route: 'trajectory', tier: 'user' },
@@ -121,7 +121,7 @@ export const MENU_ROUTE_CONFIG: Record<ActiveMenuRoute, LayerRouteConfig> = {
   'play': { id: 'play', label: 'Play Modes', layer: 2, width: 600, tier: 'user', parentRoute: 'main-menu' },
   'garage': { id: 'garage', label: 'Garage Loadout', layer: 2, width: 640, tier: 'user', parentRoute: 'main-menu' },
   'settings': { id: 'settings', label: 'Game Settings', layer: 2, width: 680, tier: 'both', parentRoute: 'main-menu' },
-  'room-host-control': { id: 'room-host-control', label: 'Online Room Control', layer: 2, width: 720, tier: 'user', parentRoute: 'play' },
+  'manage-room': { id: 'manage-room', label: 'Online Room Control', layer: 2, width: 720, tier: 'user', parentRoute: 'play' },
   'audio-eq': { id: 'audio-eq', label: 'Acoustics & EQ', layer: 3, width: 480, tier: 'developer', parentRoute: 'settings' },
   'trajectory': { id: 'trajectory', label: 'Ball Trajectory Predictor', layer: 3, width: 560, tier: 'both', parentRoute: 'settings' },
   'host-match': { id: 'host-match', label: 'Host Match Room', layer: 3, width: 520, tier: 'user', parentRoute: 'play' },
@@ -131,7 +131,7 @@ export const MENU_ROUTE_CONFIG: Record<ActiveMenuRoute, LayerRouteConfig> = {
   'exhibition': { id: 'exhibition', label: 'Exhibition Match Setup', layer: 3, width: 480, tier: 'user', parentRoute: 'play' },
   'self-training': { id: 'self-training', label: 'Self-Training Hub', layer: 3, width: 560, tier: 'user', parentRoute: 'play' },
   'kickoff-training': { id: 'kickoff-training', label: 'Kickoff Training Setup', layer: 3, width: 500, tier: 'user', parentRoute: 'self-training' },
-  'training': { id: 'training', label: 'Training Configuration', layer: 3, width: 600, tier: 'user', parentRoute: 'self-training' },
+  'training-config': { id: 'training-config', label: 'Training Configuration', layer: 3, width: 600, tier: 'user', parentRoute: 'self-training' },
   'camera': { id: 'camera', label: 'Camera Settings', layer: 3, width: 560, tier: 'user', parentRoute: 'settings' },
   'keybindings': { id: 'keybindings', label: 'Key Bindings & Controls', layer: 3, width: 560, tier: 'user', parentRoute: 'settings' },
   'exp-multi-bots': { id: 'exp-multi-bots', label: 'Experimental Multi-Bots (3v3)', layer: 3, width: 720, tier: 'developer', parentRoute: 'settings' },
@@ -254,7 +254,7 @@ export const USER_LINEAR_PLAYLIST: LinearPlaylistStep[] = [
     layer: 2 as const, label: `L2 Settings · ${t.label} Tab`, breadcrumb: `Layer 1 → Settings → ${t.label}`,
   })),
   ...ROOM_CONTROL_CONTEXT_STEPS.map((rc) => ({
-    id: `user-l2-room-host-${rc.ctx}`, tier: 'user' as const, route: 'room-host-control' as const, contextMode: rc.ctx,
+    id: `user-l2-room-host-${rc.ctx}`, tier: 'user' as const, route: 'manage-room' as const, contextMode: rc.ctx,
     layer: 2 as const, label: `L2 Room Control · ${rc.label}`, breadcrumb: `Layer 1 → Room Control → ${rc.label}`,
   })),
   ...HOST_MATCH_PROGRESS_STEPS.map((hm) => ({
@@ -276,7 +276,7 @@ export const USER_LINEAR_PLAYLIST: LinearPlaylistStep[] = [
   { id: 'user-l3-exhibition', tier: 'user', route: 'exhibition', layer: 3, label: 'L3 Exhibition Bot Setup', breadcrumb: 'Play → Exhibition Setup' },
   { id: 'user-l3-self-training', tier: 'user', route: 'self-training', layer: 3, label: 'L3 Self-Training Hub', breadcrumb: 'Play → Self-Training' },
   { id: 'user-l3-kickoff', tier: 'user', route: 'kickoff-training', layer: 3, label: 'L3 Kickoff Training Setup', breadcrumb: 'Self-Training → Kickoff Training' },
-  { id: 'user-l3-training', tier: 'user', route: 'training', layer: 3, label: 'L3 Training Configuration', breadcrumb: 'Main Menu → Training Configuration' },
+  { id: 'user-l3-training', tier: 'user', route: 'training-config', layer: 3, label: 'L3 Training Configuration', breadcrumb: 'Main Menu → Training Configuration' },
   { id: 'user-l3-camera', tier: 'user', route: 'camera', layer: 3, label: 'L3 Camera Geometry Settings', breadcrumb: 'Settings → Gameplay → Camera Settings' },
   { id: 'user-l3-keybindings', tier: 'user', route: 'keybindings', layer: 3, label: 'L3 Key Bindings & Controls', breadcrumb: 'Settings → Gameplay → Key Bindings' },
   { id: 'user-l3-trajectory', tier: 'user', route: 'trajectory', layer: 3, label: 'L3 Ball Trajectory Live Preview', breadcrumb: 'Settings → Gameplay → Trajectory Live Preview' },
@@ -347,7 +347,7 @@ export function findPlaylistStepIndex(
   const exactIdx = playlist.findIndex((step) => {
     if (step.route !== currentRoute) return false;
     if (
-      (currentRoute === 'main-menu' || currentRoute === 'room-host-control') &&
+      (currentRoute === 'main-menu' || currentRoute === 'manage-room') &&
       step.contextMode
     ) {
       return step.contextMode === normalizedLayer1Ctx;
@@ -393,7 +393,7 @@ export const isLayer3RouteAvailable = (
   if (panelRoute === 'trajectory') {
     return (
       currentRoute === 'settings' ||
-      currentRoute === 'training' ||
+      currentRoute === 'training-config' ||
       currentRoute === 'trajectory'
     );
   }
