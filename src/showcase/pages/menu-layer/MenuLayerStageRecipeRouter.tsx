@@ -18,11 +18,13 @@ import { Layer3TrainingConfigRecipe } from '../../../ui-core/recipes/Layer3Train
 import { Layer3CameraRecipe } from '../../../ui-core/recipes/Layer3CameraRecipe';
 import { Layer3KeybindingsRecipe } from '../../../ui-core/recipes/Layer3KeybindingsRecipe';
 import { Layer3ExpMultiBotsRecipe } from '../../../ui-core/recipes/Layer3ExpMultiBotsRecipe';
+import { Layer3ExpBotPackRecipe } from '../../../ui-core/recipes/Layer3ExpBotPackRecipe';
 import { Layer3DevSandboxesRecipe } from '../../../ui-core/recipes/Layer3DevSandboxesRecipe';
 import { Layer3DevActiveTunersRecipe } from '../../../ui-core/recipes/Layer3DevActiveTunersRecipe';
 import { Layer3DevCalibratedPresetsRecipe } from '../../../ui-core/recipes/Layer3DevCalibratedPresetsRecipe';
 import { Layer3DevSelfTestRecipe } from '../../../ui-core/recipes/Layer3DevSelfTestRecipe';
 import { Layer3DevUnderDevelopmentRecipe } from '../../../ui-core/recipes/Layer3DevUnderDevelopmentRecipe';
+import { Layer3DevRemoteProfileRecipe } from '../../../ui-core/recipes/Layer3DevRemoteProfileRecipe';
 import { Layer4StaticTrainingPackBrowseRecipe } from '../../../ui-core/recipes/Layer4StaticTrainingPackBrowseRecipe';
 import { Layer4AdvancedAudioRecipe } from '../../../ui-core/recipes/Layer4AdvancedAudioRecipe';
 import { Layer4ControllerSettingsRecipe } from '../../../ui-core/recipes/Layer4ControllerSettingsRecipe';
@@ -397,6 +399,14 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
         />
       )}
 
+      {displayedRoute === 'exp-botpack-9700488' && (
+        <Layer3ExpBotPackRecipe
+          isLight={isLight}
+          onLaunchFloatingControl={() => spawnPresetById('experimental-multi-bots')}
+          onBack={goBack}
+        />
+      )}
+
       {displayedRoute === 'dev-sandboxes' && (
         <Layer3DevSandboxesRecipe
           isLight={isLight}
@@ -405,11 +415,21 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
             setLastParentRoute('dev-sandboxes');
             handleSelectRoute('exp-multi-bots');
           }}
-          onEnterBench={(tabId) =>
-            tabId === 'exp-multi-bots'
-              ? handleSelectRoute('exp-multi-bots')
-              : spawnPresetById('subsystem-isolation-lab', tabId)
-          }
+          onNavigateExpBotpack9700488={() => {
+            setLastParentRoute('dev-sandboxes');
+            handleSelectRoute('exp-botpack-9700488');
+          }}
+          onNavigateTemPackConverter={() => {
+            setLastParentRoute('dev-sandboxes');
+            handleSelectRoute('dev-tem-pack-converter');
+          }}
+          onEnterBench={(tabId) => {
+            if (tabId === 'exp-multi-bots') handleSelectRoute('exp-multi-bots');
+            else if (tabId === 'exp-botpack-9700488') handleSelectRoute('exp-botpack-9700488');
+            else if (tabId === 'tem-pack-converter') handleSelectRoute('dev-tem-pack-converter');
+            else if (tabId === 'replay-to-rcs-importer') spawnPresetById('replay-to-rcs-importer');
+            else spawnPresetById('subsystem-isolation-lab', tabId);
+          }}
         />
       )}
 
@@ -453,9 +473,24 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
         />
       )}
 
+      {displayedRoute === 'dev-remote-profile' && (
+        <Layer3DevRemoteProfileRecipe
+          isLight={isLight}
+          onBack={goBack}
+        />
+      )}
+
       {displayedRoute === 'static-training-pack' && (
         <Layer4StaticTrainingPackBrowseRecipe
           isLight={isLight}
+          onBack={goBack}
+        />
+      )}
+
+      {displayedRoute === 'dev-tem-pack-converter' && (
+        <Layer4StaticTrainingPackBrowseRecipe
+          isLight={isLight}
+          isDevMode={true}
           onBack={goBack}
         />
       )}

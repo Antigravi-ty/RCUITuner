@@ -380,6 +380,11 @@ export const MenuLayerDeepRouteRenderer: React.FC<MenuLayerDeepRouteRendererProp
                   label: '4-Server Signaling Lab (Full-Mesh & Dual Bridge)',
                   panel: 'layer4-dev-signaling-lab' as const,
                 },
+                {
+                  route: 'dev-tem-pack-converter' as const,
+                  label: 'Dev .tem Pack Converter (.tem -> .RCSPack)',
+                  panel: 'layer4-static-training-pack' as const,
+                },
               ]
           ).map((item) => {
             const isActive = currentRoute === item.route;

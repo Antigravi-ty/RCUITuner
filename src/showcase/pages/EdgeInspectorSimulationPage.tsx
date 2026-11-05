@@ -7,7 +7,7 @@ import { EdgeInspectorDrawer, type EdgeDrawerSide } from '../../ui-core/navigati
 import { MenuDivider } from '../../ui-core/layout/MenuContainer';
 import {
   Layer5StaticTrainingPackEditRecipe, openStaticTrainingExitConfirmDialogue,
-} from '../../ui-core/recipes/Layer5StaticTrainingPackEditRecipe';
+} from '../../ui-core/recipes/StaticTrainingShotInspectorDrawer';
 import { Layer1MainMenuRecipe } from '../../ui-core/recipes/Layer1MainMenuRecipe';
 import { Layer2PlayRecipe } from '../../ui-core/recipes/Layer2PlayRecipe';
 import { Layer2GarageRecipe } from '../../ui-core/recipes/Layer2GarageRecipe';

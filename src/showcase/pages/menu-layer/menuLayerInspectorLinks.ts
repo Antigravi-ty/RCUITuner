@@ -214,13 +214,10 @@ const ROUTE_TO_6A_RECIPE_TARGET: Record<ActiveMenuRoute, InspectorJumpTarget> = 
     tab: 'recipes',
     targetId: 'recipe-6a-17-triggers',
   },
-  'dev-signaling-lab': {
-    code: '6A.25',
-    componentName: 'Layer4DevSignalingLabRecipe',
-    label: '6A.25 4-Server Signaling & Dual Bridge Lab',
-    tab: 'recipes',
-    targetId: 'recipe-6a-25-dev-signaling-lab',
-  },
+  'dev-signaling-lab': { code: '6A.25', componentName: 'Layer4DevSignalingLabRecipe', label: '6A.25 4-Server Signaling & Dual Bridge Lab', tab: 'recipes', targetId: 'recipe-6a-25-dev-signaling-lab' },
+  'exp-botpack-9700488': { code: '6A.20B', componentName: 'Layer3ExpBotPackRecipe', label: '6A.20B BotPack_9700488 Showcase (6 Bots)', tab: 'recipes', targetId: 'recipe-6a-20-multibots' },
+  'dev-remote-profile': { code: '6A.23R', componentName: 'Layer3DevRemoteProfileRecipe', label: '6A.23R Remote Profile & Account Management', tab: 'recipes', targetId: 'recipe-6a-23-dev-under-dev' },
+  'dev-tem-pack-converter': { code: '6A.14D', componentName: 'Layer4StaticTrainingPackBrowseRecipe', label: '6A.14D Dev .tem -> .RCSPack Pack Converter', tab: 'recipes', targetId: 'recipe-6a-14-rcspack' },
 };
 
 const PANEL_SHELL_TARGET: InspectorJumpTarget = {

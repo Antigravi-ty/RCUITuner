@@ -28,11 +28,14 @@ export type ActiveMenuRoute =
   | 'camera'
   | 'keybindings'
   | 'exp-multi-bots'
+  | 'exp-botpack-9700488'
   | 'dev-sandboxes'
   | 'dev-active-tuners'
   | 'dev-calibrated-presets'
   | 'dev-self-test'
   | 'dev-under-development'
+  | 'dev-remote-profile'
+  | 'dev-tem-pack-converter'
   | 'static-training-pack'
   | 'advanced-audio'
   | 'controller-settings'
@@ -58,11 +61,14 @@ export const ROUTE_TO_PANEL_ID: Record<Exclude<ActiveMenuRoute, 'layer-0'>, Menu
   'camera': 'layer3-camera',
   'keybindings': 'layer3-keybindings',
   'exp-multi-bots': 'layer3-exp-multi-bots',
+  'exp-botpack-9700488': 'layer3-exp-botpack',
   'dev-sandboxes': 'layer3-dev-sandboxes',
   'dev-active-tuners': 'layer3-dev-active-tuners',
   'dev-calibrated-presets': 'layer3-dev-calibrated-presets',
   'dev-self-test': 'layer3-dev-self-test',
   'dev-under-development': 'layer3-dev-under-development',
+  'dev-remote-profile': 'layer3-dev-remote-profile',
+  'dev-tem-pack-converter': 'layer4-static-training-pack',
   'static-training-pack': 'layer4-static-training-pack',
   'advanced-audio': 'layer4-advanced-audio',
   'controller-settings': 'layer4-controller-settings',
@@ -102,14 +108,17 @@ export const MENU_SANDBOX_JUMP_ITEMS: SandboxJumpEntry[] = [
   { code: '7A.D2', componentName: 'Layer2SettingsRecipe', label: 'Settings -> Developer Tab Developer Center', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 2 · Dev', route: 'settings', tier: 'developer' },
   { code: '7A.D4', componentName: 'Layer3DevSandboxesRecipe', label: '6-Tab Subsystem Isolation Lab & Sandboxes', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 3 · Dev', route: 'dev-sandboxes', tier: 'developer' },
   { code: '7A.D5', componentName: 'Layer3ExpMultiBotsRecipe', label: 'Experimental Multi-Bots (3v3 ONNX)', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 3 · Dev', route: 'exp-multi-bots', tier: 'developer' },
+  { code: '7A.D5B', componentName: 'Layer3ExpBotPackRecipe', label: 'BotPack_9700488 Showcase (6 Bots)', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 3 · Dev', route: 'exp-botpack-9700488', tier: 'developer' },
   { code: '7A.D6', componentName: 'Layer3DevActiveTunersRecipe', label: 'Active Tuners & Phase Matrix', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 3 · Dev', route: 'dev-active-tuners', tier: 'developer' },
   { code: '7A.D7', componentName: 'Layer3DevCalibratedPresetsRecipe', label: 'Calibrated Presets & Tuners', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 3 · Dev', route: 'dev-calibrated-presets', tier: 'developer' },
   { code: '7A.D8', componentName: 'Layer3DevSelfTestRecipe', label: 'Self Test Suites & Harnesses', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 3 · Dev', route: 'dev-self-test', tier: 'developer' },
   { code: '7A.D9', componentName: 'Layer3DevUnderDevelopmentRecipe', label: 'Under Development (Staging)', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 3 · Dev', route: 'dev-under-development', tier: 'developer' },
+  { code: '7A.D9R', componentName: 'Layer3DevRemoteProfileRecipe', label: 'Remote Profile & Account Management', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 3 · Dev', route: 'dev-remote-profile', tier: 'developer' },
   { code: '7A.D10', componentName: 'Layer3AudioEqRecipe', label: 'Acoustics & EQ Detail', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 3 · Dev', route: 'audio-eq', tier: 'developer' },
   { code: '7A.D11', componentName: 'Layer4AdvancedAudioRecipe', label: 'Advanced Audio Synthesis Pool', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 4 · Dev', route: 'advanced-audio', tier: 'developer' },
   { code: '7A.D12', componentName: 'Layer4EventTriggerRulesRecipe', label: 'Event & Trigger Rules Engine', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 4 · Dev', route: 'event-trigger-rules', tier: 'developer' },
   { code: '7A.D13', componentName: 'Layer4DevSignalingLabRecipe', label: '4-Server Signaling & Dual Bridge Lab', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 4 · Dev', route: 'dev-signaling-lab', tier: 'developer' },
+  { code: '7A.D14', componentName: 'Layer4StaticTrainingPackBrowseRecipe', label: 'Dev .tem -> .RCSPack Pack Converter', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 4 · Dev', route: 'dev-tem-pack-converter', tier: 'developer' },
 ];
 
 export interface LayerRouteConfig {
@@ -141,11 +150,14 @@ export const MENU_ROUTE_CONFIG: Record<ActiveMenuRoute, LayerRouteConfig> = {
   'camera': { id: 'camera', label: 'Camera Settings', layer: 3, width: 560, tier: 'user', parentRoute: 'settings' },
   'keybindings': { id: 'keybindings', label: 'Key Bindings & Controls', layer: 3, width: 560, tier: 'user', parentRoute: 'settings' },
   'exp-multi-bots': { id: 'exp-multi-bots', label: 'Experimental Multi-Bots (3v3)', layer: 3, width: 720, tier: 'developer', parentRoute: 'settings' },
+  'exp-botpack-9700488': { id: 'exp-botpack-9700488', label: 'BotPack_9700488 Showcase (6 Bots)', layer: 3, width: 580, tier: 'developer', parentRoute: 'dev-sandboxes' },
   'dev-sandboxes': { id: 'dev-sandboxes', label: 'Sandboxes', layer: 3, width: 560, tier: 'developer', parentRoute: 'settings' },
   'dev-active-tuners': { id: 'dev-active-tuners', label: 'Active Tuners', layer: 3, width: 600, tier: 'developer', parentRoute: 'settings' },
   'dev-calibrated-presets': { id: 'dev-calibrated-presets', label: 'Calibrated Presets', layer: 3, width: 560, tier: 'developer', parentRoute: 'settings' },
   'dev-self-test': { id: 'dev-self-test', label: 'Self Test', layer: 3, width: 560, tier: 'developer', parentRoute: 'settings' },
   'dev-under-development': { id: 'dev-under-development', label: 'Under Development', layer: 3, width: 600, tier: 'developer', parentRoute: 'settings' },
+  'dev-remote-profile': { id: 'dev-remote-profile', label: 'Remote Profile & Account Management', layer: 3, width: 620, tier: 'developer', parentRoute: 'settings' },
+  'dev-tem-pack-converter': { id: 'dev-tem-pack-converter', label: 'Dev .tem Pack Converter', layer: 4, width: 680, tier: 'developer', parentRoute: 'dev-sandboxes' },
   'static-training-pack': { id: 'static-training-pack', label: 'Static Training Pack (.RCSPack)', layer: 4, width: 700, tier: 'user', parentRoute: 'self-training' },
   'advanced-audio': { id: 'advanced-audio', label: 'Advanced Audio Synthesis Pool', layer: 4, width: 720, tier: 'developer', parentRoute: 'dev-active-tuners' },
   'controller-settings': { id: 'controller-settings', label: 'Controller Settings', layer: 4, width: 640, tier: 'user', parentRoute: 'keybindings' },
