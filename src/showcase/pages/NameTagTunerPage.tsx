@@ -10,6 +10,7 @@ import {
 } from '../../ui-core/stores/nameTagTunerStore';
 import type { ArenaLightingPreset } from '../ArenaBackdrop';
 import { PageJumpDirectory, type JumpDirectoryItem } from '../PageJumpDirectory';
+import { NameTagConfigExporterBar } from './name-tag-tuner/NameTagConfigExporterBar';
 import { NameTagModeShootoutSection } from './name-tag-tuner/NameTagModeShootoutSection';
 import {
   buildKickoffCars,
@@ -81,6 +82,8 @@ export const NameTagTunerPage: React.FC<{ isLight?: boolean }> = ({ isLight = fa
     slotLayoutMode,
     setSlotLayoutMode,
     resetStageControls,
+    handleReset5HDefaults,
+    build5HExportCode,
   } = useNameTagSyncedState();
 
   // Ensure the 6-Car Kickoff Arena is marked active when viewing 5H
@@ -392,7 +395,7 @@ export const NameTagTunerPage: React.FC<{ isLight?: boolean }> = ({ isLight = fa
               4 Boost Indicator Modes &amp; Kickoff Ball Entity Occlusion
             </h2>
             <p className="text-xs text-neutral-400">
-              Compare all 4 boost progress designs across short (&quot;K&quot;) vs long (&quot;AlphaStriker&quot;) names, and inspect analytical 2D destination-out ball occlusion (default OFF).
+              Compare all 4 boost progress designs across short (&quot;K&quot;) vs long (&quot;AlphaStriker&quot;) names, and inspect analytical 2D destination-out ball occlusion (default 100% solid ball).
             </p>
           </div>
         </div>
@@ -403,6 +406,13 @@ export const NameTagTunerPage: React.FC<{ isLight?: boolean }> = ({ isLight = fa
           onUpdateConfig={handleUpdateConfigFromShootout}
         />
       </section>
+
+      {/* Dedicated 5H One-Click Parameter Exporter Bar (Matching 5E / 5G Pattern) */}
+      <NameTagConfigExporterBar
+        isLight={isLight}
+        buildExportCode={build5HExportCode}
+        onResetDefaults={handleReset5HDefaults}
+      />
 
       {/* Section 02: Directly Reused NameTagTunerFloatingWindow Content Slot */}
       <section

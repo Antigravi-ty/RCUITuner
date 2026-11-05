@@ -5,6 +5,7 @@ import {
   cloneSerializable, sanitizeSyncedValue, isSyncSerializable, encodeEntriesForWire,
   decodeEntriesFromWire, buildValueSignature,
 } from './crossClientSyncCodec';
+import { isKeyInActiveTabScope } from './tabSyncScopeRegistry';
 export interface CrossClientSyncStatus {
   /** Whether the Vite WebSocket (or fallback channel) is active */
   connected: boolean;
@@ -411,13 +412,10 @@ export const crossClientSync = {
     const syncedState: Record<string, unknown> = {};
     const prefix = options?.scopePrefix;
     for (const [k, v] of bus.mirror.entries()) {
-      if (k === 'app:activeTab') continue;
-      if (prefix) {
-        if (k.startsWith(prefix)) {
-          syncedState[k] = v;
-        } } else {
+      if (isKeyInActiveTabScope(k, activeTab, prefix)) {
         syncedState[k] = v;
-      } }
+      }
+    }
     return {
       activeTab, exportedAt: new Date().toISOString(),
       controls, syncedState,

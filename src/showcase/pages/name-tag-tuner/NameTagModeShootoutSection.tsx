@@ -318,7 +318,7 @@ export const NameTagModeShootoutSection: React.FC<NameTagModeShootoutSectionProp
               KICKOFF BALL ENTITY OCCLUSION (DESTINATION-OUT ALPHA MASK)
             </div>
             <div style={{ fontSize: 11, color: '#94a3b8' }}>
-              Default is OFF to avoid any GPU/Canvas overhead. When enabled, a closer ball masks behind-the-ball name tags proportional to Ball Opacity (e.g. 70% Ball Opacity = 70% occlusion).
+              Default is ON at 100% Solid Ball so behind-the-ball name tags are cleanly occluded by the 3D ball silhouette (proportional to Ball Opacity).
             </div>
           </div>
           <div style={{ display: 'flex', gap: 6 }}>
@@ -340,7 +340,7 @@ export const NameTagModeShootoutSection: React.FC<NameTagModeShootoutSectionProp
                 color: !config.ballOcclusionEnabled ? '#5eead4' : '#cbd5e1',
               }}
             >
-              Default: OFF (0% Cost)
+              Disable: OFF (Unmasked)
             </button>
             <button
               type="button"
@@ -390,7 +390,7 @@ export const NameTagModeShootoutSection: React.FC<NameTagModeShootoutSectionProp
                     : '#cbd5e1',
               }}
             >
-              Enable 100% Solid Ball
+              Default: 100% Solid Ball
             </button>
           </div>
         </div>
@@ -406,7 +406,7 @@ export const NameTagModeShootoutSection: React.FC<NameTagModeShootoutSectionProp
             config={config}
             enabled={false}
             opacity={0.7}
-            label="1. Occlusion OFF (Default · Unmasked)"
+            label="1. Occlusion OFF (Unmasked)"
           />
           <BallOcclusionSampleCanvas
             config={config}
@@ -418,7 +418,7 @@ export const NameTagModeShootoutSection: React.FC<NameTagModeShootoutSectionProp
             config={config}
             enabled={true}
             opacity={1.0}
-            label="3. Occlusion ON @ 100% Solid Ball"
+            label="3. Occlusion ON @ 100% Solid Ball (Default)"
           />
         </div>
       </div>

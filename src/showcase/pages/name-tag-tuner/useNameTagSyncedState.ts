@@ -1,11 +1,21 @@
 import { useCallback } from 'react';
 import type { ArenaLightingPreset } from '../../ArenaBackdrop';
 import { crossClientSync, useSyncedState } from '../../stores/crossClientSync';
-import { setNameTagRuntimeState } from '../../../ui-core/stores/nameTagTunerStore';
+import {
+  DEFAULT_BALL_VISUAL_CONFIG,
+  updateBallVisualConfig,
+} from '../../../ui-core/stores/ballVisualStore';
+import {
+  resetNameTagConfig,
+  setNameTagRuntimeState,
+  useNameTagTunerStore,
+} from '../../../ui-core/stores/nameTagTunerStore';
 
 export type NameTagSlotLayoutMode = 'grid' | 'floating-width';
 
 export function useNameTagSyncedState() {
+  const { config } = useNameTagTunerStore();
+
   const [arenaPreset, setArenaPreset] = useSyncedState<ArenaLightingPreset>(
     '5h:arenaPreset',
     'night'
@@ -39,6 +49,35 @@ export function useNameTagSyncedState() {
     });
   }, []);
 
+  const handleReset5HDefaults = useCallback(() => {
+    resetNameTagConfig();
+    updateBallVisualConfig({ ...DEFAULT_BALL_VISUAL_CONFIG });
+    resetStageControls();
+  }, [resetStageControls]);
+
+  const build5HExportCode = useCallback(() => {
+    const snapshot = {
+      nameTagConfig: config,
+      stageControls: {
+        arenaPreset,
+        stageHeight,
+        cameraFovDeg,
+        ballHeightOffset,
+        animateBoostWave,
+        slotLayoutMode,
+      },
+    };
+    return `// 5H Name Tag & Boost Progress Calibrated Default Snapshot\nexport const DEFAULT_5H_NAME_TAG_SNAPSHOT = ${JSON.stringify(snapshot, null, 2)};`;
+  }, [
+    config,
+    arenaPreset,
+    stageHeight,
+    cameraFovDeg,
+    ballHeightOffset,
+    animateBoostWave,
+    slotLayoutMode,
+  ]);
+
   return {
     arenaPreset,
     setArenaPreset,
@@ -55,5 +94,8 @@ export function useNameTagSyncedState() {
     slotLayoutMode,
     setSlotLayoutMode,
     resetStageControls,
+    handleReset5HDefaults,
+    build5HExportCode,
   };
 }
+
