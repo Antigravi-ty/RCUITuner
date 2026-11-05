@@ -49,9 +49,9 @@ export const NotificationIntegrationPage: React.FC<{ isLight?: boolean }> = ({ i
       id: 'test6', name: 'scene 6: Ongoing Competition test between lowest-priority tasks and interactive notifications (Background execution and foreground yield)',
       status: 'idle', log: [],
     },
-  });
-  const [copiedError, setCopiedError] = useState(false);
-  const [isRunningAll, setIsRunningAll] = useState(false);
+  }, 'testResults');
+  const [copiedError, setCopiedError] = useState(false, 'copiedError');
+  const [isRunningAll, setIsRunningAll] = useState(false, 'isRunningAll');
   const appendLog = (testId: string, message: string) => {
     setTestResults((prev) => {
       const current = prev[testId] || { id: testId, name: testId, status: 'idle', log: [] };

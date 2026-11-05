@@ -38,10 +38,10 @@ export interface QuickNotificationButtonsBuilderSectionProps {
 export const QuickNotificationButtonsBuilderSection: React.FC<
   QuickNotificationButtonsBuilderSectionProps
 > = ({ isLight, buttons, setButtons }) => {
-  const [newBtnLabel, setNewBtnLabel] = useState<string>('Retry');
-  const [newBtnIcon, setNewBtnIcon] = useState<string>('rotate-ccw');
-  const [newBtnFormat, setNewBtnFormat] = useState<QuickNotificationButtonFormat>('icon-text');
-  const [newBtnColor, setNewBtnColor] = useState<QuickNotificationButtonVariant>('amber');
+  const [newBtnLabel, setNewBtnLabel] = useState<string>('Retry', 'newBtnLabel');
+  const [newBtnIcon, setNewBtnIcon] = useState<string>('rotate-ccw', 'newBtnIcon');
+  const [newBtnFormat, setNewBtnFormat] = useState<QuickNotificationButtonFormat>('icon-text', 'newBtnFormat');
+  const [newBtnColor, setNewBtnColor] = useState<QuickNotificationButtonVariant>('amber', 'newBtnColor');
 
   const handleAddButton = () => {
     const trimmed = newBtnLabel.trim();

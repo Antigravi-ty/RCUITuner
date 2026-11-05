@@ -9,7 +9,7 @@ import { Button } from '../../ui-core/primitives/Button';
 import { CodeBlock } from '../CodeBlock';
 
 export const BadgesPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }) => {
-  const [activeKey, setActiveKey] = useState<string | null>(null);
+  const [activeKey, setActiveKey] = useState<string | null>(null, 'activeKey');
 
   // Listen to physical keyboard events for interactive tester
   useEffect(() => {

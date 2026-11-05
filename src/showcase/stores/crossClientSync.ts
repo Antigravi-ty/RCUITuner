@@ -3,7 +3,7 @@ import type { Dispatch, SetStateAction } from 'react';
 import { attachSyncBridge } from '../../ui-core/stores/syncBridge';
 import {
   cloneSerializable, sanitizeSyncedValue, isSyncSerializable, encodeEntriesForWire,
-  decodeEntriesFromWire, buildValueSignature,
+  decodeEntriesFromWire,
 } from './crossClientSyncCodec';
 import { isKeyInActiveTabScope } from './tabSyncScopeRegistry';
 export interface CrossClientSyncStatus {
@@ -504,33 +504,11 @@ export function useSyncedState<T>(
 }
 
 export function createScopedSyncedState(scope: string) {
-  let sigCounters = new Map<string, number>();
-  let resetScheduled = false;
-  const scheduleCounterReset = () => {
-    if (resetScheduled) return;
-    resetScheduled = true;
-    queueMicrotask(() => {
-      resetScheduled = false;
-      sigCounters = new Map<string, number>();
-    });
-  };
   return function useScopedState<T>(
-    initialValue?: T | (() => T), explicitSubKey?: string
+    initialValue: T | (() => T),
+    explicitSubKey: string
   ): [T, Dispatch<SetStateAction<T>>] {
-    const [scopedInit] = useState<{ key: string; value: T }>(() => {
-      const resolvedValue =
-        typeof initialValue === 'function' ? (initialValue as () => T)()
-          : (initialValue as T);
-      if (explicitSubKey) {
-        return { key: `${scope}:${explicitSubKey}`, value: resolvedValue };
-      }
-      const sig = buildValueSignature(resolvedValue);
-      const idx = sigCounters.get(sig) ?? 0;
-      sigCounters.set(sig, idx + 1);
-      scheduleCounterReset();
-      return { key: `${scope}:${sig}#${idx}`, value: resolvedValue };
-    });
-    return useSyncedState<T>(scopedInit.key, scopedInit.value);
+    return useSyncedState<T>(`${scope}:${explicitSubKey}`, initialValue);
   };
 }
 

@@ -1,20 +1,21 @@
-import React, { useState as useLocalState, useEffect, useRef } from 'react';
-import { createScopedSyncedState } from '../stores/crossClientSync';
-
-const useState = createScopedSyncedState('page:live-preview');
+import React, { useCallback, useEffect, useRef, useState as useLocalState } from 'react';
 import { Eye, X } from 'lucide-react';
+import { MorphingStageShell } from '../../ui-core/navigation/MorphingStageShell';
 import { Button } from '../../ui-core/primitives/Button';
 import { KeycapBadge } from '../../ui-core/primitives/KeycapBadge';
-import { CodeBlock } from '../CodeBlock';
-import { useAppStore } from '../../ui-core/stores/appStore';
-import { MorphingStageShell } from '../../ui-core/navigation/MorphingStageShell';
+import { SliderControl } from '../../ui-core/primitives/SliderControl';
 import { Layer3BallTrajectoryRecipe } from '../../ui-core/recipes/Layer3BallTrajectoryRecipe';
+import { useAppStore } from '../../ui-core/stores/appStore';
+import { CodeBlock } from '../CodeBlock';
+import { TunerConfigExporterBar } from '../components/tuner/TunerConfigExporterBar';
+import { PageJumpDirectory, type JumpDirectoryItem } from '../PageJumpDirectory';
+import { crossClientSync, useSyncedState } from '../stores/crossClientSync';
 
 export interface LivePreviewSimulationPageProps {
   isLight?: boolean;
 }
 
-export type LivePreviewAnimPhase = 
+export type LivePreviewAnimPhase =
   | 'expanded'
   | 'collapsing_content'
   | 'collapsing_resize'
@@ -22,30 +23,45 @@ export type LivePreviewAnimPhase =
   | 'expanding_content'
   | 'expanding_resize';
 
-/**
- * LivePreviewSimulationPage
- * Dedicated SPA page for the Live Preview interaction paradigm:
- * 1. Sequenced Step Transition: Content fades out -> Container resizes & docks to right-middle -> Pill content shows up.
- * 2. Dock pill: positioned relative to container right-middle edge with 4-sided uniform out-glow, no title, only '<' | TAB.
- * 3. Full-width container (no max-w-5xl clamping or artificial right margin).
- */
+const LIVE_PREVIEW_JUMP_ITEMS: JumpDirectoryItem[] = [
+  {
+    id: 'l6-live-preview-stage',
+    code: '6C.1',
+    name: 'MorphingStageShell & Layer3BallTrajectoryRecipe',
+    label: 'Sequenced step transition between 480×540px center config panel and 88×38px right-middle TAB dock',
+  },
+  {
+    id: 'l6-live-preview-controls',
+    code: '6C.2',
+    name: 'Live Preview Session & Ball Sim Speed Controller',
+    label: 'Session state toggle, TAB dock morph trigger & 3D Ball Simulation speed control',
+  },
+];
+
 export const LivePreviewSimulationPage: React.FC<LivePreviewSimulationPageProps> = ({
   isLight = false,
 }) => {
   const isCollapsed = useAppStore((s) => s.isLivePreviewCollapsed);
   const setCollapsed = useAppStore((s) => s.setLivePreviewCollapsed);
-  const [activePreviewId, setActivePreviewId] = useState<string | null>('ball-trajectory-predictor');
+  const [activePreviewId, setActivePreviewId] = useSyncedState<string | null>(
+    'page:live-preview:activePreviewId',
+    'ball-trajectory-predictor'
+  );
   const enterPreview = (id: string, _title?: string) => setActivePreviewId(id);
   const exitPreview = () => {
     setActivePreviewId(null);
     setCollapsed(false);
   };
 
-  const [animPhase, setAnimPhase] = useState<LivePreviewAnimPhase>(
+  const [animPhase, setAnimPhase] = useSyncedState<LivePreviewAnimPhase>(
+    'page:live-preview:animPhase',
     isCollapsed ? 'collapsed' : 'expanded'
   );
   const [isPillHovered, setIsPillHovered] = useLocalState(false);
-  const [ballSimSpeed, setBallSimSpeed] = useState(128);
+  const [ballSimSpeed, setBallSimSpeed] = useSyncedState<number>(
+    'page:live-preview:ballSimSpeed',
+    128
+  );
 
   // Sync external isCollapsed changes into anim phase
   useEffect(() => {
@@ -56,39 +72,30 @@ export const LivePreviewSimulationPage: React.FC<LivePreviewSimulationPageProps>
     }
   }, [isCollapsed]);
 
-  // Sequenced collapse handler
   const handleTriggerCollapse = () => {
     if (animPhase !== 'expanded') return;
-    // Step 1: Content vanishes
     setAnimPhase('collapsing_content');
     setTimeout(() => {
-      // Step 2: Container resizes to right-middle
       setAnimPhase('collapsing_resize');
       setTimeout(() => {
-        // Step 3: Pill content shows up
         setAnimPhase('collapsed');
         setCollapsed(true);
       }, 260);
     }, 110);
   };
 
-  // Sequenced expand handler
   const handleTriggerExpand = () => {
     if (animPhase !== 'collapsed') return;
-    // Step 1: Pill content vanishes
     setAnimPhase('expanding_content');
     setTimeout(() => {
-      // Step 2: Container resizes from right-middle back to center
       setAnimPhase('expanding_resize');
       setTimeout(() => {
-        // Step 3: Recipe content shows up
         setAnimPhase('expanded');
         setCollapsed(false);
       }, 260);
     }, 90);
   };
 
-  // Toggle collapse state via TAB
   const handleToggle = () => {
     if (animPhase === 'expanded') {
       handleTriggerCollapse();
@@ -97,7 +104,6 @@ export const LivePreviewSimulationPage: React.FC<LivePreviewSimulationPageProps>
     }
   };
 
-  // Keyboard shortcut listener (TAB)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Tab') {
@@ -115,7 +121,10 @@ export const LivePreviewSimulationPage: React.FC<LivePreviewSimulationPageProps>
     setCollapsed(false);
   };
 
-  const isDockState = animPhase === 'collapsed' || animPhase === 'collapsing_resize' || animPhase === 'expanding_content';
+  const isDockState =
+    animPhase === 'collapsed' ||
+    animPhase === 'collapsing_resize' ||
+    animPhase === 'expanding_content';
   const isContentVisible = animPhase === 'expanded';
   const isPillContentVisible = animPhase === 'collapsed';
 
@@ -149,6 +158,30 @@ export const LivePreviewSimulationPage: React.FC<LivePreviewSimulationPageProps>
   const xDock = Math.max(16, Math.round(stageSize.width - 16 - dockW));
   const yDock = Math.max(16, Math.round((stageSize.height - dockH) / 2));
 
+  const handleResetDefaults = useCallback(() => {
+    crossClientSync.resetAll({ scopePrefix: 'page:live-preview:' });
+    setCollapsed(false);
+  }, [setCollapsed]);
+
+  const buildExportCode = useCallback(() => {
+    const snapshot = {
+      activePreviewId,
+      animPhase,
+      ballSimSpeedKmh: ballSimSpeed,
+      geometry: {
+        expandedPanel: { widthPx: expandedW, heightPx: expandedH, radiusPx: 16 },
+        rightMiddleDockPill: { widthPx: dockW, heightPx: dockH, radiusPx: 12, marginRightPx: 16 },
+      },
+      sequencedStepTimingsMs: {
+        collapseContentFadeOut: 110,
+        collapseResizeAndDock: 260,
+        expandPillFadeOut: 90,
+        expandResizeToCenter: 260,
+      },
+    };
+    return `// 6C Live Preview Sequenced Step Transition Calibrated Default Snapshot\nexport const DEFAULT_6C_LIVE_PREVIEW_SNAPSHOT = ${JSON.stringify(snapshot, null, 2)};`;
+  }, [activePreviewId, animPhase, ballSimSpeed]);
+
   return (
     <div className="flex flex-col gap-6 w-full relative">
       {/* Static Page Header (Nothing above the View Box ever changes) */}
@@ -158,9 +191,16 @@ export const LivePreviewSimulationPage: React.FC<LivePreviewSimulationPageProps>
             <Eye className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">6C · Live Preview Real-time Preview Spec</h1>
+            <h1 className="text-2xl font-bold tracking-tight">
+              6C · Live Preview Real-time Preview Spec
+            </h1>
             <p className={`text-xs mt-0.5 ${isLight ? 'text-neutral-500' : 'text-neutral-400'}`}>
-              Dedicated mode for three-level depth parameter adjustment. Press key <code className="font-mono text-neutral-900 dark:text-neutral-100 font-bold">TAB</code> Key between central config panel and right side Dock Smooth temporal deformation between.
+              Dedicated mode for three-level depth parameter adjustment. Press key{' '}
+              <code className="font-mono text-neutral-900 dark:text-neutral-100 font-bold">
+                TAB
+              </code>{' '}
+              Key between central config panel and right side Dock Smooth temporal deformation
+              between.
             </p>
           </div>
         </div>
@@ -168,10 +208,11 @@ export const LivePreviewSimulationPage: React.FC<LivePreviewSimulationPageProps>
 
       {/* 1. TOP-PINNED VIEW BOX STAGE: Stage Container (Dotted Background Stage) */}
       <div
+        id="l6-live-preview-stage"
         ref={stageRef}
-        className={`relative w-full min-h-[620px] rounded-2xl border p-6 flex items-center justify-center overflow-hidden transition-colors ${
-          isLight 
-            ? 'bg-neutral-100/70 border-neutral-200 shadow-inner' 
+        className={`scroll-mt-24 relative w-full min-h-[620px] rounded-2xl border p-6 flex items-center justify-center overflow-hidden transition-colors ${
+          isLight
+            ? 'bg-neutral-100/70 border-neutral-200 shadow-inner'
             : 'bg-neutral-950/80 border-neutral-800 shadow-inner'
         }`}
         style={{
@@ -181,14 +222,15 @@ export const LivePreviewSimulationPage: React.FC<LivePreviewSimulationPageProps>
           backgroundSize: '24px 24px',
         }}
       >
-        {/* Background Field Simulation (Undims when collapsed to right-middle dock) */}
         <div
           className={`absolute inset-0 flex flex-col items-center justify-center pointer-events-none transition-opacity duration-300 ${
             animPhase === 'collapsed' ? 'opacity-100' : 'opacity-25'
           }`}
         >
           <div className="flex flex-col items-center gap-2 select-none">
-            <span className={`text-5xl ${animPhase === 'collapsed' ? 'animate-bounce' : ''}`}>[Ball]</span>
+            <span className={`text-5xl ${animPhase === 'collapsed' ? 'animate-bounce' : ''}`}>
+              [Ball]
+            </span>
             <span className="text-xs font-mono font-bold text-neutral-700 dark:text-neutral-300">
               [Three.js Simulation Active: Ball Speed {ballSimSpeed} km/h]
             </span>
@@ -227,7 +269,6 @@ export const LivePreviewSimulationPage: React.FC<LivePreviewSimulationPageProps>
           )}
         </MorphingStageShell>
 
-        {/* State Indicator pill in bottom-left */}
         <div className="absolute bottom-4 left-4 flex items-center gap-2 text-xs font-mono px-3 py-1.5 rounded-xl border bg-black/50 text-neutral-200 backdrop-blur border-white/10 select-none">
           <span>Live Session:</span>
           <strong className={activePreviewId ? 'text-emerald-400' : 'text-neutral-400'}>
@@ -236,7 +277,11 @@ export const LivePreviewSimulationPage: React.FC<LivePreviewSimulationPageProps>
           <span>|</span>
           <span>State:</span>
           <strong className="text-neutral-100">
-            {animPhase === 'collapsed' ? 'COLLAPSED (Right Dock)' : animPhase === 'expanded' ? 'EXPANDED (Center)' : animPhase.toUpperCase()}
+            {animPhase === 'collapsed'
+              ? 'COLLAPSED (Right Dock)'
+              : animPhase === 'expanded'
+                ? 'EXPANDED (Center)'
+                : animPhase.toUpperCase()}
           </strong>
           <span>|</span>
           <span className="flex items-center gap-1">
@@ -247,52 +292,120 @@ export const LivePreviewSimulationPage: React.FC<LivePreviewSimulationPageProps>
 
       {/* 2. LIVE PREVIEW SESSION ACTION CONTROLS (Placed BELOW the View Box) */}
       <div
-        className={`flex flex-wrap items-center justify-between gap-3 px-4 py-3 rounded-2xl border text-xs ${
+        id="l6-live-preview-controls"
+        className={`scroll-mt-24 flex flex-col gap-4 px-5 py-4 rounded-2xl border text-xs ${
           isLight
             ? 'bg-white border-neutral-200 shadow-2xs'
             : 'bg-neutral-900/70 border-neutral-800'
         }`}
       >
-        <span className="font-mono text-neutral-500 dark:text-neutral-400">
-          Session Control (Placed below View Box so toggling session state never alters the header above the stage):
-        </span>
-        <div className="flex items-center gap-2">
-          {!activePreviewId ? (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <span className="font-mono text-neutral-500 dark:text-neutral-400">
+            Session Control (Placed below View Box so toggling session state never alters the
+            header above the stage):
+          </span>
+          <div className="flex items-center gap-2">
             <Button
-              variant="primary"
+              variant="secondary"
               size="sm"
               isLight={isLight}
-              icon={<Eye className="h-4 w-4" />}
-              onClick={handleLaunch}
+              onClick={handleToggle}
             >
-              Invoke Live Preview Session
+              {animPhase === 'collapsed'
+                ? 'Expand from Right Dock [TAB]'
+                : 'Collapse to Right Dock [TAB]'}
             </Button>
-          ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              isLight={isLight}
-              icon={<X className="h-4 w-4" />}
-              onClick={() => {
-                exitPreview();
-                setAnimPhase('expanded');
-              }}
-            >
-              Exit Live Preview
-            </Button>
-          )}
+            {!activePreviewId ? (
+              <Button
+                variant="primary"
+                size="sm"
+                isLight={isLight}
+                icon={<Eye className="h-4 w-4" />}
+                onClick={handleLaunch}
+              >
+                Invoke Live Preview Session
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                isLight={isLight}
+                icon={<X className="h-4 w-4" />}
+                onClick={() => {
+                  exitPreview();
+                  setAnimPhase('expanded');
+                }}
+              >
+                Exit Live Preview
+              </Button>
+            )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-neutral-200/70 dark:border-neutral-800 items-center">
+          <SliderControl
+            label="3D Ball Trajectory Simulation Speed"
+            value={ballSimSpeed}
+            min={32}
+            max={240}
+            step={4}
+            unit=" km/h"
+            colorScheme="amber"
+            editable
+            onChange={setBallSimSpeed}
+            isLight={isLight}
+          />
+          <div className="flex items-center gap-1.5 flex-wrap justify-end">
+            <span className="text-[11px] font-mono text-neutral-400 mr-1">Speed Presets:</span>
+            {[64, 128, 180, 216].map((spd) => (
+              <button
+                key={spd}
+                type="button"
+                onClick={() => setBallSimSpeed(spd)}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-mono border cursor-pointer transition-colors ${
+                  ballSimSpeed === spd
+                    ? 'bg-amber-500 text-neutral-950 border-amber-400 font-bold'
+                    : isLight
+                      ? 'bg-neutral-100 hover:bg-neutral-200 border-neutral-300 text-neutral-700'
+                      : 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-neutral-300'
+                }`}
+              >
+                {spd === 128 ? '128 km/h (Default)' : `${spd} km/h`}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Code Snippet for Live Preview */}
+      {/* Dedicated 6C One-Click Config Exporter Bar (Placed below Top-Pinned View Box) */}
+      <TunerConfigExporterBar
+        badge="6C-EXPORT"
+        title="Live Preview Session & Dock Morph One-Click Config Exporter"
+        subtitle="Exports 6C Live Preview session state, 3D ball simulation speed (km/h), center panel (480×540px) & right-middle dock pill (88×38px) geometry"
+        copyLabel="Copy 6C Live Preview Config (Export Snapshot)"
+        codeTitle="Current 6C Live Preview Parameter Snapshot (Paste directly into DEFAULT_6C_LIVE_PREVIEW_SNAPSHOT)"
+        actionId="export-6c-live-preview-config"
+        isLight={isLight}
+        buildExportCode={buildExportCode}
+        onResetDefaults={handleResetDefaults}
+      />
+
+      <PageJumpDirectory
+        layerTag="Layer 6 · 6C Live Preview Spec"
+        title="6C · Live Preview & Right-Middle TAB Dock Directory"
+        subtitle="Click to locate the top-pinned MorphingStageShell or session speed controls · Export 6C scoped parameters"
+        items={LIVE_PREVIEW_JUMP_ITEMS}
+        isLight={isLight}
+      />
+
       <CodeBlock
         isLight={isLight}
-        title="Live Preview Continuous deformation timing implementation (Sequenced Step Transition Recipe)"
-        code={`// Live Preview Core timing engine specification
+        title="Live Preview Continuous deformation timing implementation (Reflects Current 6C Parameters)"
+        code={`// Live Preview Core timing engine specification (Active State: "${animPhase}", Ball Sim Speed: ${ballSimSpeed} km/h)
 // Step 1: Content Fade-Out (110ms)
 setAnimPhase('collapsing_content');
 
-// Step 2: Container Resize & Translate to Container Right-Middle (260ms)
+// Step 2: Container Resize (${expandedW}×${expandedH}px -> ${dockW}×${dockH}px) & Translate to Right-Middle (260ms)
 setAnimPhase('collapsing_resize');
 
 // Step 3: Dock Pill Show-Up ('<' | TAB, Ambient Out-Glow)

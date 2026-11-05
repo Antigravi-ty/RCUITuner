@@ -10,7 +10,7 @@ import {
 } from '../../ui-core/stores/nameTagTunerStore';
 import type { ArenaLightingPreset } from '../ArenaBackdrop';
 import { PageJumpDirectory, type JumpDirectoryItem } from '../PageJumpDirectory';
-import { NameTagConfigExporterBar } from './name-tag-tuner/NameTagConfigExporterBar';
+import { TunerConfigExporterBar } from '../components/tuner/TunerConfigExporterBar';
 import { NameTagModeShootoutSection } from './name-tag-tuner/NameTagModeShootoutSection';
 import {
   buildKickoffCars,
@@ -408,7 +408,13 @@ export const NameTagTunerPage: React.FC<{ isLight?: boolean }> = ({ isLight = fa
       </section>
 
       {/* Dedicated 5H One-Click Parameter Exporter Bar (Matching 5E / 5G Pattern) */}
-      <NameTagConfigExporterBar
+      <TunerConfigExporterBar
+        badge="5H-EXPORT"
+        title="Name Tag & Boost Parameter Tuner & One-Click Config Exporter"
+        subtitle="Exports only 5H NameTagConfig (Boost fill/unfilled opacity, pure black boost colors, 100% solid ball occlusion & pill geometry)"
+        copyLabel="Copy 5H Name Tag Config (Export Snapshot)"
+        codeTitle="Current 5H Name Tag Parameter Snapshot (Paste directly into DEFAULT_NAME_TAG_CONFIG)"
+        actionId="export-5h-config"
         isLight={isLight}
         buildExportCode={build5HExportCode}
         onResetDefaults={handleReset5HDefaults}

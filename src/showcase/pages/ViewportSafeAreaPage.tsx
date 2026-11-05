@@ -1,24 +1,21 @@
-import React from 'react';
-import { createScopedSyncedState } from '../stores/crossClientSync';
-
-const useState = createScopedSyncedState('page:viewport-safe-area');
+import React, { useCallback } from 'react';
 import {
-  Monitor,
-  ShieldAlert,
-  Sparkles,
-  Maximize2,
-  Sliders,
-  RotateCcw,
-  Eye,
   CheckCircle2,
+  Eye,
+  Monitor,
+  RotateCcw,
+  Sliders,
+  Sparkles,
 } from 'lucide-react';
-import { GameViewport } from '../components/GameViewport';
-import { SafeAreaHud } from '../../ui-core/viewport/SafeAreaHud';
-import { useViewportStore, viewportStore } from '../../ui-core/stores/viewportStore';
-import { SliderControl } from '../../ui-core/primitives/SliderControl';
 import { Badge } from '../../ui-core/primitives/Badge';
 import { Button } from '../../ui-core/primitives/Button';
+import { SliderControl } from '../../ui-core/primitives/SliderControl';
+import { useViewportStore, viewportStore } from '../../ui-core/stores/viewportStore';
 import { CodeBlock } from '../CodeBlock';
+import { GameViewport } from '../components/GameViewport';
+import { TunerConfigExporterBar } from '../components/tuner/TunerConfigExporterBar';
+import { PageJumpDirectory, type JumpDirectoryItem } from '../PageJumpDirectory';
+import { useSyncedState } from '../stores/crossClientSync';
 
 interface AspectPreset {
   id: string;
@@ -80,11 +77,53 @@ const ASPECT_PRESETS: AspectPreset[] = [
   },
 ];
 
+const VIEWPORT_JUMP_ITEMS: JumpDirectoryItem[] = [
+  {
+    id: 'viewport-5c-1-aspect-clamp',
+    code: '5C.1',
+    name: 'GameViewport',
+    label: '18:9 Pillarbox Clamp & 1:1 Portrait Gate Simulator',
+  },
+  {
+    id: 'viewport-5c-2-safe-area',
+    code: '5C.2',
+    name: 'SafeAreaHud & viewportStore',
+    label: 'Global Safe Area Margin (-5% ~ +10% Overscan) & Content Render Scale',
+  },
+];
+
 export const ViewportSafeAreaPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }) => {
   const { safeAreaMargin, renderScale, showSafeAreaGuides } = useViewportStore();
-  const [selectedPresetId, setSelectedPresetId] = useState<string>('21-9');
+  const [selectedPresetId, setSelectedPresetId] = useSyncedState<string>(
+    'page:viewport-safe-area:selectedPresetId',
+    '21-9'
+  );
 
   const activePreset = ASPECT_PRESETS.find((p) => p.id === selectedPresetId) ?? ASPECT_PRESETS[1];
+
+  const handleReset5CDefaults = useCallback(() => {
+    viewportStore.setSafeAreaMargin(0);
+    viewportStore.setRenderScale(100);
+    setSelectedPresetId('21-9');
+  }, [setSelectedPresetId]);
+
+  const build5CExportCode = useCallback(() => {
+    const snapshot = {
+      viewportStore: {
+        safeAreaMarginPct: safeAreaMargin,
+        renderScalePct: renderScale,
+        showSafeAreaGuides,
+      },
+      aspectSimulatorPreset: {
+        id: activePreset.id,
+        label: activePreset.label,
+        ratioLabel: activePreset.ratioLabel,
+        containerWidthPx: activePreset.width,
+        containerHeightPx: activePreset.height,
+      },
+    };
+    return `// 5C Viewport & Safe Area Calibrated Default Snapshot\nexport const DEFAULT_5C_VIEWPORT_SAFE_AREA_SNAPSHOT = ${JSON.stringify(snapshot, null, 2)};`;
+  }, [safeAreaMargin, renderScale, showSafeAreaGuides, activePreset]);
 
   return (
     <div className="flex flex-col gap-8 max-w-4xl">
@@ -92,21 +131,26 @@ export const ViewportSafeAreaPage: React.FC<{ isLight?: boolean }> = ({ isLight 
       <div className="flex flex-col gap-2">
         <div className="inline-flex items-center gap-2 text-xs font-mono text-amber-500 font-semibold uppercase tracking-wider">
           <Sparkles className="h-4 w-4" />
-          <span>Layer 5 · 5C Viewport & Safe Area (Viewport and safe area units)</span>
+          <span>Layer 5 · 5C Viewport &amp; Safe Area (Viewport and safe area units)</span>
         </div>
         <h1 className="text-2xl font-bold tracking-tight">
-          5C. Viewport & Safe Area Viewport clamping and safe area engine
+          5C. Viewport &amp; Safe Area Viewport clamping and safe area engine
         </h1>
         <p className={`text-xs leading-relaxed ${isLight ? 'text-neutral-600' : 'text-neutral-400'}`}>
-          benchmark <code className="font-mono">Rocket Companion</code> Viewport Geometry Spec (<code className="font-mono">src/ui-core/viewport/</code>) : 
-          Provide <strong>18:9 Ultra-Wide Pillarbox Clamp</strong>, <strong>1:1 Portrait Gate Portrait Baseline Intercept</strong>, And <strong>-5% ~ +10% Safe Area Margin (Include negative overscan Overscan Bleed) </strong>. 
-          As L5C Standalone Subsystem, and 5A (Match HUD), 5B (Charts), 5D (Loading) Fully orthogonal decoupling. 
+          benchmark <code className="font-mono">Rocket Companion</code> Viewport Geometry Spec (
+          <code className="font-mono">src/ui-core/viewport/</code>) : Provide{' '}
+          <strong>18:9 Ultra-Wide Pillarbox Clamp</strong>,{' '}
+          <strong>1:1 Portrait Gate Portrait Baseline Intercept</strong>, And{' '}
+          <strong>-5% ~ +10% Safe Area Margin (Include negative overscan Overscan Bleed) </strong>.
+          As L5C Standalone Subsystem, and 5A (Match HUD), 5B (Charts), 5D (Loading) Fully
+          orthogonal decoupling.
         </p>
       </div>
 
       {/* 1. Interactive Aspect Ratio Clamp & Portrait Gate Simulator (View Box Pinned at Top) */}
       <div
-        className={`p-6 rounded-2xl border flex flex-col gap-5 transition-colors ${
+        id="viewport-5c-1-aspect-clamp"
+        className={`scroll-mt-24 p-6 rounded-2xl border flex flex-col gap-5 transition-colors ${
           isLight ? 'bg-white border-neutral-200 shadow-2xs' : 'bg-neutral-900/60 border-neutral-800'
         }`}
       >
@@ -136,11 +180,10 @@ export const ViewportSafeAreaPage: React.FC<{ isLight?: boolean }> = ({ isLight 
 
                 <div className="flex flex-col items-center justify-center gap-1 text-center my-auto">
                   <CheckCircle2 className="h-6 w-6 text-amber-400" />
-                  <span className="text-sm font-bold tracking-tight">
-                    18:9 Clamped Safe Canvas
-                  </span>
+                  <span className="text-sm font-bold tracking-tight">18:9 Clamped Safe Canvas</span>
                   <span className="text-[11px] font-mono text-neutral-400 max-w-md">
-                    HUD Anchor points are always fixed to the four corners of this active canvas, Auto-generate on ultra-wide screen sides Pillarbox Guardrail
+                    HUD Anchor points are always fixed to the four corners of this active canvas,
+                    Auto-generate on ultra-wide screen sides Pillarbox Guardrail
                   </span>
                 </div>
 
@@ -177,12 +220,16 @@ export const ViewportSafeAreaPage: React.FC<{ isLight?: boolean }> = ({ isLight 
                   isSelected
                     ? 'bg-amber-500 text-white border-amber-500 font-bold shadow-xs'
                     : isLight
-                    ? 'bg-neutral-50 hover:bg-neutral-100 border-neutral-200 text-neutral-800'
-                    : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-800 text-neutral-200'
+                      ? 'bg-neutral-50 hover:bg-neutral-100 border-neutral-200 text-neutral-800'
+                      : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-800 text-neutral-200'
                 }`}
               >
                 <span className="text-xs font-bold truncate">{preset.label.split(' ')[0]}</span>
-                <span className={`text-[10px] font-mono truncate ${isSelected ? 'text-amber-100' : 'text-neutral-400'}`}>
+                <span
+                  className={`text-[10px] font-mono truncate ${
+                    isSelected ? 'text-amber-100' : 'text-neutral-400'
+                  }`}
+                >
                   {preset.ratioLabel.split(' ')[0]}
                 </span>
               </button>
@@ -191,21 +238,39 @@ export const ViewportSafeAreaPage: React.FC<{ isLight?: boolean }> = ({ isLight 
         </div>
 
         <p className={`text-xs ${isLight ? 'text-neutral-600' : 'text-neutral-400'}`}>
-          <strong>Current Simulated Viewport ({activePreset.width} × {activePreset.height}px): </strong>
+          <strong>
+            Current Simulated Viewport ({activePreset.width} × {activePreset.height}px):{' '}
+          </strong>
           {activePreset.desc}
         </p>
       </div>
 
+      {/* Dedicated 5C One-Click Config Exporter Bar (Placed below Top-Pinned View Box) */}
+      <TunerConfigExporterBar
+        badge="5C-EXPORT"
+        title="Viewport & Safe Area Parameter Tuner & One-Click Config Exporter"
+        subtitle="Exports Safe Area Margin (-5% ~ +10% Overscan), Content Render Scale (50% ~ 150%), Safe Area Guides & Aspect Clamp Preset"
+        copyLabel="Copy 5C Viewport Config (Export Snapshot)"
+        codeTitle="Current 5C Viewport & Safe Area Parameter Snapshot (Paste directly into DEFAULT_5C_VIEWPORT_SAFE_AREA_SNAPSHOT)"
+        actionId="export-5c-viewport-config"
+        isLight={isLight}
+        buildExportCode={build5CExportCode}
+        onResetDefaults={handleReset5CDefaults}
+      />
+
       {/* 2. Interactive Global Safe Area & Scaling Telemetry Control */}
       <div
-        className={`p-6 rounded-2xl border flex flex-col gap-5 transition-colors ${
+        id="viewport-5c-2-safe-area"
+        className={`scroll-mt-24 p-6 rounded-2xl border flex flex-col gap-5 transition-colors ${
           isLight ? 'bg-white border-neutral-200 shadow-2xs' : 'bg-neutral-900/60 border-neutral-800'
         }`}
       >
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2 font-bold text-sm">
             <Sliders className="h-4 w-4 text-amber-500" />
-            <span>2. Global Safe Area Margin (-5% ~ +10%) and Content Scaling Real-time Controller</span>
+            <span>
+              2. Global Safe Area Margin (-5% ~ +10%) and Content Scaling Real-time Controller
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -215,17 +280,16 @@ export const ViewportSafeAreaPage: React.FC<{ isLight?: boolean }> = ({ isLight 
               icon={<Eye className="h-3.5 w-3.5" />}
               onClick={() => viewportStore.toggleSafeAreaGuides()}
             >
-              {showSafeAreaGuides ? 'Hide safe area markers (HUD On)' : 'Show safe area guides (HUD Off)'}
+              {showSafeAreaGuides
+                ? 'Hide safe area markers (HUD On)'
+                : 'Show safe area guides (HUD Off)'}
             </Button>
             <Button
               size="sm"
               variant="ghost"
               isLight={isLight}
               icon={<RotateCcw className="h-3.5 w-3.5" />}
-              onClick={() => {
-                viewportStore.setSafeAreaMargin(0);
-                viewportStore.setRenderScale(100);
-              }}
+              onClick={handleReset5CDefaults}
             >
               reset (0% / 100%)
             </Button>
@@ -250,8 +314,9 @@ export const ViewportSafeAreaPage: React.FC<{ isLight?: boolean }> = ({ isLight 
               isLight={isLight}
             />
             <span className={`text-[11px] font-mono ${isLight ? 'text-neutral-500' : 'text-neutral-400'}`}>
-              • Positive Value (0% ~ +10%): Four-side inward safe padding, Avoid Curved Screen/TV Cut Corner. <br />
-              • Negative Value (-5% ~ 0%): Overscan extension beyond physical viewport (Overscan Bleed). 
+              • Positive Value (0% ~ +10%): Four-side inward safe padding, Avoid Curved Screen/TV
+              Cut Corner. <br />• Negative Value (-5% ~ 0%): Overscan extension beyond physical
+              viewport (Overscan Bleed).
             </span>
           </div>
 
@@ -270,26 +335,36 @@ export const ViewportSafeAreaPage: React.FC<{ isLight?: boolean }> = ({ isLight 
               isLight={isLight}
             />
             <span className={`text-[11px] font-mono ${isLight ? 'text-neutral-500' : 'text-neutral-400'}`}>
-              • Only affects the right main content workspace, Header and Sidebar Strictly Fixed 100% Original Size. 
+              • Only affects the right main content workspace, Header and Sidebar Strictly Fixed
+              100% Original Size.
             </span>
           </div>
         </div>
       </div>
 
+      <PageJumpDirectory
+        layerTag="Layer 5 · 5C Viewport & Safe Area"
+        title="5C · Viewport Clamp & Safe Area Quick Jump Directory"
+        subtitle="Click to locate the 18:9 Pillarbox simulator or global Safe Area controller · Export 5C scoped parameters"
+        items={VIEWPORT_JUMP_ITEMS}
+        isLight={isLight}
+      />
+
       <CodeBlock
         isLight={isLight}
-        title="5C. GameViewport & SafeAreaHud Standard Call Example"
+        title="5C. GameViewport & SafeAreaHud Standard Call Example (Reflects Current Parameters)"
         code={`import { GameViewport } from '../components/GameViewport';
 import { SafeAreaHud } from '@/ui-core/viewport/SafeAreaHud';
-import { useViewportStore } from '@/ui-core/stores/viewportStore';
+import { viewportStore } from '@/ui-core/stores/viewportStore';
+
+// Calibrated 5C Viewport & Safe Area Parameters (${activePreset.label}: ${activePreset.width}×${activePreset.height}px)
+viewportStore.setSafeAreaMargin(${safeAreaMargin});
+viewportStore.setRenderScale(${renderScale});
 
 export const MatchStage = ({ isLight }: { isLight: boolean }) => {
   return (
     <div className="relative w-screen h-screen overflow-hidden">
-      {/* Physical screen-level safe area auxiliary guidelines */}
       <SafeAreaHud isLight={isLight} />
-
-      {/* Auto Execute 18:9 Pillarbox Clamp and 1:1 Portrait Gate Portrait Protection */}
       <GameViewport isLight={isLight} showTelemetry>
         <HudAnchorStage ... />
       </GameViewport>

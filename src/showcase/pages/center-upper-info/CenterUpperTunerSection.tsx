@@ -1,15 +1,14 @@
 import React, { useState, useCallback } from 'react';
-import { RotateCcw, Timer, Palette, Sliders, Layers, Copy, Check, Code2, } from 'lucide-react';
+import { RotateCcw, Timer, Palette, Sliders, Layers } from 'lucide-react';
 import {
   DEFAULT_RL_COUNTDOWN_GLOW, DEFAULT_WINNER_BLUE_TEAM_CONFIG, DEFAULT_CENTER_UPPER_TYPOGRAPHY,
   DEFAULT_CENTER_UPPER_TIMING,
 } from '../../../ui-core/hud/CenterUpperInfoHUD';
-import { Badge } from '../../../ui-core/primitives/Badge';
 import { SliderControl } from '../../../ui-core/primitives/SliderControl';
 import { SegmentedSwitch } from '../../../ui-core/primitives/SegmentedSwitch';
 import { ToggleSwitch } from '../../../ui-core/primitives/ToggleSwitch';
 import { ColorSwatchInput } from '../../components/tuner/ColorSwatchInput';
-import { CodeBlock } from '../../CodeBlock';
+import { TunerConfigExporterBar } from '../../components/tuner/TunerConfigExporterBar';
 import { RL_GLOW_SWATCHES } from './CenterUpperStageBackdropBar';
 import { CenterUpperBlueTeamColorMenu } from './CenterUpperBlueTeamColorMenu';
 import { useCenterUpperSyncedState } from './useCenterUpperSyncedState';
@@ -45,7 +44,6 @@ export const CenterUpperTunerSection: React.FC<CenterUpperTunerSectionProps> = (
   } = useCenterUpperSyncedState();
 
   const [copied5EConfig, setCopied5EConfig] = useState<boolean>(false);
-  const [showExported5ECode, setShowExported5ECode] = useState<boolean>(false);
 
   const handleCopy5EConfig = useCallback(() => {
     const code = build5EExportCode();
@@ -57,67 +55,18 @@ export const CenterUpperTunerSection: React.FC<CenterUpperTunerSectionProps> = (
   }, [build5EExportCode]);
   return (
     <section id="center-upper-tuner" className="grid grid-cols-1 lg:grid-cols-3 gap-5 scroll-mt-24">
-      {/* Top Export & Solidify Default Parameters Bar across all 3 columns */}
-      <div className={`lg:col-span-3 p-4 rounded-2xl border flex flex-col gap-3 ${ isLight
-        ? 'bg-white border-neutral-200 text-neutral-900 shadow-xs'
-        : 'bg-neutral-900/80 border-neutral-800 text-neutral-100 shadow-md' }`}>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2 flex-wrap">
-            <Badge variant="amber" size="sm" isLight={isLight}>
-              5E-2
-            </Badge>
-            <span className="text-sm font-bold font-mono">Parameter fine-tuning and export (Tuner &amp; Default Solidifier)</span>
-            <span className="text-xs font-mono opacity-65">Includes Winner Blue Team RGB menu, Out Glow, Duration &amp; Typography; One-click copy JSON/TS to solidify as default parameters</span>
-          </div>
-
-          <div className="flex items-center gap-2 flex-wrap">
-            <button
-              type="button"
-              onClick={() => setShowExported5ECode((v) => !v)}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono border cursor-pointer transition-all ${
-                showExported5ECode
-                  ? 'bg-sky-500/15 border-sky-500/40 text-sky-400 font-bold'
-                  : isLight
-                  ? 'bg-neutral-100 hover:bg-neutral-200 border-neutral-300 text-neutral-700'
-                  : 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-neutral-200'
-              }`}
-            >
-              <Code2 className="h-3.5 w-3.5" />
-              <span>{showExported5ECode ? 'Collapse Parameter Code' : 'View default code'}</span>
-            </button>
-
-            <button type="button" onClick={handleCopy5EConfig} data-ui-action="export-5e-config"
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold border cursor-pointer transition-all ${
-              copied5EConfig ? 'bg-emerald-500 text-neutral-950 border-emerald-400'
-              : 'bg-amber-500 hover:bg-amber-400 text-neutral-950 border-amber-400' }`}>
-              {copied5EConfig ? (
-                <>
-                  <Check className="h-3.5 w-3.5" />
-                  <span>Copied 5E Configuration (Copied!)</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="h-3.5 w-3.5" />
-                  <span>Export 5E Configuration (Copy 5E Config)</span>
-                </>
-              )}
-            </button>
-
-            <button type="button" onClick={handleReset5EDefaults} title="reset 5E Reset all parameters to default"
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono border cursor-pointer transition-all ${
-              isLight ? 'bg-white hover:bg-neutral-100 border-neutral-300 text-neutral-700'
-              : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-700 text-neutral-300' }`}>
-              <RotateCcw className="h-3.5 w-3.5" />
-              <span>Reset 5E Default Parameters</span>
-            </button>
-          </div>
-        </div>
-
-        {showExported5ECode && (
-          <CodeBlock title="current 5E Parameter Snapshot (Paste directly to set as default value)" language="typescript" isLight={isLight}
-            code={build5EExportCode()} />
-        )}
-      </div>
+      <TunerConfigExporterBar
+        badge="5E-2"
+        title="Parameter fine-tuning and export (Tuner & Default Solidifier)"
+        subtitle="Includes Winner Blue Team RGB menu, Out Glow, Duration & Typography; One-click copy JSON/TS to solidify as default parameters"
+        copyLabel="Export 5E Configuration (Copy 5E Config)"
+        codeTitle="current 5E Parameter Snapshot (Paste directly to set as default value)"
+        actionId="export-5e-config"
+        className="lg:col-span-3"
+        isLight={isLight}
+        buildExportCode={build5EExportCode}
+        onResetDefaults={handleReset5EDefaults}
+      />
 
       {/* Column 1: Winner Blue Team RGB Menu & Rocket League Yellow Outer Glow (`Out Glow`) Parameters */}
       <div className={`p-5 rounded-3xl border flex flex-col gap-4 ${ isLight
