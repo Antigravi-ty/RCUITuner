@@ -1,8 +1,9 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   NAME_TAG_FAR_CALIBRATION_DEPTH_UU,
   NAME_TAG_NEAR_CALIBRATION_DEPTH_UU,
   NAME_TAG_REFERENCE_DEPTH_UU,
+  type NameTagBoostBorderOverride,
   type NameTagCarTelemetry,
   type NameTagConfig,
 } from '../../../ui-core/config/nameTagCalibrationMath';
@@ -11,7 +12,10 @@ import {
   type NameTagBallOcclusionProjection2D,
   type NameTagPillRenderCard2D,
 } from '../../../ui-core/config/nameTagPillRenderer';
-import { setNameTagTelemetrySnapshot } from '../../../ui-core/stores/nameTagTunerStore';
+import {
+  resolveNameTagBoostBorderVisible,
+  setNameTagTelemetrySnapshot,
+} from '../../../ui-core/stores/nameTagTunerStore';
 import { ArenaBackdrop, type ArenaLightingPreset } from '../../ArenaBackdrop';
 import {
   buildKickoffCars,
@@ -38,6 +42,7 @@ export interface NameTagStageCanvasProps {
   config: NameTagConfig;
   cars: KickoffCarSpawn[];
   focusedCarIndex: number | null;
+  boostBorderOverride?: NameTagBoostBorderOverride;
   cameraFovDeg: number;
   ballHeightOffset: number;
   animateBoostWave: boolean;
@@ -50,6 +55,7 @@ export const NameTagStageCanvas: React.FC<NameTagStageCanvasProps> = ({
   config,
   cars,
   focusedCarIndex,
+  boostBorderOverride = null,
   cameraFovDeg,
   ballHeightOffset,
   animateBoostWave,
@@ -57,42 +63,55 @@ export const NameTagStageCanvas: React.FC<NameTagStageCanvasProps> = ({
   arenaPreset,
   stageHeight,
 }) => {
+  const stageRootRef = useRef<HTMLDivElement | null>(null);
   const sceneCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const overlayCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const lastTelemetryEmitMsRef = useRef<number>(0);
+  const [resizeTick, setResizeTick] = useState(0);
+
+  useEffect(() => {
+    const el = stageRootRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(() => {
+      setResizeTick((t) => t + 1);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     let rafId = 0;
-    let lastTelemetryTime = 0;
-    const startMs = performance.now();
+    let cancelled = false;
 
-    const renderFrame = (nowMs: number) => {
+    const renderFrame = (emitBroadcastTelemetry: boolean) => {
+      if (cancelled) return;
       const sceneCanvas = sceneCanvasRef.current;
       const overlayCanvas = overlayCanvasRef.current;
-      if (!sceneCanvas || !overlayCanvas) {
-        rafId = requestAnimationFrame(renderFrame);
-        return;
-      }
+      if (!sceneCanvas || !overlayCanvas) return;
 
       const rect = sceneCanvas.getBoundingClientRect();
       const width = Math.max(1, Math.round(rect.width));
       const height = Math.max(1, Math.round(rect.height));
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-      if (sceneCanvas.width !== Math.round(width * dpr) || sceneCanvas.height !== Math.round(height * dpr)) {
+      if (
+        sceneCanvas.width !== Math.round(width * dpr) ||
+        sceneCanvas.height !== Math.round(height * dpr)
+      ) {
         sceneCanvas.width = Math.round(width * dpr);
         sceneCanvas.height = Math.round(height * dpr);
       }
-      if (overlayCanvas.width !== Math.round(width * dpr) || overlayCanvas.height !== Math.round(height * dpr)) {
+      if (
+        overlayCanvas.width !== Math.round(width * dpr) ||
+        overlayCanvas.height !== Math.round(height * dpr)
+      ) {
         overlayCanvas.width = Math.round(width * dpr);
         overlayCanvas.height = Math.round(height * dpr);
       }
 
       const sceneCtx = sceneCanvas.getContext('2d');
       const overlayCtx = overlayCanvas.getContext('2d');
-      if (!sceneCtx || !overlayCtx) {
-        rafId = requestAnimationFrame(renderFrame);
-        return;
-      }
+      if (!sceneCtx || !overlayCtx) return;
 
       sceneCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
       sceneCtx.clearRect(0, 0, width, height);
@@ -120,11 +139,11 @@ export const NameTagStageCanvas: React.FC<NameTagStageCanvasProps> = ({
         cars,
         povCar,
         ballWorld,
-        config,
+        config
       );
 
-      // Build 2D Name Tag Cards & Telemetry
-      const elapsedSec = (nowMs - startMs) / 1000;
+      // Phase-locked wall-clock wave so multi-screen tabs stay synchronized and slider drags never jump
+      const wavePhaseSec = Date.now() * 0.001;
       const visibleCards2D: NameTagPillRenderCard2D[] = [];
       const telemetryCars: NameTagCarTelemetry[] = [];
 
@@ -146,7 +165,7 @@ export const NameTagStageCanvas: React.FC<NameTagStageCanvasProps> = ({
         const proj = projectWorldPoint(anchorWorld, camBasis, width, height);
         const activeDepthUu = Math.max(
           80,
-          config.depthMetric === 'euclidean' ? proj.euclidean : proj.viewZ,
+          config.depthMetric === 'euclidean' ? proj.euclidean : proj.viewZ
         );
 
         const depthWindowT = Math.max(
@@ -154,8 +173,8 @@ export const NameTagStageCanvas: React.FC<NameTagStageCanvasProps> = ({
           Math.min(
             1,
             (activeDepthUu - NAME_TAG_NEAR_CALIBRATION_DEPTH_UU) /
-              (NAME_TAG_FAR_CALIBRATION_DEPTH_UU - NAME_TAG_NEAR_CALIBRATION_DEPTH_UU),
-          ),
+              (NAME_TAG_FAR_CALIBRATION_DEPTH_UU - NAME_TAG_NEAR_CALIBRATION_DEPTH_UU)
+          )
         );
         const nearFarMult =
           config.nearScaleMultiplier +
@@ -169,12 +188,12 @@ export const NameTagStageCanvas: React.FC<NameTagStageCanvasProps> = ({
 
         const screenUnitScale = Math.max(
           0.22,
-          Math.min(2.2, (worldScaleFactor * focalPx * 22) / Math.max(200, activeDepthUu)),
+          Math.min(2.2, (worldScaleFactor * focalPx * 22) / Math.max(200, activeDepthUu))
         );
 
         const baseBoost = config.previewBoostAmounts[car.carIndex] ?? 66;
         const dynamicBoost = animateBoostWave
-          ? Math.round(50 + 50 * Math.sin(elapsedSec * 1.45 + car.carIndex * 1.05))
+          ? Math.round(50 + 50 * Math.sin(wavePhaseSec * 1.45 + car.carIndex * 1.05))
           : baseBoost;
 
         const baseName = config.previewNames[car.carIndex] || car.slotCode;
@@ -185,6 +204,13 @@ export const NameTagStageCanvas: React.FC<NameTagStageCanvasProps> = ({
 
         const isOwnPov = povCar?.carIndex === car.carIndex;
         const visible = config.enabled && proj.visible && (!isOwnPov || config.showOnLocalCar);
+
+        const boostBorderVisible = resolveNameTagBoostBorderVisible(
+          config,
+          boostBorderOverride,
+          car.team,
+          povCar ? povCar.team : null
+        );
 
         const centerX = proj.x;
         const centerY = proj.y - effScreenOffsetPx * (height / 1080);
@@ -200,7 +226,7 @@ export const NameTagStageCanvas: React.FC<NameTagStageCanvasProps> = ({
           proj.viewZ,
           proj.euclidean * proj.euclidean,
           config,
-          config.boostBorderEnabled,
+          boostBorderVisible
         );
 
         if (visible) {
@@ -215,7 +241,7 @@ export const NameTagStageCanvas: React.FC<NameTagStageCanvasProps> = ({
           team: car.team,
           visible,
           boostAmount: dynamicBoost,
-          boostBorderVisible: config.boostBorderEnabled,
+          boostBorderVisible,
           carWorldPos: [car.x, car.y, car.z],
           anchorWorldPos: [anchorWorld.x, anchorWorld.y, anchorWorld.z],
           spriteWorldPos: [anchorWorld.x, anchorWorld.y, anchorWorld.z],
@@ -249,40 +275,59 @@ export const NameTagStageCanvas: React.FC<NameTagStageCanvasProps> = ({
         width,
         height,
         config,
-        ballOcclusion,
+        ballOcclusion
       );
 
-      if (nowMs - lastTelemetryTime > 90) {
-        lastTelemetryTime = nowMs;
-        setNameTagTelemetrySnapshot({
-          updatedAtMs: Date.now(),
-          viewportWidthPx: width,
-          viewportHeightPx: height,
-          aspectRatio: width / Math.max(1, height),
-          devicePixelRatio: dpr,
-          cameraMode: povCar ? 'pov' : 'free',
-          focusedCarIndex: povCar ? povCar.carIndex : 0,
-          cameraFovDeg,
-          cameraPosition: [camBasis.pos.x, camBasis.pos.y, camBasis.pos.z],
-          cameraForward: [camBasis.forward.x, camBasis.forward.y, camBasis.forward.z],
-          cameraUp: [camBasis.up.x, camBasis.up.y, camBasis.up.z],
-          cars: telemetryCars,
-        });
+      const nowMs = performance.now();
+      if (emitBroadcastTelemetry || nowMs - lastTelemetryEmitMsRef.current > 140) {
+        lastTelemetryEmitMsRef.current = nowMs;
+        setNameTagTelemetrySnapshot(
+          {
+            updatedAtMs: Date.now(),
+            viewportWidthPx: width,
+            viewportHeightPx: height,
+            aspectRatio: width / Math.max(1, height),
+            devicePixelRatio: dpr,
+            cameraMode: povCar ? 'pov' : 'free',
+            focusedCarIndex: povCar ? povCar.carIndex : 0,
+            cameraFovDeg,
+            cameraPosition: [camBasis.pos.x, camBasis.pos.y, camBasis.pos.z],
+            cameraForward: [camBasis.forward.x, camBasis.forward.y, camBasis.forward.z],
+            cameraUp: [camBasis.up.x, camBasis.up.y, camBasis.up.z],
+            cars: telemetryCars,
+          },
+          emitBroadcastTelemetry
+        );
       }
-
-      rafId = requestAnimationFrame(renderFrame);
     };
 
-    rafId = requestAnimationFrame(renderFrame);
-    return () => cancelAnimationFrame(rafId);
+    // Immediate synchronous render on any parameter or resize update
+    renderFrame(true);
+
+    if (animateBoostWave) {
+      const tickWave = () => {
+        if (cancelled) return;
+        renderFrame(false);
+        rafId = requestAnimationFrame(tickWave);
+      };
+      rafId = requestAnimationFrame(tickWave);
+    }
+
+    return () => {
+      cancelled = true;
+      if (rafId) cancelAnimationFrame(rafId);
+    };
   }, [
     config,
     cars,
     focusedCarIndex,
+    boostBorderOverride,
     cameraFovDeg,
     ballHeightOffset,
     animateBoostWave,
     customNameOverride,
+    stageHeight,
+    resizeTick,
   ]);
 
   const activePovCar =
@@ -290,6 +335,8 @@ export const NameTagStageCanvas: React.FC<NameTagStageCanvasProps> = ({
 
   return (
     <div
+      ref={stageRootRef}
+      className="rounded-2xl border border-white/10 shadow-2xl"
       style={{
         position: 'relative',
         width: '100%',
