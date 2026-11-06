@@ -19,6 +19,7 @@ import { MenuLayerStageCanvas } from './menu-layer/MenuLayerStageCanvas';
 import { useMenuLayerAdaptiveMetrics } from './menu-layer/useMenuLayerAdaptiveMetrics';
 import { useMenuLayerNavigationHandlers } from './menu-layer/useMenuLayerNavigationHandlers';
 import { MenuLayerSandboxProvider } from './menu-layer/MenuLayerSandboxContext';
+import { RapidReviewTriageBar } from '../components/review/RapidReviewTriageBar';
 import type { ShowcaseTab } from '../sidebarNavConfig';
 
 export interface MenuLayerPreviewPageProps {
@@ -437,6 +438,8 @@ export const MenuLayerPreviewPage: React.FC<MenuLayerPreviewPageProps> = ({
           }}
           isLight={isLight}
         />
+
+        <RapidReviewTriageBar isLight={isLight} />
       </div>
     </MenuLayerSandboxProvider>
   );

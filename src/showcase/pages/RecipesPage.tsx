@@ -27,6 +27,7 @@ import {
   resolveActiveRecipeFromUrl,
   getRelatedRecipeItems,
 } from './recipes/recipeRegistry';
+import { RapidReviewTriageBar } from '../components/review/RapidReviewTriageBar';
 
 export const RecipesPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }) => {
   const {
@@ -452,6 +453,8 @@ export const RecipesPage: React.FC<{ isLight?: boolean }> = ({ isLight = true })
           })}
         </div>
       )}
+
+      <RapidReviewTriageBar isLight={isLight} />
     </div>
   );
 };
