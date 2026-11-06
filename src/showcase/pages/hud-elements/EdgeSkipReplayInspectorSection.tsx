@@ -244,12 +244,7 @@ export const EdgeSkipReplayInspectorSection: React.FC<EdgeSkipReplayInspectorSec
           <SkipReplayTunerControls
             isLight={isLight}
             skipCfg={skipCfg}
-            viewMode={viewMode}
-            setViewMode={setViewMode}
-            mixedAuxSlots={mixedAuxSlots}
-            setMixedAuxSlots={setMixedAuxSlots}
             copiedJson={copiedJson}
-            skipSlots={skipSlots}
             toggleSlotSkip={toggleSlotSkip}
             updateSkipCfg={updateSkipCfg}
             setSkipCfg={setSkipCfg}

@@ -389,7 +389,10 @@ export const HudCoreTriadInspectorSection = React.memo<HudCoreTriadInspectorSect
                     style={{ backgroundColor: velocityStatus.color }}
                   />
                   <span>
-                    Color Algorithm Spec: 0~1410 Pure Gold (#d4af37); 1410~2200 From Mid-Speed Dark Green (#77ca7a) Linear transition to bright green (#59f168); &gt;=2200 Instant Purple (#a020f0) Start supersonic heartbeat breathing effect. via Ref Direct Change DOM style, 120Hz Zero Redraw.
+                    Color Algorithm Spec: 0~1410 Pure Gold (#d4af37); 1410~2200 From Mid-Speed Dark
+                    Green (#77ca7a) Linear transition to bright green (#59f168); &gt;=2200 Instant
+                    Purple (#a020f0) Start supersonic heartbeat breathing effect. via Ref Direct
+                    Change DOM style, 120Hz Zero Redraw.
                   </span>
                 </div>
               </div>

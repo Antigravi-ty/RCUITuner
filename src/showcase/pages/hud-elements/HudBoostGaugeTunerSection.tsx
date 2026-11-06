@@ -1,7 +1,11 @@
 import React from 'react';
 import { useBoostGaugeStore } from '../../../ui-core/stores/boostGaugeStore';
 import { Flame, RotateCcw, Moon, Sun, Copy, Check, Code2 } from 'lucide-react';
-import { CircularBoostGauge, getBoostSegmentColor, STEP_12_TIER_PRESETS, type BoostColorScheme, type BoostColorMode, type BoostThemeOverride } from '../../../ui-core/hud/CircularBoostGauge';
+import {
+  CircularBoostGauge,
+  getBoostSegmentColor,
+  type BoostThemeOverride,
+} from '../../../ui-core/hud/CircularBoostGauge';
 import { type HudBoostListener } from '../../../ui-core/stores/hudTransientTypes';
 import { SliderControl } from '../../../ui-core/primitives/SliderControl';
 import { ToggleSwitch } from '../../../ui-core/primitives/ToggleSwitch';
@@ -9,6 +13,7 @@ import { Badge } from '../../../ui-core/primitives/Badge';
 import { SectionErrorBoundary } from '../../components/SectionErrorBoundary';
 import { CodeBlock } from '../../CodeBlock';
 import { HudBoostGaugeGeometryControls } from './HudBoostGaugeGeometryControls';
+import { HudBoostGaugePaletteAndModeControls } from './HudBoostGaugePaletteAndModeControls';
 
 export interface HudBoostGaugeTunerSectionProps {
   isLight: boolean;
@@ -53,9 +58,6 @@ export const HudBoostGaugeTunerSection: React.FC<HudBoostGaugeTunerSectionProps>
   const [showCode, setShowCode] = React.useState<boolean>(false);
   const [copiedConfig, setCopiedConfig] = React.useState<boolean>(false);
 
-  const setColorScheme = (v: BoostColorScheme) => setToken('colorScheme', v);
-  const setColorMode = (v: BoostColorMode) => setToken('colorMode', v);
-  const setFixedTextColor = (v: string) => setToken('fixedTextColor', v);
   const setThemeOverride = (v: BoostThemeOverride) => setToken('themeOverride', v);
 
   const handleResetBoostGaugeConfig = () => {
@@ -85,7 +87,9 @@ export const HudBoostGaugeTunerSection: React.FC<HudBoostGaugeTunerSectionProps>
           <div className="h-6 w-6 rounded-md bg-sky-500/10 text-sky-500 flex items-center justify-center font-bold text-xs font-mono">
             5A.5
           </div>
-          <h2 className="text-base font-bold tracking-tight">CircularBoostGauge (high frequency 120Hz · Fully parametric circular progress gauge)</h2>
+          <h2 className="text-base font-bold tracking-tight">
+            CircularBoostGauge (high frequency 120Hz · Fully parametric circular progress gauge)
+          </h2>
           <Badge variant="amber" size="sm" isLight={isLight}>
             120Hz Transient SVG/DOM Ref
           </Badge>
@@ -98,8 +102,11 @@ export const HudBoostGaugeTunerSection: React.FC<HudBoostGaugeTunerSectionProps>
           {/* Left Preview Stage */}
           <div
             className={`lg:col-span-5 p-6 rounded-3xl border flex flex-col items-center justify-between gap-4 transition-all ${
-            isLight ? 'bg-neutral-100/70 border-neutral-200/90 shadow-inner'
-            : 'bg-neutral-950 border-neutral-800/90 shadow-inner' }`}>
+              isLight
+                ? 'bg-neutral-100/70 border-neutral-200/90 shadow-inner'
+                : 'bg-neutral-950 border-neutral-800/90 shadow-inner'
+            }`}
+          >
             <div className="w-full flex items-center justify-between text-[11px] font-mono opacity-80">
               <span>
                 Ring Radius: <strong>{ringInnerPct}%~{ringOuterPct}%</strong>
@@ -141,7 +148,9 @@ export const HudBoostGaugeTunerSection: React.FC<HudBoostGaugeTunerSectionProps>
               </span>
               <span>
                 Color Scheme:{' '}
-                <strong className="text-sky-500">{colorScheme === 'step-12' ? 'each12level(9Segment)' : 'Classic4Color'}</strong>
+                <strong className="text-sky-500">
+                  {colorScheme === 'step-12' ? 'each12level(9Segment)' : 'Classic4Color'}
+                </strong>
               </span>
             </div>
           </div>
@@ -149,8 +158,11 @@ export const HudBoostGaugeTunerSection: React.FC<HudBoostGaugeTunerSectionProps>
           {/* Right Configuration Panel */}
           <div
             className={`lg:col-span-7 p-6 rounded-3xl border flex flex-col justify-between gap-4 transition-colors shadow-2xs ${
-            isLight ? 'bg-white border-neutral-200/90 text-neutral-800'
-            : 'bg-neutral-900/60 border-neutral-800 text-neutral-200' }`}>
+              isLight
+                ? 'bg-white border-neutral-200/90 text-neutral-800'
+                : 'bg-neutral-900/60 border-neutral-800 text-neutral-200'
+            }`}
+          >
             <div className="flex flex-col gap-3.5">
               {/* Header */}
               <div className="flex items-center justify-between border-b pb-2.5 border-neutral-100 dark:border-neutral-800/70 flex-wrap gap-2">
@@ -166,9 +178,16 @@ export const HudBoostGaugeTunerSection: React.FC<HudBoostGaugeTunerSectionProps>
                       [Boost] 120Hz SVG/Text Ref Direct Drive
                     </span>
                   ) : (
-                    <span className="font-mono text-xs font-bold px-2 py-0.5 rounded-md border" style={{ color:
-                      !isLight && boostSegment.segmentName === 'black' ? '#e4e4e7' : boostSegment.color,
-                      borderColor: `${boostSegment.color}66`, }}>
+                    <span
+                      className="font-mono text-xs font-bold px-2 py-0.5 rounded-md border"
+                      style={{
+                        color:
+                          !isLight && boostSegment.segmentName === 'black'
+                            ? '#e4e4e7'
+                            : boostSegment.color,
+                        borderColor: `${boostSegment.color}66`,
+                      }}
+                    >
                       {isUnlimitedBoost
                         ? '-- (UNLIMITED)'
                         : `${boostAmount}% · ${boostSegment.rangeLabel}`}
@@ -186,8 +205,11 @@ export const HudBoostGaugeTunerSection: React.FC<HudBoostGaugeTunerSectionProps>
                     <Code2 className="h-3 w-3" />
                     <span>{showCode ? 'Collapse Code' : 'view config code'}</span>
                   </button>
-                  <button type="button" onClick={handleCopyConfig}
-                    className="px-2.5 py-0.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-[11px] font-mono cursor-pointer transition-all flex items-center gap-1 shadow-2xs">
+                  <button
+                    type="button"
+                    onClick={handleCopyConfig}
+                    className="px-2.5 py-0.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-[11px] font-mono cursor-pointer transition-all flex items-center gap-1 shadow-2xs"
+                  >
                     {copiedConfig ? (
                       <>
                         <Check className="h-3 w-3" />
@@ -200,8 +222,11 @@ export const HudBoostGaugeTunerSection: React.FC<HudBoostGaugeTunerSectionProps>
                       </>
                     )}
                   </button>
-                  <button type="button" onClick={handleResetBoostGaugeConfig}
-                    className="px-2 py-0.5 rounded-lg border border-neutral-400/40 text-[11px] font-mono cursor-pointer hover:bg-neutral-500/10 flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={handleResetBoostGaugeConfig}
+                    className="px-2 py-0.5 rounded-lg border border-neutral-400/40 text-[11px] font-mono cursor-pointer hover:bg-neutral-500/10 flex items-center gap-1"
+                  >
                     <RotateCcw className="h-3 w-3" />
                     <span>reset to default</span>
                   </button>
@@ -288,22 +313,39 @@ export const HudBoostGaugeTunerSection: React.FC<HudBoostGaugeTunerSectionProps>
 
               {showCode && (
                 <div className="pt-1">
-                  <CodeBlock title="src/ui-core/stores/boostGaugeStore.ts (DEFAULT_BOOST_GAUGE_TOKENS)"
-                    code={exportConfigCode()} isLight={isLight} />
+                  <CodeBlock
+                    title="src/ui-core/stores/boostGaugeStore.ts (DEFAULT_BOOST_GAUGE_TOKENS)"
+                    code={exportConfigCode()}
+                    isLight={isLight}
+                  />
                 </div>
               )}
 
               {/* 1. Boost Amount Slider & Unlimited Boost + Dark Mode Override */}
               <div className="flex flex-col gap-2">
-                <SliderControl label="Advance Value (Dragging slider will pause 120Hz Stream and switch to manual inspection)" value={boostAmount} min={0} max={100}
-                  step={1} unit="%" colorScheme="sky" isLight={isLight} onChange={(v) => { setIs120HzLive(false);
-                  setBoostAmount(v); }} />
+                <SliderControl
+                  label="Advance Value (Dragging slider will pause 120Hz Stream and switch to manual inspection)"
+                  value={boostAmount}
+                  min={0}
+                  max={100}
+                  step={1}
+                  unit="%"
+                  colorScheme="sky"
+                  isLight={isLight}
+                  onChange={(v) => {
+                    setIs120HzLive(false);
+                    setBoostAmount(v);
+                  }}
+                />
 
                 <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-semibold">Infinite Advance (`--`):</span>
-                    <ToggleSwitch checked={isUnlimitedBoost} onCheckedChange={setIsUnlimitedBoost}
-                      isLight={isLight} />
+                    <ToggleSwitch
+                      checked={isUnlimitedBoost}
+                      onCheckedChange={setIsUnlimitedBoost}
+                      isLight={isLight}
+                    />
                   </div>
 
                   {/* Dark Mode Override Selector */}
@@ -333,172 +375,13 @@ export const HudBoostGaugeTunerSection: React.FC<HudBoostGaugeTunerSectionProps>
                 </div>
               </div>
 
-              {/* 2. Color Scheme (4-Color vs 12-Step 9-Tier) + Quick Tier Buttons */}
-              <div className="flex flex-col gap-2 pt-2 border-t border-neutral-100 dark:border-neutral-800/60">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <span className="text-xs font-semibold">Color Palette (Color Scheme):</span>
-                  <div className="flex items-center gap-1.5 font-mono text-xs">
-                    <button
-                      type="button"
-                      onClick={() => setColorScheme('step-12')}
-                      className={`px-2.5 py-1 rounded-lg border cursor-pointer transition-all ${
-                        colorScheme === 'step-12'
-                          ? 'bg-emerald-600 text-white border-emerald-600 font-bold shadow-2xs'
-                          : 'border-neutral-400/40 opacity-80 hover:opacity-100'
-                      }`}
-                    >
-                      each 12 level · Nine-segment Seven-color+Red flash (T5A.4 Pie)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setColorScheme('classic-4')}
-                      className={`px-2.5 py-1 rounded-lg border cursor-pointer transition-all ${
-                        colorScheme === 'classic-4'
-                          ? 'bg-sky-600 text-white border-sky-600 font-bold shadow-2xs'
-                          : 'border-neutral-400/40 opacity-80 hover:opacity-100'
-                      }`}
-                    >
-                      Classic Four-Color Mode (0-24/60/96/100)
-                    </button>
-                  </div>
-                </div>
-
-                {colorScheme === 'step-12' ? (
-                  <div className="grid grid-cols-3 sm:grid-cols-9 gap-1.5 font-mono">
-                    {STEP_12_TIER_PRESETS.map((item) => {
-                      const isActive =
-                        !is120HzLive &&
-                        ((item.val === 6 && boostAmount < 12) ||
-                          (item.val === 18 && boostAmount >= 12 && boostAmount < 24) ||
-                          (item.val === 30 && boostAmount >= 24 && boostAmount < 36) ||
-                          (item.val === 42 && boostAmount >= 36 && boostAmount < 48) ||
-                          (item.val === 54 && boostAmount >= 48 && boostAmount < 60) ||
-                          (item.val === 66 && boostAmount >= 60 && boostAmount < 72) ||
-                          (item.val === 78 && boostAmount >= 72 && boostAmount < 84) ||
-                          (item.val === 90 && boostAmount >= 84 && boostAmount <= 96) ||
-                          (item.val === 100 && boostAmount > 96));
-                      return (
-                        <button
-                          key={item.range}
-                          type="button"
-                          onClick={() => {
-                            setIs120HzLive(false);
-                            setIsUnlimitedBoost(false);
-                            setBoostAmount(item.val);
-                          }}
-                          className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-xl border text-[10px] cursor-pointer transition-all ${
-                            isActive ? 'ring-2 ring-amber-500 font-bold scale-102' : 'opacity-85 hover:opacity-100'
-                          }`}
-                          style={{
-                            backgroundColor: `${item.hex}20`,
-                            borderColor: `${item.hex}80`,
-                          }}
-                          title={`Click Test ${item.range} (${item.label})`}
-                        >
-                          <span
-                            className={`w-2.5 h-2.5 rounded-full mb-0.5 border border-white/30 ${
-                              item.isFlashing ? 'animate-ping' : ''
-                            }`}
-                            style={{ backgroundColor: item.hex }}
-                          />
-                          <span className="font-bold leading-tight">{item.range}</span>
-                          <span className="text-[9px] opacity-80 leading-tight">{item.label.split(' ')[0]}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {[
-                      { val: 15, label: '0~24 (red)',
-                        cls: 'bg-red-500/10 border-red-500/40 text-red-500 hover:bg-red-500/20' },
-                      { val: 45, label: '25~60 (Yellow)',
-                        cls: 'bg-amber-500/10 border-amber-500/40 text-amber-500 hover:bg-amber-500/20' },
-                      { val: 80, label: '61~96 (green)',
-                        cls: 'bg-emerald-500/10 border-emerald-500/40 text-emerald-500 hover:bg-emerald-500/20' },
-                      { val: 100, label: '97~100 (Light Blue)',
-                        cls: 'bg-sky-500/10 border-sky-500/40 text-sky-500 hover:bg-sky-500/20' },
-                    ].map((item) => (
-                      <button
-                        key={item.val}
-                        type="button"
-                        onClick={() => {
-                          setIs120HzLive(false);
-                          setIsUnlimitedBoost(false);
-                          setBoostAmount(item.val);
-                        }}
-                        className={`flex flex-col items-center justify-center p-1.5 rounded-xl border text-xs font-mono font-bold cursor-pointer transition-all ${item.cls}`}
-                      >
-                        <span>{item.val}%</span>
-                        <span className="text-[10px] font-normal opacity-80">{item.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* 3. Inverted Color Mode & Fixed Number Color */}
-              <div className="flex flex-col gap-2 pt-2 border-t border-neutral-100 dark:border-neutral-800/60">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <span className="text-xs font-semibold">Color Mode (standard vs Inverted hollow transparent ring vs Ring Only):</span>
-                  <div className="flex items-center gap-1 font-mono text-xs flex-wrap">
-                    {(
-                      [
-                        { id: 'inverted', label: 'Invert (Dial Color Shift · Vacant100-X%Hollow Ring Transparency)' },
-                        { id: 'ring-only', label: 'Ring Only (Fixed Digit Color)' },
-                        { id: 'standard', label: 'standard (Ring+Dynamic Digit Color)' },
-                      ] as const
-                    ).map((m) => (
-                      <button
-                        key={m.id}
-                        type="button"
-                        onClick={() => setColorMode(m.id)}
-                        className={`px-2 py-0.5 rounded-lg text-[11px] border cursor-pointer transition-all ${
-                          colorMode === m.id
-                            ? 'bg-amber-500 text-neutral-950 border-amber-500 font-bold shadow-2xs'
-                            : 'border-neutral-400/40 opacity-80 hover:opacity-100'
-                        }`}
-                      >
-                        {m.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {colorMode !== 'standard' && (
-                  <div className="flex items-center justify-between gap-2 flex-wrap text-xs font-mono bg-amber-500/5 border border-amber-500/20 rounded-xl px-3 py-1.5">
-                    <span className="text-[11px] font-semibold">Central numeric fixed color (`fixedTextColor`):</span>
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      {[
-                        { hex: '#FFFFFF', label: 'Pure White #FFF' },
-                        { hex: '#09090B', label: 'Pure Black #09090B' },
-                        { hex: '#FDE047', label: 'Bright Gold #FDE047' },
-                        { hex: '#38BDF8', label: 'Ice Blue #38BDF8' },
-                      ].map((sw) => (
-                        <button
-                          key={sw.hex}
-                          type="button"
-                          onClick={() => setFixedTextColor(sw.hex)}
-                          className={`px-2 py-0.5 rounded border text-[10px] cursor-pointer flex items-center gap-1 ${
-                            fixedTextColor.toUpperCase() === sw.hex
-                              ? 'ring-2 ring-amber-500 font-bold'
-                              : 'opacity-80'
-                          }`}
-                        >
-                          <span
-                            className="w-2.5 h-2.5 rounded-full border border-neutral-400"
-                            style={{ backgroundColor: sw.hex }}
-                          />
-                          <span>{sw.label}</span>
-                        </button>
-                      ))}
-                      <input type="color" value={fixedTextColor}
-                        onChange={(e) => setFixedTextColor(e.target.value)}
-                        className="w-6 h-6 rounded cursor-pointer border-0 bg-transparent" title="Custom fixed numeric color" />
-                    </div>
-                  </div>
-                )}
-              </div>
+              <HudBoostGaugePaletteAndModeControls
+                is120HzLive={is120HzLive}
+                setIs120HzLive={setIs120HzLive}
+                boostAmount={boostAmount}
+                setBoostAmount={setBoostAmount}
+                setIsUnlimitedBoost={setIsUnlimitedBoost}
+              />
 
               <HudBoostGaugeGeometryControls
                 isLight={isLight}

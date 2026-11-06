@@ -1,286 +1,142 @@
-import React, { useEffect, useRef } from 'react';
-import { createScopedSyncedState } from '../stores/crossClientSync';
-
-const useState = createScopedSyncedState('page:hud-elements');
-import { Crosshair, Sparkles, Zap, Play, Pause, } from 'lucide-react';
-import { createHudTransientChannel } from '../../ui-core/stores/hudTransientChannel';
-import {
-  DEFAULT_SKIP_INDICATOR_CONFIG,
-  type EdgeSkipIndicatorConfig,
-  resolveSkipIndicatorConfig,
-} from '../../ui-core/stores/hudTransientTypes';
+import React from 'react';
+import { Crosshair, Sparkles, Play, Pause } from 'lucide-react';
 import { Badge } from '../../ui-core/primitives/Badge';
 import { SectionErrorBoundary } from '../components/SectionErrorBoundary';
+import { TunerConfigExporterBar } from '../components/tuner/TunerConfigExporterBar';
 import { PageJumpDirectory, JumpDirectoryItem } from '../PageJumpDirectory';
 import { HudSpatialChoreographySandbox } from './hud-elements/HudSpatialChoreographySandbox';
 import { EdgeDemoInspectorSection } from './hud-elements/EdgeDemoInspectorSection';
 import { EdgeSkipReplayInspectorSection } from './hud-elements/EdgeSkipReplayInspectorSection';
 import { HudCoreTriadInspectorSection } from './hud-elements/HudCoreTriadInspectorSection';
-import { HudStageAndFollowupSection, type SlotLayoutPreset } from './hud-elements/HudStageAndFollowupSection';
+import { HudStageAndFollowupSection } from './hud-elements/HudStageAndFollowupSection';
 import { HudTopBandPairSection } from './hud-elements/HudTopBandPairSection';
+import { useHudElementsPageState } from './hud-elements/useHudElementsPageState';
 
 const HUD_5A_DIRECTORY_ITEMS: JumpDirectoryItem[] = [
-  { id: 'hud-5a-sandbox', code: '5A.S',
-    name: 'HudSpatialChoreographySandbox', label: 'High-density full-screen layout and transient animation sandbox (Top Edge Docking + Anti-glitch Double Chin)' },
-  { id: 'hud-5a-1-scoreboard', code: '5A.1', name: 'StepperScoreboardHUD', label: 'Top flush right angle·Bottom rounded scoreboard + Anti-glitch Single/Double Chin' },
-  { id: 'hud-5a-2-edge-strip', code: '5A.2',
-    name: 'EdgePlayerHudStrip', label: '3v3 Strictly axis-symmetric single-sided rounded bar (Live/Replay/Spectator)' },
-  { id: 'hud-5a-2-demo-inspector', code: '5A.2+',
-    name: 'EdgeDemoInspectorSection', label: 'Explosion status persistent preview Bomb SVG size/weight/Outer glow workbench' },
-  { id: 'hud-5a-2-skip-inspector', code: '5A.2++',
-    name: 'EdgeSkipReplayInspectorSection', label: 'Skip Replay & Slot Extension Card under-card border, push/retract choreography & icon workbench' },
-  { id: 'hud-5a-3-ball-cam', code: '5A.3',
-    name: 'BallCameraIndicator', label: 'Low-frequency discrete sphere view indicator (React.memo + subscribeBallCam)' },
-  { id: 'hud-5a-4-velocity-bar', code: '5A.4',
-    name: 'VelocityProgressBar', label: '120Hz Zero-radius supersonic progress bar (subscribeSpeed DOM Ref)' },
-  { id: 'hud-5a-5-boost-gauge', code: '5A.5',
-    name: 'CircularBoostGauge', label: '120Hz Fully parametric circular progress gauge (subscribeBoost SVG Ref)' },
-  { id: 'hud-5a-5s-triad-stage', code: '5A.5S',
-    name: 'Decoupled 3-Widget Stage', label: 'high frequency Speed/Boost + low frequency BallCam Zero-coupling slot layout test bench' },
-  { id: 'hud-5a-6-telemetry-flip', code: '5A.6 & 5A.7',
-    name: 'CompactTelemetryBarHUD & FlipIndicatorPillHUD', label: 'Top-Left 4 Metric Micro-capsule + Double-jump countdown status light' },
-  { id: 'hud-5a-9-kickoff-rhythm', code: '5A.9',
-    name: 'KickoffRhythmOverlayHUD', label: '120Hz Zero Allocation Canvas Kickoff Rhythm Track + 9Key Hit Row' },
+  {
+    id: 'hud-5a-sandbox',
+    code: '5A.S',
+    name: 'HudSpatialChoreographySandbox',
+    label:
+      'High-density full-screen layout and transient animation sandbox (Top Edge Docking + Anti-glitch Double Chin)',
+  },
+  {
+    id: 'hud-5a-1-scoreboard',
+    code: '5A.1',
+    name: 'StepperScoreboardHUD',
+    label: 'Top flush right angle·Bottom rounded scoreboard + Anti-glitch Single/Double Chin',
+  },
+  {
+    id: 'hud-5a-2-edge-strip',
+    code: '5A.2',
+    name: 'EdgePlayerHudStrip',
+    label: '3v3 Strictly axis-symmetric single-sided rounded bar (Live/Replay/Spectator)',
+  },
+  {
+    id: 'hud-5a-2-demo-inspector',
+    code: '5A.2+',
+    name: 'EdgeDemoInspectorSection',
+    label: 'Explosion status persistent preview Bomb SVG size/weight/Outer glow workbench',
+  },
+  {
+    id: 'hud-5a-2-skip-inspector',
+    code: '5A.2++',
+    name: 'EdgeSkipReplayInspectorSection',
+    label:
+      'Skip Replay & Slot Extension Card under-card border, push/retract choreography & icon workbench',
+  },
+  {
+    id: 'hud-5a-3-ball-cam',
+    code: '5A.3',
+    name: 'BallCameraIndicator',
+    label: 'Low-frequency discrete sphere view indicator (React.memo + subscribeBallCam)',
+  },
+  {
+    id: 'hud-5a-4-velocity-bar',
+    code: '5A.4',
+    name: 'VelocityProgressBar',
+    label: '120Hz Zero-radius supersonic progress bar (subscribeSpeed DOM Ref)',
+  },
+  {
+    id: 'hud-5a-5-boost-gauge',
+    code: '5A.5',
+    name: 'CircularBoostGauge',
+    label: '120Hz Fully parametric circular progress gauge (subscribeBoost SVG Ref)',
+  },
+  {
+    id: 'hud-5a-5s-triad-stage',
+    code: '5A.5S',
+    name: 'Decoupled 3-Widget Stage',
+    label:
+      'high frequency Speed/Boost + low frequency BallCam Zero-coupling slot layout test bench',
+  },
+  {
+    id: 'hud-5a-6-telemetry-flip',
+    code: '5A.6 & 5A.7',
+    name: 'CompactTelemetryBarHUD & FlipIndicatorPillHUD',
+    label: 'Top-Left 4 Metric Micro-capsule + Double-jump countdown status light',
+  },
+  {
+    id: 'hud-5a-9-kickoff-rhythm',
+    code: '5A.9',
+    name: 'KickoffRhythmOverlayHUD',
+    label: '120Hz Zero Allocation Canvas Kickoff Rhythm Track + 9Key Hit Row',
+  },
 ];
 
 export const HudElementsPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }) => {
-  const [ballCamActive, setBallCamActive] = useState<boolean>(true, 'ballCamActive');
-  const [ballCamShortcut, setBallCamShortcut] = useState<string | null>('SPACE', 'ballCamShortcut');
-  const [ballCamLabel, setBallCamLabel] = useState<string>('BALL CAM', 'ballCamLabel');
-  const [speed, setSpeed] = useState<number>(1410, 'speed');
-  const [barWidth, setBarWidth] = useState<string>('100%', 'barWidth');
-  const [barHeight, setBarHeight] = useState<number>(20, 'barHeight');
-  const [boostAmount, setBoostAmount] = useState<number>(35, 'boostAmount');
-  const [isUnlimitedBoost, setIsUnlimitedBoost] = useState<boolean>(false, 'isUnlimitedBoost');
-  const [gaugeSize, setGaugeSize] = useState<number>(148, 'gaugeSize');
-  const [is120HzLive, setIs120HzLive] = useState<boolean>(true, 'is120HzLive');
-  const [slotPreset, setSlotPreset] = useState<SlotLayoutPreset>('classic-triad', 'slotPreset');
-  const [edgeSkipReady, setEdgeSkipReady] = useState<Record<1 | 2 | 3 | 4 | 5 | 6, boolean>>(
-    { 1: true, 2: false, 3: true, 4: true, 5: false, 6: false },
-    'edgeSkipReady'
-  );
-  const [rawEdgeSkipConfig, setEdgeSkipConfig] = useState<EdgeSkipIndicatorConfig>(
-    { ...DEFAULT_SKIP_INDICATOR_CONFIG },
-    'edgeSkipConfigV2'
-  );
-  const edgeSkipConfig = resolveSkipIndicatorConfig(rawEdgeSkipConfig);
-
-  const transientChannelRef = useRef(
-    createHudTransientChannel({
-      speed: 1410,
-      boostAmount: 85,
-      isUnlimitedBoost: false,
-    })
-  );
-
-  const toggleEdgeSkipReady = (slot: 1 | 2 | 3 | 4 | 5 | 6) => {
-    setEdgeSkipReady((prev) => {
-      const nextVal = !prev[slot];
-      transientChannelRef.current.updatePlayerSlot(slot, { replaySkipReady: nextVal });
-      return { ...prev, [slot]: nextVal };
-    });
-  };
-
-  useEffect(() => {
-    const ch = transientChannelRef.current;
-    ch.setRoster({ viewMode: 'spectator', skipIndicatorConfig: edgeSkipConfig });
-    ([1, 2, 3, 4, 5, 6] as const).forEach((k) => {
-      ch.updatePlayerSlot(k, { replaySkipReady: Boolean(edgeSkipReady?.[k]) });
-    });
-  }, [edgeSkipReady, edgeSkipConfig]);
-
-  // Track React render count to prove 120Hz updates cause 0 React re-renders
-  const reactRenderCountRef = useRef<number>(0);
-  reactRenderCountRef.current += 1;
-  const liveSpeedReadoutRef = useRef<HTMLSpanElement | null>(null);
-  const liveBoostReadoutRef = useRef<HTMLSpanElement | null>(null);
-  const liveHzReadoutRef = useRef<HTMLSpanElement | null>(null);
-  const liveRenderRateRef = useRef<HTMLSpanElement | null>(null);
-
-  // Keep unlimited flag synced to transient channel when toggled manually
-  useEffect(() => {
-    const ch = transientChannelRef.current;
-    ch.setBoost(ch.getBoost().amount, isUnlimitedBoost);
-  }, [isUnlimitedBoost]);
-
-  // 120Hz Physics Telemetry Stream Simulator (VSync rAF with clamped dt - Zero React setState!)
-  useEffect(() => {
-    if (!is120HzLive) return;
-
-    const channel = transientChannelRef.current;
-    let rafId = 0;
-    let tickCount = 0;
-    let ticksThisWindow = 0;
-    let lastTime = performance.now();
-    let lastWindowMark = lastTime;
-    let accumulatorMs = 0;
-    let lastRenderSnap = reactRenderCountRef.current;
-    let scrollCooldownUntil = 0;
-    const stepMs = 1000 / 120;
-
-    const onScrollCapture = () => {
-      scrollCooldownUntil = performance.now() + 90;
-    };
-    window.addEventListener('scroll', onScrollCapture, { capture: true, passive: true });
-
-    const tick = (now: number) => {
-      rafId = requestAnimationFrame(tick);
-
-      if (now < scrollCooldownUntil || document.hidden) {
-        lastTime = now;
-        return;
-      }
-
-      const dt = Math.min(34, Math.max(0, now - lastTime));
-      lastTime = now;
-      accumulatorMs += dt;
-
-      let steps = 0;
-      let latestSpeed = channel.getSpeed();
-      let latestBoost = channel.getBoost().amount;
-
-      while (accumulatorMs >= stepMs && steps < 4) {
-        accumulatorMs -= stepMs;
-        steps++;
-        tickCount += 1;
-        ticksThisWindow += 1;
-
-        // Simulate realistic Rocket League acceleration -> supersonic surge -> braking cycle (6s period at 120Hz)
-        const t = (tickCount % 720) / 720;
-        let simSpeed = 1410;
-        let simBoost = 85;
-
-        if (t < 0.25) {
-          const p = t / 0.25;
-          simSpeed = p * 1410;
-          simBoost = Math.max(12, 55 - p * 35);
-        } else if (t < 0.6) {
-          const p = (t - 0.25) / 0.35;
-          simSpeed = 1410 + Math.min(1, p * 1.25) * 885;
-          simBoost = p < 0.45 ? 100 - p * 90 : Math.max(4, 60 - (p - 0.45) * 100);
-        } else if (t < 0.8) {
-          const p = (t - 0.6) / 0.2;
-          simSpeed = 2240 + Math.sin(p * Math.PI * 4) * 45;
-          simBoost = p > 0.3 ? 100 : 12;
-        } else {
-          const p = (t - 0.8) / 0.2;
-          simSpeed = 2240 - p * 1620;
-          simBoost = 100 - p * 45;
-        }
-
-        latestSpeed = simSpeed;
-        latestBoost = simBoost;
-        channel.setSpeed(simSpeed);
-        channel.setBoost(simBoost, isUnlimitedBoost);
-        channel.setFlipState({
-          hasFlip: t < 0.72,
-          status: t < 0.15 ? 'grounded' : t < 0.72 ? 'countdown' : 'expired',
-          remainingSeconds: t < 0.72 ? Math.max(0, 1.25 * (1 - t / 0.72)) : 0,
-        });
-        channel.setTelemetrySnapshot({
-          fps: 120,
-          refreshHz: 120,
-          renderScalePct: 100,
-          physicsRateHz: 120.0,
-          baseLatencyMs: 18 + Math.round(Math.sin(tickCount * 0.05) * 3),
-          extraLatencyMs: 0,
-        });
-        channel.setKickoffFrame({
-          episodeTick: tickCount % 240,
-        });
-      }
-
-      if (steps > 0 && tickCount % 6 === 0) {
-        if (liveSpeedReadoutRef.current) {
-          liveSpeedReadoutRef.current.textContent = `${Math.round(latestSpeed)} uu/s`;
-        }
-        if (liveBoostReadoutRef.current) {
-          liveBoostReadoutRef.current.textContent = isUnlimitedBoost
-            ? '-- (∞)'
-            : `${Math.round(latestBoost)}%`;
-        }
-      }
-
-      if (now - lastWindowMark >= 600) {
-        const elapsedSec = (now - lastWindowMark) / 1000;
-        const hz = Math.round(ticksThisWindow / elapsedSec);
-        const renderDelta = reactRenderCountRef.current - lastRenderSnap;
-        const rendersPerSec = Math.round(renderDelta / elapsedSec);
-
-        if (liveHzReadoutRef.current) {
-          liveHzReadoutRef.current.textContent = `${hz} Hz`;
-        }
-        if (liveRenderRateRef.current) {
-          liveRenderRateRef.current.textContent = `${rendersPerSec} / sec`;
-        }
-        ticksThisWindow = 0;
-        lastWindowMark = now;
-        lastRenderSnap = reactRenderCountRef.current;
-      }
-    };
-
-    rafId = requestAnimationFrame(tick);
-    return () => {
-      cancelAnimationFrame(rafId);
-      window.removeEventListener('scroll', onScrollCapture, { capture: true });
-    };
-  }, [is120HzLive, isUnlimitedBoost]);
-
-  // Toast / Feedback
-  const [toastMsg, setToastMsg] = useState<string | null>(null, 'toastMsg');
-  const showToast = (msg: string) => {
-    setToastMsg(msg);
-    setTimeout(() => setToastMsg(null), 2200);
-  };
-
-  // Quick context-linked presets
-  const applyScenarioPreset = (preset: 'kickoff' | 'defense' | 'supersonic-rush' | 'empty-clutch') => {
-    setIs120HzLive(false);
-    switch (preset) {
-      case 'kickoff':
-        setBallCamActive(true);
-        setSpeed(1410);
-        setBoostAmount(33);
-        showToast('preset loaded: Kickoff sprint (Kickoff Rush · manual mode)');
-        break;
-      case 'defense':
-        setBallCamActive(true);
-        setSpeed(750);
-        setBoostAmount(12);
-        showToast('preset loaded: Goal-line defense (Goal Line Defense · manual mode)');
-        break;
-      case 'supersonic-rush':
-        setBallCamActive(true);
-        setSpeed(2280);
-        setBoostAmount(99);
-        showToast('preset loaded: Supersonic dash (Supersonic Surge · manual mode)');
-        break;
-      case 'empty-clutch':
-        setBallCamActive(false);
-        setSpeed(2300);
-        setBoostAmount(0);
-        showToast('preset loaded: Zero-G speed (Empty Boost Max Speed · manual mode)');
-        break;
-    }
-  };
-
-  const subscribeSpeedFn = is120HzLive ? transientChannelRef.current.subscribeSpeed : undefined;
-  const subscribeBoostFn = is120HzLive ? transientChannelRef.current.subscribeBoost : undefined;
-  const subscribeBallCamFn = is120HzLive ? transientChannelRef.current.subscribeBallCam : undefined;
-  const handleToggleBallCam = () => {
-    if (is120HzLive) {
-      transientChannelRef.current.toggleBallCam();
-    } else {
-      setBallCamActive((prev) => !prev);
-    }
-  };
+  const {
+    ballCamActive,
+    ballCamShortcut,
+    ballCamLabel,
+    speed,
+    boostAmount,
+    isUnlimitedBoost,
+    is120HzLive,
+    setIs120HzLive,
+    slotPreset,
+    setSlotPreset,
+    edgeSkipReady,
+    toggleEdgeSkipReady,
+    edgeSkipConfig,
+    setEdgeSkipConfig,
+    transientChannel,
+    liveSpeedReadoutRef,
+    liveBoostReadoutRef,
+    liveHzReadoutRef,
+    liveRenderRateRef,
+    toastMsg,
+    applyScenarioPreset,
+    subscribeSpeedFn,
+    subscribeBoostFn,
+    subscribeBallCamFn,
+    handleToggleBallCam,
+    build5AExportCode,
+    handleReset5ADefaults,
+  } = useHudElementsPageState();
 
   return (
     <div className="flex flex-col gap-10 max-w-6xl w-full">
       {/* Top Jump Directory */}
-      <PageJumpDirectory layerTag="Layer 5A · High-Frequency Match HUD Elements" title="HUD Elements Independent gauge and spatial layout directory"
+      <PageJumpDirectory
+        layerTag="Layer 5A · High-Frequency Match HUD Elements"
+        title="HUD Elements Independent gauge and spatial layout directory"
         subtitle="all 5A Components uniformly integrated hudTransientChannel 120Hz Transient Channel (0 React Re-render) And Full Support Light/Dark Mode Switch. "
-        items={HUD_5A_DIRECTORY_ITEMS} isLight={isLight} />
+        items={HUD_5A_DIRECTORY_ITEMS}
+        isLight={isLight}
+      />
+
+      <TunerConfigExporterBar
+        badge="5A-EXPORT"
+        title="HUD Elements Parameter Tuner & One-Click Config Exporter"
+        subtitle="Exports 5A Cockpit Triad (BallCam, VelocityProgressBar, CircularBoostGauge), EdgePlayerHudStrip Skip/Demo indicators & slot layout preset"
+        copyLabel="Copy 5A HUD Config (Export Snapshot)"
+        codeTitle="Current 5A HUD Elements Parameter Snapshot (Paste directly into DEFAULT_5A_HUD_ELEMENTS_SNAPSHOT)"
+        actionId="export-5a-hud-config"
+        isLight={isLight}
+        buildExportCode={build5AExportCode}
+        onResetDefaults={handleReset5ADefaults}
+      />
 
       {/* Top Title Area */}
       <div className="flex flex-col gap-2">
@@ -288,7 +144,9 @@ export const HudElementsPage: React.FC<{ isLight?: boolean }> = ({ isLight = tru
           <div className="h-8 w-8 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center">
             <Crosshair className="h-5 w-5" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">HUD Elements Independent Gauge Component</h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+            HUD Elements Independent Gauge Component
+          </h1>
           <Badge variant="primary" size="sm" isLight={isLight}>
             Standalone · Zero Position Coupling
           </Badge>
@@ -309,9 +167,13 @@ export const HudElementsPage: React.FC<{ isLight?: boolean }> = ({ isLight = tru
         </p>
 
         {/* Top 120Hz Transient Engine Toggle + Contextual linkage test bar */}
-        <div className={`mt-2 p-3.5 rounded-2xl border flex flex-col gap-3 ${ isLight
-          ? 'bg-neutral-50/90 border-neutral-200/90 text-neutral-800'
-          : 'bg-neutral-900/70 border-neutral-800 text-neutral-200' }`}>
+        <div
+          className={`mt-2 p-3.5 rounded-2xl border flex flex-col gap-3 ${
+            isLight
+              ? 'bg-neutral-50/90 border-neutral-200/90 text-neutral-800'
+              : 'bg-neutral-900/70 border-neutral-800 text-neutral-200'
+          }`}
+        >
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2 flex-wrap">
               <button
@@ -328,7 +190,9 @@ export const HudElementsPage: React.FC<{ isLight?: boolean }> = ({ isLight = tru
                 {is120HzLive ? (
                   <>
                     <Pause className="h-3.5 w-3.5 fill-current" />
-                    <span>[Boost] 120Hz Transient physics stream running (Click to switch back to manual slider)</span>
+                    <span>
+                      [Boost] 120Hz Transient physics stream running (Click to switch back to manual slider)
+                    </span>
                   </>
                 ) : (
                   <>
@@ -339,24 +203,39 @@ export const HudElementsPage: React.FC<{ isLight?: boolean }> = ({ isLight = tru
               </button>
 
               {is120HzLive && (
-                <div className={`flex items-center gap-3 px-3 py-1 rounded-xl border font-mono text-[11px] ${
-                  isLight ? 'bg-white border-neutral-200 text-neutral-700'
-                  : 'bg-neutral-950/80 border-neutral-800 text-neutral-300' }`}>
+                <div
+                  className={`flex items-center gap-3 px-3 py-1 rounded-xl border font-mono text-[11px] ${
+                    isLight
+                      ? 'bg-white border-neutral-200 text-neutral-700'
+                      : 'bg-neutral-950/80 border-neutral-800 text-neutral-300'
+                  }`}
+                >
                   <span>
-                    Stream: <strong ref={liveHzReadoutRef} className="text-sky-500">120 Hz</strong>
+                    Stream:{' '}
+                    <strong ref={liveHzReadoutRef} className="text-sky-500">
+                      120 Hz
+                    </strong>
                   </span>
                   <span className="opacity-30">|</span>
                   <span>
                     React Re-renders:{' '}
-                    <strong ref={liveRenderRateRef} className="text-emerald-500">0 / sec</strong>
+                    <strong ref={liveRenderRateRef} className="text-emerald-500">
+                      0 / sec
+                    </strong>
                   </span>
                   <span className="opacity-30">|</span>
                   <span>
-                    Speed: <strong ref={liveSpeedReadoutRef} className="text-amber-500">1410 uu/s</strong>
+                    Speed:{' '}
+                    <strong ref={liveSpeedReadoutRef} className="text-amber-500">
+                      1410 uu/s
+                    </strong>
                   </span>
                   <span className="opacity-30">|</span>
                   <span>
-                    Boost: <strong ref={liveBoostReadoutRef} className="text-sky-500">85%</strong>
+                    Boost:{' '}
+                    <strong ref={liveBoostReadoutRef} className="text-sky-500">
+                      85%
+                    </strong>
                   </span>
                 </div>
               )}
@@ -424,39 +303,50 @@ export const HudElementsPage: React.FC<{ isLight?: boolean }> = ({ isLight = tru
         )}
       </div>
 
-      {/* ─────────────────────────────────────────────────────────────────── */}
       {/* 5A.S: HUD v2 FULL-VIEWPORT SPATIAL LAYOUT & CHOREOGRAPHY SANDBOX */}
-      {/* ─────────────────────────────────────────────────────────────────── */}
       <div id="hud-5a-sandbox" className="scroll-mt-24">
-        <SectionErrorBoundary title="5A.S HudSpatialChoreographySandbox" scopePrefix="hud-spatial-sandbox"
-          isLight={isLight}>
+        <SectionErrorBoundary
+          title="5A.S HudSpatialChoreographySandbox"
+          scopePrefix="hud-spatial-sandbox"
+          isLight={isLight}
+        >
           <HudSpatialChoreographySandbox isLight={isLight} />
         </SectionErrorBoundary>
       </div>
 
-      {/* ─────────────────────────────────────────────────────────────────── */}
       {/* 5A.1 & 5A.2: STEPPER SCOREBOARD HUD & EDGE PLAYER HUD STRIP */}
-      {/* ─────────────────────────────────────────────────────────────────── */}
       <HudTopBandPairSection
         isLight={isLight}
         edgeSkipReady={edgeSkipReady}
         toggleEdgeSkipReady={toggleEdgeSkipReady}
         edgeSkipConfig={edgeSkipConfig}
         setEdgeSkipConfig={setEdgeSkipConfig}
-        transientChannel={transientChannelRef.current}
+        transientChannel={transientChannel}
       />
 
       {/* 5A.2+: Dedicated Persistent Demolished Slot & Bomb SVG Size/Style Inspector */}
-      <SectionErrorBoundary title="5A.2+ EdgeDemoInspectorSection" scopePrefix="hud-5a-2-demo-inspector" isLight={isLight}>
+      <SectionErrorBoundary
+        title="5A.2+ EdgeDemoInspectorSection"
+        scopePrefix="hud-5a-2-demo-inspector"
+        isLight={isLight}
+      >
         <EdgeDemoInspectorSection isLight={isLight} />
       </SectionErrorBoundary>
 
       {/* 5A.2++: Dedicated Skip Replay & Slot Extension Card Workbench */}
-      <SectionErrorBoundary title="5A.2++ EdgeSkipReplayInspectorSection" scopePrefix="hud-5a-2-skip-inspector" isLight={isLight}>
+      <SectionErrorBoundary
+        title="5A.2++ EdgeSkipReplayInspectorSection"
+        scopePrefix="hud-5a-2-skip-inspector"
+        isLight={isLight}
+      >
         <EdgeSkipReplayInspectorSection isLight={isLight} />
       </SectionErrorBoundary>
 
-      <SectionErrorBoundary title="5A.3 ~ 5A.5 HudCoreTriadInspectorSection" scopePrefix="hud-5a-5-boost-config" isLight={isLight}>
+      <SectionErrorBoundary
+        title="5A.3 ~ 5A.5 HudCoreTriadInspectorSection"
+        scopePrefix="hud-5a-5-boost-config"
+        isLight={isLight}
+      >
         <HudCoreTriadInspectorSection
           isLight={isLight}
           handleToggleBallCam={handleToggleBallCam}
@@ -467,12 +357,25 @@ export const HudElementsPage: React.FC<{ isLight?: boolean }> = ({ isLight = tru
       </SectionErrorBoundary>
 
       <SectionErrorBoundary title="5A.6 ~ 5A.9 HudStageAndFollowupSection" isLight={isLight}>
-        <HudStageAndFollowupSection isLight={isLight} is120HzLive={is120HzLive} slotPreset={slotPreset}
-          setSlotPreset={setSlotPreset} ballCamActive={ballCamActive} subscribeBallCamFn={subscribeBallCamFn}
-          ballCamShortcut={ballCamShortcut} ballCamLabel={ballCamLabel} handleToggleBallCam={handleToggleBallCam}
-          speed={speed} subscribeSpeedFn={subscribeSpeedFn} boostAmount={boostAmount}
-          isUnlimitedBoost={isUnlimitedBoost} subscribeBoostFn={subscribeBoostFn}
-          transientChannel={transientChannelRef.current} />
+        <HudStageAndFollowupSection
+          isLight={isLight}
+          is120HzLive={is120HzLive}
+          slotPreset={slotPreset}
+          setSlotPreset={setSlotPreset}
+          ballCam={{
+            active: ballCamActive,
+            subscribeFn: subscribeBallCamFn,
+            shortcut: ballCamShortcut,
+            label: ballCamLabel,
+            onToggle: handleToggleBallCam,
+          }}
+          speed={speed}
+          subscribeSpeedFn={subscribeSpeedFn}
+          boostAmount={boostAmount}
+          isUnlimitedBoost={isUnlimitedBoost}
+          subscribeBoostFn={subscribeBoostFn}
+          transientChannel={transientChannel}
+        />
       </SectionErrorBoundary>
     </div>
   );

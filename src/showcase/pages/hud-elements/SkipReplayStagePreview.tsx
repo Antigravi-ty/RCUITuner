@@ -254,7 +254,13 @@ export const SkipReplayStagePreview: React.FC<SkipReplayStagePreviewProps> = Rea
             </button>
           </div>
           <pre className="overflow-x-auto whitespace-pre-wrap break-all leading-relaxed opacity-85 select-all">
-            {`color: "${skipCfg.color}" | sizePx: ${skipCfg.sizePx} | weight: ${skipCfg.strokeWidth.toFixed(1)} | glow: ${skipCfg.glowBlurPx}px (${skipCfg.glowIntensityPct}%) | protrude: ${skipCfg.protrudeWidthPx}px | underlap: ${skipCfg.underlapPx}px | radius: ${skipCfg.cardRadiusPx}px | offsetX: ${skipCfg.iconOffsetXPx}px | offsetY: ${skipCfg.iconOffsetYPx}px | enter: ${skipCfg.enterDurationMs}ms | exit: ${skipCfg.exitDurationMs}ms | variant: "${skipCfg.variant}"`}
+            {[
+              `color: "${skipCfg.color}" | sizePx: ${skipCfg.sizePx} | weight: ${skipCfg.strokeWidth.toFixed(1)}`,
+              `glow: ${skipCfg.glowBlurPx}px (${skipCfg.glowIntensityPct}%) | protrude: ${skipCfg.protrudeWidthPx}px`,
+              `underlap: ${skipCfg.underlapPx}px | radius: ${skipCfg.cardRadiusPx}px`,
+              `offsetX: ${skipCfg.iconOffsetXPx}px | offsetY: ${skipCfg.iconOffsetYPx}px`,
+              `enter: ${skipCfg.enterDurationMs}ms | exit: ${skipCfg.exitDurationMs}ms | variant: "${skipCfg.variant}"`,
+            ].join(' | ')}
           </pre>
         </div>
       </div>

@@ -295,7 +295,13 @@ export const TakeoverStageCanvas: React.FC<TakeoverStageCanvasProps> = ({
         <span className="opacity-30">|</span>
         <strong className="text-sky-400">
           {vignettePreviewActive
-            ? `Vignette ${vignetteConfig.intensityPct}% (T:${vignetteConfig.depthTopPct ?? 0}/B:${vignetteConfig.depthBottomPct ?? 35}/X:${vignetteConfig.depthXPct ?? 0}${vignetteConfig.verticalOffsetPx ? ` dY:${vignetteConfig.verticalOffsetPx > 0 ? '+' : ''}${vignetteConfig.verticalOffsetPx}px` : ''})`
+            ? [
+                `Vignette ${vignetteConfig.intensityPct}% `,
+                `(T:${vignetteConfig.depthTopPct ?? 0}/B:${vignetteConfig.depthBottomPct ?? 35}/X:${vignetteConfig.depthXPct ?? 0}`,
+                vignetteConfig.verticalOffsetPx
+                  ? ` dY:${vignetteConfig.verticalOffsetPx > 0 ? '+' : ''}${vignetteConfig.verticalOffsetPx}px)`
+                  : ')',
+              ].join('')
             : 'Vignette OFF'}
         </strong>
         {isFlowBackdrop && (

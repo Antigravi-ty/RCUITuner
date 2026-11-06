@@ -164,7 +164,10 @@ export const NameTagTunerPage: React.FC<{ isLight?: boolean }> = ({ isLight = fa
           </Badge>
         </div>
         <p className={`text-xs leading-relaxed ${isLight ? 'text-neutral-600' : 'text-neutral-400'}`}>
-          Static top-pinned View Box stage (non-sticky for comfortable dual-monitor workflows) — all camera POV selections, kickoff permutations, boost progress modes, ball occlusion masks, and per-car calibration overrides synchronize in real time across multiple browser windows and tabs.
+          Static top-pinned View Box stage (non-sticky for comfortable dual-monitor workflows) — all
+          camera POV selections, kickoff permutations, boost progress modes, ball occlusion masks,
+          and per-car calibration overrides synchronize in real time across multiple browser windows
+          and tabs.
         </p>
       </div>
 

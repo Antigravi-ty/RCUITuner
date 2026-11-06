@@ -1,18 +1,14 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
+import { Loader2 } from 'lucide-react';
 import { createScopedSyncedState } from '../stores/crossClientSync';
-
-const useState = createScopedSyncedState('page:loading-screen');
-import {
-  Loader2, Play, Pause, RotateCcw,
-  CheckCircle2, Ruler, Check, ShieldAlert, Sun,
-  Moon, Sparkles, Sliders,
-} from 'lucide-react';
 import { LoadingStep, LoadingError } from '../components/loading/types';
 import { calculateOverallProgress } from '../components/loading/DualProgressBar';
 import { LoadingScreen } from '../components/loading/LoadingScreen';
 import { GameViewport } from '../components/GameViewport';
-import { SliderControl } from '../../ui-core/primitives/SliderControl';
 import { LoadingStepInspectorGrid } from './loading/LoadingStepInspectorGrid';
+import { LoadingPipelineControlDeck } from './loading/LoadingPipelineControlDeck';
+
+const useState = createScopedSyncedState('page:loading-screen');
 
 export interface LoadingScreenPreviewPageProps {
   isLight?: boolean;
@@ -34,7 +30,7 @@ const INITIAL_STEPS: LoadingStep[] = [
     type: 'determinate',
     status: 'completed',
     progressPct: 100,
-    bytesLoaded: 33554432, // 32 MB
+    bytesLoaded: 33554432,
     bytesTotal: 33554432,
     speedBps: 120000000,
   },
@@ -45,9 +41,9 @@ const INITIAL_STEPS: LoadingStep[] = [
     type: 'determinate',
     status: 'active',
     progressPct: 68,
-    bytesLoaded: 149520000, // ~142.6 MB
-    bytesTotal: 220200960,  // ~210 MB
-    speedBps: 29800000,     // ~28.4 MB/s
+    bytesLoaded: 149520000,
+    bytesTotal: 220200960,
+    speedBps: 29800000,
     timeRemainingSec: 2.4,
   },
   {
@@ -56,7 +52,8 @@ const INITIAL_STEPS: LoadingStep[] = [
     category: 'Graphics Pipeline',
     type: 'indeterminate',
     status: 'pending',
-    indeterminateHint: 'Warming graphics pipeline cache (18/64 variants) · WebGPU active, not frozen',
+    indeterminateHint:
+      'Warming graphics pipeline cache (18/64 variants) · WebGPU active, not frozen',
   },
   {
     id: 'soundbank-load',
@@ -66,7 +63,7 @@ const INITIAL_STEPS: LoadingStep[] = [
     status: 'pending',
     progressPct: 0,
     bytesLoaded: 0,
-    bytesTotal: 58720256, // ~56 MB
+    bytesTotal: 58720256,
     speedBps: 18500000,
   },
   {
@@ -83,14 +80,14 @@ export const LoadingScreenPreviewPage: React.FC<LoadingScreenPreviewPageProps> =
   isLight = false,
 }) => {
   const [steps, setSteps] = useState<LoadingStep[]>(INITIAL_STEPS, 'steps');
-  const [currentStepIndex, setCurrentStepIndex] = useState<number>(2, 'currentStepIndex'); // Start on downloading arena
+  const [currentStepIndex, setCurrentStepIndex] = useState<number>(2, 'currentStepIndex');
   const [isRunning, setIsRunning] = useState<boolean>(false, 'isRunning');
   const [simSpeed, setSimSpeed] = useState<number>(1, 'simSpeed');
   const [error, setError] = useState<LoadingError | null>(null, 'error');
   const [stageIsLight, setStageIsLight] = useState<boolean>(isLight, 'stageIsLight');
   const [feedbackToast, setFeedbackToast] = useState<string | null>(null, 'feedbackToast');
+  const waitCountRef = useRef<Record<string, number>>({});
 
-  // Sync stage theme when global isLight changes
   useEffect(() => {
     setStageIsLight(isLight);
   }, [isLight]);
@@ -100,13 +97,9 @@ export const LoadingScreenPreviewPage: React.FC<LoadingScreenPreviewPageProps> =
     setTimeout(() => setFeedbackToast(null), 2400);
   };
 
-  // Compute overall progress percentage cleanly using decoupled loading engine helper
   const overallProgressPct = calculateOverallProgress(steps, currentStepIndex);
-  const currentStep = steps[currentStepIndex] || steps[0];
 
-  // Adjust a specific determinate step's progress percentage (0 - 100) via slider
   const handleStepProgressChange = (stepIdx: number, newPct: number) => {
-    // If running, pause auto-timer so user has full slider control
     if (isRunning) setIsRunning(false);
 
     setSteps((prev) =>
@@ -120,13 +113,14 @@ export const LoadingScreenPreviewPage: React.FC<LoadingScreenPreviewPageProps> =
           progressPct: newPct,
           bytesLoaded: loaded,
           status: isDone ? 'completed' : idx === currentStepIndex ? 'active' : s.status,
-          timeRemainingSec: isDone ? 0 : Math.max(0.5, ((total - loaded) / (s.speedBps || 25000000))),
+          timeRemainingSec: isDone
+            ? 0
+            : Math.max(0.5, (total - loaded) / (s.speedBps || 25000000)),
         };
       })
     );
   };
 
-  // Simulation tick loop
   useEffect(() => {
     if (!isRunning || error) return;
 
@@ -138,12 +132,11 @@ export const LoadingScreenPreviewPage: React.FC<LoadingScreenPreviewPageProps> =
 
         if (step.type === 'determinate') {
           const total = step.bytesTotal || 100;
-          const loaded = (step.bytesLoaded || 0) + (total * 0.03 * simSpeed);
+          const loaded = (step.bytesLoaded || 0) + total * 0.03 * simSpeed;
           const newPct = Math.min(100, (loaded / total) * 100);
-          const remainingSec = Math.max(0, ((total - loaded) / (step.speedBps || 25000000)));
+          const remainingSec = Math.max(0, (total - loaded) / (step.speedBps || 25000000));
 
           if (newPct >= 100) {
-            // Step complete!
             nextSteps[currentStepIndex] = {
               ...step,
               status: 'completed',
@@ -152,7 +145,6 @@ export const LoadingScreenPreviewPage: React.FC<LoadingScreenPreviewPageProps> =
               timeRemainingSec: 0,
             };
 
-            // Advance to next step
             if (currentStepIndex < nextSteps.length - 1) {
               const nextIdx = currentStepIndex + 1;
               setCurrentStepIndex(nextIdx);
@@ -174,10 +166,9 @@ export const LoadingScreenPreviewPage: React.FC<LoadingScreenPreviewPageProps> =
             };
           }
         } else {
-          // Indeterminate step: simulate active wait time without erratic jumping
-          const waitCounter = (step as any)._waitCount || 0;
+          const waitCounter = waitCountRef.current[step.id] ?? 0;
           if (waitCounter > 25 / simSpeed) {
-            // Complete indeterminate step
+            waitCountRef.current[step.id] = 0;
             nextSteps[currentStepIndex] = {
               ...step,
               status: 'completed',
@@ -194,7 +185,7 @@ export const LoadingScreenPreviewPage: React.FC<LoadingScreenPreviewPageProps> =
               showToast('[ok] Pipeline loading complete (All Steps Complete!)');
             }
           } else {
-            (nextSteps[currentStepIndex] as any)._waitCount = waitCounter + 1;
+            waitCountRef.current[step.id] = waitCounter + 1;
           }
         }
 
@@ -205,7 +196,6 @@ export const LoadingScreenPreviewPage: React.FC<LoadingScreenPreviewPageProps> =
     return () => clearInterval(interval);
   }, [isRunning, error, currentStepIndex, simSpeed, steps.length]);
 
-  // Trigger error simulation
   const triggerSimulatedError = () => {
     setIsRunning(false);
     const activeStep = steps[currentStepIndex] || steps[0];
@@ -215,20 +205,25 @@ export const LoadingScreenPreviewPage: React.FC<LoadingScreenPreviewPageProps> =
       message:
         'ShaderCompilationError: Syntax error parsing shader module "arena_turf.wgsl" at line 42, col 15: unexpected token "vec3_unorm". Pipeline creation aborted.',
       stepId: activeStep.id,
-      technicalDetails: `Error 0x80041002 (WGSL_PARSE_ERROR)\n  --> arena_turf.wgsl:42:15\n   |\n42 | let ambient: vec3_unorm = compute_sky_irradiance();\n   |              ^^^^^^^^^ unknown type\n   at WebGpuBackend.compileModule (wasm_glue.js:148)`,
+      technicalDetails: [
+        'Error 0x80041002 (WGSL_PARSE_ERROR)',
+        '  --> arena_turf.wgsl:42:15',
+        '   |',
+        '42 | let ambient: vec3_unorm = compute_sky_irradiance();',
+        '   |              ^^^^^^^^^ unknown type',
+        '   at WebGpuBackend.compileModule (wasm_glue.js:148)',
+      ].join('\n'),
       retryable: true,
       timestamp: Date.now(),
     };
     setError(newError);
 
-    // Set active step to error
     setSteps((prev) =>
       prev.map((s, idx) => (idx === currentStepIndex ? { ...s, status: 'error' } : s))
     );
     showToast('[Alert] Error trigger simulated (Throw Error Active)');
   };
 
-  // Recover from error
   const handleRecoverError = () => {
     setError(null);
     setSteps((prev) =>
@@ -246,11 +241,11 @@ export const LoadingScreenPreviewPage: React.FC<LoadingScreenPreviewPageProps> =
     showToast('[ok] Errors cleared and loading pipeline restored');
   };
 
-  // Reset to beginning
   const handleReset = () => {
     setIsRunning(false);
     setError(null);
     setCurrentStepIndex(0);
+    waitCountRef.current = {};
     setSteps(
       INITIAL_STEPS.map((s, idx) => ({
         ...s,
@@ -262,16 +257,23 @@ export const LoadingScreenPreviewPage: React.FC<LoadingScreenPreviewPageProps> =
     showToast('Loading process reset (Pipeline Reset)');
   };
 
-  // Jump to specific step
   const jumpToStep = (index: number) => {
     setError(null);
     setCurrentStepIndex(index);
+    waitCountRef.current = {};
     setSteps((prev) =>
       prev.map((s, idx) => ({
         ...s,
         status: idx < index ? 'completed' : idx === index ? 'active' : 'pending',
         progressPct: idx < index ? 100 : idx === index ? s.progressPct || 40 : 0,
-        bytesLoaded: idx < index ? s.bytesTotal : idx === index ? (s.bytesTotal ? s.bytesTotal * 0.4 : 0) : 0,
+        bytesLoaded:
+          idx < index
+            ? s.bytesTotal
+            : idx === index
+            ? s.bytesTotal
+              ? s.bytesTotal * 0.4
+              : 0
+            : 0,
       }))
     );
     showToast(`Jump to step ${index + 1}: ${steps[index]?.title}`);
@@ -286,17 +288,22 @@ export const LoadingScreenPreviewPage: React.FC<LoadingScreenPreviewPageProps> =
             <Loader2 className="h-5 w-5" />
           </div>
           <div className="flex flex-col">
-            <h1 className="text-2xl font-bold tracking-tight">Loading Loading screen and dual-layer progress bar</h1>
+            <h1 className="text-2xl font-bold tracking-tight">
+              Loading Screen &amp; Dual-Layer Progress Bar
+            </h1>
             <span className="text-xs text-neutral-500 dark:text-neutral-400 font-mono">
-              Two-layer step-by-step advancement · Determinate state download and indeterminate state compilation (Apple Minimalist design) · Exception circuit breaker
+              Two-layer step-by-step advancement · Determinate state download and indeterminate
+              state compilation (Apple Minimalist design) · Exception circuit breaker
             </span>
           </div>
         </div>
       </div>
 
       {/* 2. Live 18:9 Canvas Simulation Stage (View Box — Pinned directly below static Page Header) */}
-      <div id="loading-viewport-stage"
-        className="relative w-full h-[520px] md:h-[580px] rounded-3xl border border-neutral-300 dark:border-neutral-800 overflow-hidden shadow-2xl flex items-center justify-center transition-all duration-300">
+      <div
+        id="loading-viewport-stage"
+        className="relative w-full h-[520px] md:h-[580px] rounded-3xl border border-neutral-300 dark:border-neutral-800 overflow-hidden shadow-2xl flex items-center justify-center transition-all duration-300"
+      >
         <GameViewport isLight={stageIsLight} className="w-full h-full">
           <LoadingScreen
             steps={steps}
@@ -312,181 +319,20 @@ export const LoadingScreenPreviewPage: React.FC<LoadingScreenPreviewPageProps> =
         </GameViewport>
       </div>
 
-      {/* 3. Interactive Pipeline Control Simulator (External simulation controller — placed below View Box) */}
-      <div className={`p-4 rounded-2xl border flex flex-col gap-3 transition-colors shadow-2xs ${
-        isLight ? 'bg-white border-neutral-200/90 text-neutral-800' : 'bg-neutral-900/70 border-neutral-800 text-neutral-200'
-        }`}>
-        <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-semibold">
-          <div className="flex items-center gap-2 text-neutral-600 dark:text-neutral-400">
-            <Sparkles className="h-4 w-4 text-sky-500" />
-            <span>Loading pipeline interaction controller (Pipeline Simulation Controls)</span>
-          </div>
+      {/* 3. Interactive Pipeline Control Simulator */}
+      <LoadingPipelineControlDeck
+        isLight={isLight}
+        steps={steps}
+        overallProgressPct={overallProgressPct}
+        showToast={showToast}
+        onReset={handleReset}
+        onTriggerError={triggerSimulatedError}
+        onRecoverError={handleRecoverError}
+        onJumpToStep={jumpToStep}
+        onStepProgressChange={handleStepProgressChange}
+      />
 
-          <div className="flex items-center gap-3 flex-wrap">
-            {feedbackToast && (
-              <span className="text-sky-500 font-mono font-bold flex items-center gap-1">
-                <Check className="h-3 w-3" />
-                {feedbackToast}
-              </span>
-            )}
-            <button
-              type="button"
-              onClick={async () => {
-                const stage = document.getElementById('loading-viewport-stage');
-                if (!stage) return;
-                const winW = window.innerWidth;
-                const winH = window.innerHeight;
-                const progressBar = stage.querySelector<HTMLElement>('[data-ui-element="dual-progress-bar"]');
-
-                const getRectStr = (r: DOMRect) =>
-                  `${Math.round(r.width * 10) / 10}px × ${Math.round(r.height * 10) / 10}px (x: ${Math.round(r.x)}, y: ${Math.round(r.y)})`;
-
-                const lines: string[] = [];
-                lines.push('========================================================================');
-                lines.push(' [LOADING SCREEN DUAL PROGRESS TELEMETRY SNAPSHOT]');
-                lines.push('========================================================================');
-                lines.push(`• Window Viewport:      ${winW}px × ${winH}px`);
-                if (progressBar) lines.push(`• Dual Progress Bar:    ${getRectStr(progressBar.getBoundingClientRect())}`);
-                lines.push(`• Active Step Index:    ${currentStepIndex + 1} of ${steps.length}`);
-                lines.push(`• Active Step Title:    ${steps[currentStepIndex]?.title}`);
-                lines.push(`• Active Step Type:     ${steps[currentStepIndex]?.type}`);
-                lines.push(`• Overall Progress:     ${Math.round(overallProgressPct)}%`);
-                lines.push(`• Pipeline Has Error:   ${!!error}`);
-                lines.push('========================================================================\n');
-
-                const report = lines.join('\n');
-                console.log(report);
-                if (navigator.clipboard?.writeText) {
-                  try {
-                    await navigator.clipboard.writeText(report);
-                    showToast('[ok] Loading layer telemetry data exported to console and copied to clipboard');
-                  } catch (_) {
-                    showToast('[ok] Loading layer telemetry data exported to console');
-                  }
-                }
-              }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border font-mono font-medium transition-all active:scale-95 cursor-pointer bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-800 dark:text-neutral-100 border-neutral-300 dark:border-neutral-700 shadow-2xs"
-              title="Print and copy current Loading Interface layout and state data"
-            >
-              <Ruler className="h-3.5 w-3.5 text-sky-500" />
-              <span>Export loading layer telemetry</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Primary action buttons */}
-        <div className="flex flex-wrap items-center gap-2 text-xs">
-          {/* Play / Pause */}
-          <button
-            type="button"
-            onClick={() => setIsRunning(!isRunning)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer shadow-xs ${
-              isRunning
-                ? 'bg-amber-500 hover:bg-amber-400 text-black'
-                : 'bg-emerald-600 hover:bg-emerald-500 text-white'
-            }`}
-          >
-            {isRunning ? (
-              <>
-                <Pause className="h-3.5 w-3.5" />
-                <span>Pause simulation (Pause)</span>
-              </>
-            ) : (
-              <>
-                <Play className="h-3.5 w-3.5 fill-current" />
-                <span>Start auto-simulation (Start Pipeline)</span>
-              </>
-            )}
-          </button>
-
-          {/* Reset */}
-          <button type="button" onClick={handleReset}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border font-medium transition-colors cursor-pointer bg-neutral-100 hover:bg-neutral-200 text-neutral-800 border-neutral-300 dark:bg-neutral-800 dark:hover:bg-neutral-700 dark:text-neutral-200 dark:border-neutral-700">
-            <RotateCcw className="h-3.5 w-3.5" />
-            <span>Reset workflow (Reset)</span>
-          </button>
-
-          <div className="h-4 w-px bg-neutral-300 dark:bg-neutral-700 mx-1" />
-
-          {/* Simulate Throw Error Button */}
-          <button type="button" onClick={triggerSimulatedError} disabled={!!error}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer shadow-xs ${
-            error ? 'bg-red-950/40 text-red-400 border border-red-800/40 opacity-50 cursor-not-allowed'
-            : 'bg-red-600 hover:bg-red-500 text-white active:scale-95 shadow-[0_0_12px_rgba(239,68,68,0.3)]' }`}>
-            <ShieldAlert className="h-3.5 w-3.5" />
-            <span>[Alert] Throw exception (Throw Error)</span>
-          </button>
-
-          {/* Clear & Recover Error Button */}
-          {error && (
-            <button type="button" onClick={handleRecoverError}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs active:scale-95 transition-all cursor-pointer">
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              <span>Resume and continue (Recover & Resume)</span>
-            </button>
-          )}
-
-          <div className="h-4 w-px bg-neutral-300 dark:bg-neutral-700 mx-1" />
-
-          {/* Speed Selector */}
-          <div className="flex items-center gap-1 p-1 rounded-xl border bg-neutral-100 dark:bg-neutral-800 border-neutral-300 dark:border-neutral-700 font-mono">
-            <span className="text-[11px] px-1 text-neutral-500">Playback speed:</span>
-            {[0.5, 1, 2, 5].map((s) => (
-              <button key={s} type="button" onClick={() => setSimSpeed(s)}
-                className={`px-2 py-0.5 rounded-md font-bold transition-colors cursor-pointer ${
-                  simSpeed === s ? 'bg-sky-500 text-white' : 'text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white' }`}>
-                {s}x
-              </button>
-            ))}
-          </div>
-
-          {/* Stage theme override */}
-          <button type="button" onClick={() => setStageIsLight(!stageIsLight)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border font-medium transition-colors cursor-pointer bg-neutral-100 hover:bg-neutral-200 text-neutral-800 border-neutral-300 dark:bg-neutral-800 dark:hover:bg-neutral-700 dark:text-neutral-200 dark:border-neutral-700 ml-auto"
-            title="Independently toggle light and dark tones of loading stage">
-            {stageIsLight ? <Sun className="h-3.5 w-3.5 text-amber-500" /> : <Moon className="h-3.5 w-3.5 text-sky-400" />}
-            <span>Stage theme: {stageIsLight ? 'Light mode (Light)' : 'Dark mode (Dark)'}</span>
-          </button>
-        </div>
-
-        {/* Dedicated Active Step Determinate Progress Slider (User can swipe directly 0% ~ 100%) */}
-        {currentStep.type === 'determinate' && (
-          <div className="p-3 rounded-xl border border-amber-500/30 bg-amber-500/5 flex flex-col gap-1.5">
-            <div className="flex items-center justify-between text-xs font-mono">
-              <span className="font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
-                <Sliders className="h-3.5 w-3.5" />
-                <span>Real-time preview slider for current deterministic step (Adjust 0% ~ 100%)</span>
-              </span>
-              <span className="font-bold tabular-nums text-neutral-700 dark:text-neutral-300">
-                {Math.round(currentStep.progressPct || 0)}%
-              </span>
-            </div>
-            <SliderControl label={`Current step: ${currentStep.title}`} value={Math.round(currentStep.progressPct || 0)}
-              min={0} max={100} step={1} unit="%" colorScheme="amber" isLight={isLight}
-              onChange={(val) => handleStepProgressChange(currentStepIndex, val)} />
-          </div>
-        )}
-
-        {/* Step Jumpers (Quick jump) */}
-        <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-neutral-200/80 dark:border-neutral-800 text-xs">
-          <span className="text-[11px] font-mono text-neutral-500 dark:text-neutral-400 mr-1">Jump to step:</span>
-          {steps.map((st, idx) => (
-            <button key={st.id} type="button" onClick={() => jumpToStep(idx)}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-mono text-[11px] border transition-all cursor-pointer ${
-                currentStepIndex === idx ? 'bg-sky-500 text-white font-bold border-sky-400 shadow-xs'
-                  : st.status === 'completed' ? isLight ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40'
-                  : isLight ? 'bg-neutral-100 hover:bg-neutral-200 text-neutral-700 border-neutral-300' : 'bg-neutral-800/80 hover:bg-neutral-700 text-neutral-300 border-neutral-700' }`}>
-              <span>{idx + 1}.</span>
-              <span className="truncate max-w-[120px]">{st.title.split(' ')[0]}</span>
-              <span className="text-[9px] opacity-75 font-sans">
-                {st.type === 'determinate' ? '(Determinate)' : '(Indeterminate)'}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* 4. Deep Pipeline Step Inspector (Step metrics and sliders for each deterministic step) */}
+      {/* 4. Deep Pipeline Step Inspector */}
       <LoadingStepInspectorGrid
         steps={steps}
         currentStepIndex={currentStepIndex}

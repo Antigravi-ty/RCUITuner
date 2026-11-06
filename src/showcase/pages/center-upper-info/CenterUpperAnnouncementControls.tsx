@@ -6,35 +6,29 @@ import {
   CUSTOM_ANNOUNCEMENT_PRESETS,
   type CustomAnnouncementPreset,
 } from './CenterUpperStageBackdropBar';
+import { useCenterUpperSyncedState } from './useCenterUpperSyncedState';
+
 export interface CenterUpperAnnouncementControlsProps {
   isLight: boolean;
-  customPresetId: string;
   handleApplyCustomPreset: (preset: CustomAnnouncementPreset) => void;
-  showCustomTopLine: boolean;
-  setShowCustomTopLine: (val: boolean) => void;
-  customTopText: string;
-  setCustomTopText: (val: string) => void;
-  customMainText: string;
-  setCustomMainText: (val: string) => void;
-  customSubText: string;
-  setCustomSubText: (val: string) => void;
-  setIsVisibleOnStage: (val: boolean) => void;
 }
 
 export const CenterUpperAnnouncementControls: React.FC<CenterUpperAnnouncementControlsProps> = ({
   isLight,
-  customPresetId,
   handleApplyCustomPreset,
-  showCustomTopLine,
-  setShowCustomTopLine,
-  customTopText,
-  setCustomTopText,
-  customMainText,
-  setCustomMainText,
-  customSubText,
-  setCustomSubText,
-  setIsVisibleOnStage,
 }) => {
+  const {
+    customPresetId,
+    showCustomTopLine,
+    setShowCustomTopLine,
+    customTopText,
+    setCustomTopText,
+    customMainText,
+    setCustomMainText,
+    customSubText,
+    setCustomSubText,
+    setIsVisibleOnStage,
+  } = useCenterUpperSyncedState();
   return (
     <div className="flex flex-col gap-2.5 pt-2 border-t border-neutral-200/70 dark:border-neutral-800/80">
       <div className="flex items-center justify-between gap-2 flex-wrap">
