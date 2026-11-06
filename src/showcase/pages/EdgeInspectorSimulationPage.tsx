@@ -188,15 +188,17 @@ export const EdgeInspectorSimulationPage: React.FC<EdgeInspectorSimulationPagePr
             isLight={isLight}
             transparent={true}
             packTitle="Aerial Striker Pack"
-            shots={shots}
-            onShotsChange={setShots}
-            selectedShotIndex={selectedShotIndex}
-            onSelectedShotIndexChange={setSelectedShotIndex}
-            isInspectingShot={isInspectingShot}
-            onInspectingShotChange={setIsInspectingShot}
-            editSubMode={editSubMode}
-            onEditSubModeChange={setEditSubMode}
             onCollapseDrawer={() => setIsDrawerExpanded(false)}
+            stateOverride={{
+              shots,
+              onShotsChange: setShots,
+              selectedShotIndex,
+              onSelectedShotIndexChange: setSelectedShotIndex,
+              isInspectingShot,
+              onInspectingShotChange: setIsInspectingShot,
+              editSubMode,
+              onEditSubModeChange: setEditSubMode,
+            }}
           />
         </EdgeInspectorDrawer>
 
