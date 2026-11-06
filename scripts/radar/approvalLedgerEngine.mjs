@@ -1,60 +1,17 @@
-import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { ROOT_DIR } from './constants.mjs';
+import {
+  collectSurfaceSubtree,
+  computeSizingAndConfigHash,
+  computeTemplateHash,
+  discoverSurfaceVariantUnits,
+  normalizeVisualAstSource,
+  sha256Hex16,
+} from './semanticHashExtractor.mjs';
 
 const LEDGER_REL_PATH = 'src/ui-core/manifest/uiApprovalLedger.json';
 const CALIBRATION_REL_PATH = 'src/ui-core/manifest/surfaceCalibrationOverrides.json';
-
-function sha256Hex16(input) {
-  return crypto.createHash('sha256').update(input, 'utf8').digest('hex').slice(0, 16);
-}
-
-/**
- * Strips comments and normalizes Beta visual structure of a UI `.tsx`/`.ts` file
- * while ignoring Alpha store-internal logic changes.
- */
-function normalizeVisualAstSource(content) {
-  const withoutComments = content
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/\/\/.*$/gm, '');
-
-  const visualTokens = [];
-  // 1. Capture JSX tags and their attribute names/literals
-  const jsxTagRe = /<\/?[A-Za-z0-9_.]+(?:\s+[A-Za-z0-9_:-]+(?:\s*=\s*(?:"[^"]*"|'[^']*'))?)*\s*\/?>/g;
-  let match;
-  while ((match = jsxTagRe.exec(withoutComments)) !== null) {
-    visualTokens.push(match[0].replace(/\s+/g, ' ').trim());
-  }
-
-  // 2. Capture className / style / variant / size / layout literals
-  const visualPropRe =
-    /\b(?:className|style|variant|size|width|height|minWidth|minHeight|maxHeight|padding|gap|columns)\s*[:=]\s*(?:`[^`]*`|"[^"]*"|'[^']*'|\{[^{}]*\})/g;
-  while ((match = visualPropRe.exec(withoutComments)) !== null) {
-    visualTokens.push(match[0].replace(/\s+/g, ' ').trim());
-  }
-
-  if (visualTokens.length === 0) {
-    return withoutComments.replace(/\s+/g, ' ').trim();
-  }
-  return visualTokens.join('\n');
-}
-
-function computeTemplateHash() {
-  const shellFiles = [
-    'src/ui-core/layout/Panel.tsx',
-    'src/ui-core/layout/PanelFooter.tsx',
-    'src/ui-core/layout/UniversalThreeStageShell.tsx',
-  ];
-  const parts = [];
-  for (const rel of shellFiles) {
-    const abs = path.join(ROOT_DIR, rel);
-    if (fs.existsSync(abs)) {
-      parts.push(`${rel}:${normalizeVisualAstSource(fs.readFileSync(abs, 'utf8'))}`);
-    }
-  }
-  return sha256Hex16(parts.join('|'));
-}
 
 function loadJsonSafe(relPath, fallback) {
   const abs = path.join(ROOT_DIR, relPath);
@@ -64,59 +21,6 @@ function loadJsonSafe(relPath, fallback) {
   } catch {
     return fallback;
   }
-}
-
-function collectSurfaceSubtree(entryRel, dependencyGraph) {
-  const uiFiles = new Set([entryRel]);
-  const alphaDeps = new Set();
-  const queue = [entryRel];
-
-  while (queue.length > 0) {
-    const curr = queue.shift();
-    const deps = dependencyGraph.get(curr) || [];
-    for (const dep of deps) {
-      if (
-        dep.startsWith('src/ui-core/stores/') ||
-        dep.startsWith('src/ui-core/config/') ||
-        dep.startsWith('src/ui-core/tokens/') ||
-        dep.startsWith('src/ui-core/utils/') ||
-        dep.startsWith('src/ui-core/manifest/')
-      ) {
-        alphaDeps.add(dep);
-        continue;
-      }
-      if (
-        dep.startsWith('src/ui-core/panels/') ||
-        dep.startsWith('src/ui-core/recipes/') ||
-        dep.startsWith('src/ui-core/compounds/') ||
-        dep.startsWith('src/ui-core/primitives/') ||
-        dep.startsWith('src/ui-core/charts/')
-      ) {
-        if (!uiFiles.has(dep)) {
-          uiFiles.add(dep);
-          queue.push(dep);
-        }
-      }
-    }
-  }
-
-  return {
-    uiFiles: Array.from(uiFiles).sort(),
-    alphaDeps: Array.from(alphaDeps).sort(),
-  };
-}
-
-function computeSizingAndConfigHash(surfaceId, entryContent, calibrationOverrides) {
-  const metaMatch = entryContent.match(/export\s+const\s+SURFACE_META[\s\S]*?\};/);
-  const metaSnippet = metaMatch ? metaMatch[0].replace(/\s+/g, ' ').trim() : '';
-  const overrideObj = calibrationOverrides[surfaceId] ?? null;
-  return sha256Hex16(
-    JSON.stringify({
-      surfaceId,
-      metaSnippet,
-      overrideObj,
-    })
-  );
 }
 
 function deriveSurfaceId(relFile) {
@@ -131,6 +35,28 @@ function deriveSurfaceId(relFile) {
     return `recipe:${base}`;
   }
   return base;
+}
+
+function classifyDriftBucket({ status, visualDrifted, configDrifted, templateDrifted }) {
+  if (!status || status === 'unreviewed' || status === 'pending') {
+    return { driftState: 'unreviewed', bucket: 'bucket-1-visual' };
+  }
+  if (status === 'rejected') {
+    return { driftState: 'rejected', bucket: 'bucket-1-visual' };
+  }
+  if (visualDrifted) {
+    return { driftState: 'visual-stale', bucket: 'bucket-1-visual' };
+  }
+  if (configDrifted) {
+    return { driftState: 'config-stale', bucket: 'bucket-2-config' };
+  }
+  if (templateDrifted) {
+    return { driftState: 'template-stale', bucket: 'bucket-3-template' };
+  }
+  return {
+    driftState: status === 'deferred' ? 'deferred' : 'approved',
+    bucket: 'clean',
+  };
 }
 
 export function checkAndSyncApprovalLedger({
@@ -156,8 +82,28 @@ export function checkAndSyncApprovalLedger({
     )
     .sort();
 
+  const fileVisualHashCache = new Map();
+  const getFileVisualHash = (uiRel) => {
+    if (fileVisualHashCache.has(uiRel)) return fileVisualHashCache.get(uiRel);
+    const uiAbs = path.join(ROOT_DIR, uiRel);
+    const uiContent = fs.readFileSync(uiAbs, 'utf8');
+    const h = sha256Hex16(normalizeVisualAstSource(uiContent));
+    fileVisualHashCache.set(uiRel, h);
+    return h;
+  };
+
   const computedSurfaces = {};
   const driftedSurfaces = [];
+  const driftedVariants = [];
+  const bucketCounts = {
+    'bucket-1-visual': 0,
+    'bucket-2-config': 0,
+    'bucket-3-template': 0,
+    clean: 0,
+  };
+
+  let totalVariantUnits = 0;
+  let approvedVariantUnits = 0;
 
   for (const entryFile of surfaceEntryFiles) {
     const surfaceId = deriveSurfaceId(entryFile);
@@ -165,12 +111,13 @@ export function checkAndSyncApprovalLedger({
     const absEntry = path.join(ROOT_DIR, entryFile);
     const entryContent = fs.readFileSync(absEntry, 'utf8');
 
-    const { uiFiles, alphaDeps } = collectSurfaceSubtree(entryFile, dependencyGraph);
+    const { uiFiles, alphaDeps, alphaDependencies } = collectSurfaceSubtree(
+      entryFile,
+      dependencyGraph
+    );
     const fileVisualHashes = {};
     for (const uiRel of uiFiles) {
-      const uiAbs = path.join(ROOT_DIR, uiRel);
-      const uiContent = fs.readFileSync(uiAbs, 'utf8');
-      fileVisualHashes[uiRel] = sha256Hex16(normalizeVisualAstSource(uiContent));
+      fileVisualHashes[uiRel] = getFileVisualHash(uiRel);
     }
 
     const visualAstHash = sha256Hex16(
@@ -181,11 +128,57 @@ export function checkAndSyncApprovalLedger({
     const sizingAndConfigHash = computeSizingAndConfigHash(
       surfaceId,
       entryContent,
-      calibrationOverrides
+      calibrationOverrides,
+      alphaDeps
     );
 
     const prevRecord = existingLedger.surfaces?.[surfaceId];
     const nowIso = new Date().toISOString();
+
+    const variantDescriptors = discoverSurfaceVariantUnits(entryFile, dependencyGraph);
+    const computedVariants = {};
+
+    for (const vDesc of variantDescriptors) {
+      totalVariantUnits += 1;
+      const unitId = `${surfaceId}:${vDesc.variantId}`;
+      const vSubtree = collectSurfaceSubtree(vDesc.entryFile, dependencyGraph);
+      const vFileHashes = {};
+      for (const vf of vSubtree.uiFiles) {
+        vFileHashes[vf] = getFileVisualHash(vf);
+      }
+      const vVisualAstHash = sha256Hex16(
+        Object.entries(vFileHashes)
+          .map(([k, v]) => `${k}:${v}`)
+          .join('|')
+      );
+      const prevUnit = prevRecord?.variants?.[vDesc.variantId];
+      computedVariants[vDesc.variantId] = {
+        unitId,
+        variantId: vDesc.variantId,
+        label: vDesc.label,
+        entryFile: vDesc.entryFile,
+        status: prevUnit?.status ?? prevRecord?.status ?? 'approved',
+        visualAstHash: vVisualAstHash,
+        fileVisualHashes: vFileHashes,
+        alphaDependencies: vSubtree.alphaDependencies,
+        approvedAt: prevUnit?.approvedAt || prevRecord?.approvedAt || nowIso,
+      };
+
+      if (!syncApproval && prevUnit && prevUnit.visualAstHash !== vVisualAstHash) {
+        const changedSubFiles = Object.entries(vFileHashes)
+          .filter(([fRel, fHash]) => prevUnit.fileVisualHashes?.[fRel] !== fHash)
+          .map(([fRel]) => fRel);
+        driftedVariants.push({
+          unitId,
+          surfaceId,
+          variantId: vDesc.variantId,
+          entryFile: vDesc.entryFile,
+          changedFiles: changedSubFiles,
+        });
+      } else {
+        approvedVariantUnits += 1;
+      }
+    }
 
     computedSurfaces[surfaceId] = {
       status: prevRecord?.status ?? 'approved',
@@ -196,15 +189,20 @@ export function checkAndSyncApprovalLedger({
       visualAstHash,
       fileVisualHashes,
       alphaDeps,
+      alphaDependencies,
+      ...(Object.keys(computedVariants).length > 0 ? { variants: computedVariants } : {}),
       approvedAt: prevRecord?.approvedAt || nowIso,
     };
 
     if (!syncApproval) {
       if (!prevRecord) {
+        bucketCounts['bucket-1-visual'] += 1;
         driftedSurfaces.push({
           surfaceId,
           entryFile,
-          reason: 'Missing from uiApprovalLedger.json (new unapproved surface)',
+          driftState: 'unreviewed',
+          bucket: 'bucket-1-visual',
+          reason: 'Missing from uiApprovalLedger.json (new unreviewed surface)',
           changedFiles: [entryFile],
         });
       } else {
@@ -214,24 +212,34 @@ export function checkAndSyncApprovalLedger({
             changedFiles.push(fRel);
           }
         }
-        if (
-          prevRecord.templateHash !== templateHash ||
-          prevRecord.sizingAndConfigHash !== sizingAndConfigHash ||
-          prevRecord.visualAstHash !== visualAstHash
-        ) {
+        const visualDrifted = prevRecord.visualAstHash !== visualAstHash;
+        const configDrifted = prevRecord.sizingAndConfigHash !== sizingAndConfigHash;
+        const templateDrifted = prevRecord.templateHash !== templateHash;
+        const { driftState, bucket } = classifyDriftBucket({
+          status: prevRecord.status,
+          visualDrifted,
+          configDrifted,
+          templateDrifted,
+        });
+        bucketCounts[bucket] += 1;
+
+        if (bucket !== 'clean') {
           driftedSurfaces.push({
             surfaceId,
             entryFile,
-            reason:
-              prevRecord.visualAstHash !== visualAstHash
-                ? 'Beta Visual AST hash drifted'
-                : prevRecord.sizingAndConfigHash !== sizingAndConfigHash
-                ? 'Sizing/Config hash drifted'
-                : 'Template shell hash drifted',
+            driftState,
+            bucket,
+            reason: visualDrifted
+              ? `Visual AST subtree changed (${changedFiles.join(', ') || entryFile})`
+              : configDrifted
+              ? 'Sizing or DEFAULT_*_CONFIG values changed'
+              : 'Template shell hash changed',
             changedFiles,
           });
         }
       }
+    } else {
+      bucketCounts.clean += 1;
     }
   }
 
@@ -250,7 +258,11 @@ export function checkAndSyncApprovalLedger({
   return {
     totalSurfaces: surfaceEntryFiles.length,
     approvedCount: surfaceEntryFiles.length - driftedSurfaces.length,
+    totalVariantUnits,
+    approvedVariantUnits,
+    bucketCounts,
     driftedSurfaces,
+    driftedVariants,
     synced: syncApproval,
   };
 }

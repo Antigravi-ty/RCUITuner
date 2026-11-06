@@ -255,10 +255,10 @@ console.log(
 console.log(
   `8. 3-Layer Approval  : ${
     approvalReport.driftedSurfaces.length === 0
-      ? `PASS (${approvalReport.approvedCount}/${approvalReport.totalSurfaces} surfaces verified${
+      ? `PASS (${approvalReport.approvedCount}/${approvalReport.totalSurfaces} surfaces, ${approvalReport.approvedVariantUnits}/${approvalReport.totalVariantUnits} variant units verified${
           SYNC_APPROVAL ? ' · synced uiApprovalLedger.json' : ''
         })`
-      : `DRIFT (${approvalReport.approvedCount}/${approvalReport.totalSurfaces} approved, ${approvalReport.driftedSurfaces.length} pending re-audit)`
+      : `DRIFT (${approvalReport.approvedCount}/${approvalReport.totalSurfaces} surfaces, B1:${approvalReport.bucketCounts['bucket-1-visual']} B2:${approvalReport.bucketCounts['bucket-2-config']} B3:${approvalReport.bucketCounts['bucket-3-template']})`
   }`
 );
 console.log(
