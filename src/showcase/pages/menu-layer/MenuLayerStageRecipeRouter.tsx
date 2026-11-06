@@ -32,6 +32,7 @@ import { Layer4ControllerSettingsRecipe } from '../../../ui-core/recipes/Layer4C
 import { Layer4EventTriggerRulesRecipe } from '../../../ui-core/recipes/Layer4EventTriggerRulesRecipe';
 import { Layer4DevSignalingLabRecipe } from '../../../ui-core/recipes/Layer4DevSignalingLabRecipe';
 import { floatingStore, type FloatingWindowItem } from '../../../ui-core/stores/floatingStore';
+import { StoreSnapshotScope } from '../../../ui-core/stores/storeSnapshotScope';
 import { type PresetConfig } from '../../../ui-core/stores/floatingPresets';
 import { PRESET_WINDOWS } from '../../../ui-core/stores/devFloatingPresets';
 import {
@@ -186,37 +187,33 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
       )}
 
       {displayedRoute === 'settings' && (
-        <Layer2SettingsRecipe
-          isLight={isLight}
-          onBack={goBack}
-          activeTab={settingsTab}
-          onTabChange={(tab) => setSettingsTab(tab)}
-          developerMode={visibilityTier === 'developer'}
-          stateOverride={{
-            initialTab: settingsTab,
-            onDeveloperModeChange: (enabled) => {
-              onSwitchTier?.(enabled ? 'developer' : 'user');
-              if (enabled) {
-                setSettingsTab('developer');
-                showToast('Enabled Developer Mode, Switch To Developer Exclusive View');
-              } else {
-                setSettingsTab('advanced');
-                showToast('Closed Developer Mode, Back User Exclusive View');
-              }
-            },
-            onSpawnDiagnosticWindow: (win) => floatingStore.spawnWindow(win),
-            onNavigateRoute: (route) => {
-              setLastParentRoute('settings');
-              if (route === 'trajectory') {
-                setLiveAnimPhase('expanded');
-                handleSelectRoute('trajectory');
-                showToast('Enter Submenu: Ball Trajectory Predictor (support TAB Side collapsed real-time preview)');
-              } else {
-                handleSelectRoute(route as ActiveMenuRoute);
-              }
+        <StoreSnapshotScope
+          overrides={{
+            appStore: {
+              settingsTargetTab: settingsTab,
+              developerMode: visibilityTier === 'developer',
+              navigate: (route: string) => {
+                setLastParentRoute('settings');
+                if (route === 'trajectory') {
+                  setLiveAnimPhase('expanded');
+                  handleSelectRoute('trajectory');
+                  showToast(
+                    'Enter Submenu: Ball Trajectory Predictor (support TAB Side collapsed real-time preview)'
+                  );
+                } else {
+                  handleSelectRoute(route as ActiveMenuRoute);
+                }
+              },
             },
           }}
-        />
+        >
+          <Layer2SettingsRecipe
+            isLight={isLight}
+            onBack={goBack}
+            activeTab={settingsTab}
+            onTabChange={(tab) => setSettingsTab(tab as typeof settingsTab)}
+          />
+        </StoreSnapshotScope>
       )}
 
       {displayedRoute === 'manage-room' && (

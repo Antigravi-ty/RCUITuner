@@ -1,5 +1,6 @@
 import React, { Suspense, lazy } from 'react';
 import { Badge } from '../../../ui-core/primitives/Badge';
+import { StoreSnapshotScope } from '../../../ui-core/stores/storeSnapshotScope';
 import { AuditTicketHeader } from '../../components/AuditTicketHeader';
 import { LocalPanelSizingTuner } from './LocalPanelSizingTuner';
 import {
@@ -115,7 +116,20 @@ export function renderLayer2RecipeStage(
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 w-full items-start">
                 {LAYER2_SETTINGS_STATES.map((st, idx) => (
                   <div key={st.id} className="flex flex-col gap-2 items-center w-full">
-                    <Layer2SettingsRecipe isLight={isLight} {...st.props} onBack={noop} />
+                    <StoreSnapshotScope
+                      overrides={{
+                        appStore: {
+                          settingsTargetTab: st.props.activeTab,
+                          developerMode: true,
+                        },
+                      }}
+                    >
+                      <Layer2SettingsRecipe
+                        isLight={isLight}
+                        activeTab={st.props.activeTab}
+                        onBack={noop}
+                      />
+                    </StoreSnapshotScope>
                     <AuditTicketHeader
                       index={idx + 1}
                       label={st.label}

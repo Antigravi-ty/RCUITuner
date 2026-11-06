@@ -8,6 +8,7 @@ import { Layer2PlayRecipe } from '../../ui-core/recipes/Layer2PlayRecipe';
 import { Layer2SettingsRecipe } from '../../ui-core/recipes/Layer2SettingsRecipe';
 import { Layer3AcousticsEqualizerRecipe } from '../../ui-core/recipes/Layer3AcousticsEqualizerRecipe';
 import { Layer3BallTrajectoryRecipe } from '../../ui-core/recipes/Layer3BallTrajectoryRecipe';
+import { StoreSnapshotScope } from '../../ui-core/stores/storeSnapshotScope';
 import type { ContainerTransitionMode } from '../../ui-core/tokens/easing';
 import { CodeBlock } from '../CodeBlock';
 import { TunerConfigExporterBar } from '../components/tuner/TunerConfigExporterBar';
@@ -261,18 +262,26 @@ export const NavigationPage: React.FC<{ isLight?: boolean }> = ({ isLight = fals
         {currentRoute === 'garage' && <Layer2GarageRecipe isLight={isLight} onBack={goBack} />}
 
         {currentRoute === 'settings' && (
-          <Layer2SettingsRecipe
-            isLight={isLight}
-            onBack={goBack}
-            stateOverride={{
-              initialTab: targetSettingsTab,
-              onNavigateRoute: (route) => {
-                if (route === 'audio-eq' || route === 'trajectory') {
-                  navigateTo(route);
-                }
+          <StoreSnapshotScope
+            overrides={{
+              appStore: {
+                settingsTargetTab: targetSettingsTab,
+                navigate: (route: string) => {
+                  if (route === 'acoustics-equalizer' || route === 'audio-eq') {
+                    navigateTo('audio-eq');
+                  } else if (route === 'trajectory') {
+                    navigateTo('trajectory');
+                  }
+                },
               },
             }}
-          />
+          >
+            <Layer2SettingsRecipe
+              isLight={isLight}
+              activeTab={targetSettingsTab}
+              onBack={goBack}
+            />
+          </StoreSnapshotScope>
         )}
 
         {currentRoute === 'audio-eq' && (
@@ -311,7 +320,7 @@ const ROUTES = ${JSON.stringify(ROUTE_WIDTH_MAP, null, 2)};
   {activeRoute === 'main' && <Layer1MainMenuRecipe onResume={...} onNavigatePlay={...} onNavigateGarage={...} onNavigateSettings={...} />}
   {activeRoute === 'play' && <Layer2PlayRecipe onBack={goBack} />}
   {activeRoute === 'garage' && <Layer2GarageRecipe onBack={goBack} />}
-  {activeRoute === 'settings' && <Layer2SettingsRecipe onBack={goBack} stateOverride={{ initialTab: ${JSON.stringify(targetSettingsTab)} }} />}
+  {activeRoute === 'settings' && <Layer2SettingsRecipe onBack={goBack} activeTab=${JSON.stringify(targetSettingsTab)} />}
   {activeRoute === 'audio-eq' && <Layer3AcousticsEqualizerRecipe onBack={goBack} />}
 </MorphingShell>`}
         />
