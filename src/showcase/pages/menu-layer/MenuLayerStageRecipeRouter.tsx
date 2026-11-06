@@ -34,6 +34,7 @@ import { Layer4DevSignalingLabRecipe } from '../../../ui-core/recipes/Layer4DevS
 import { floatingStore, type FloatingWindowItem } from '../../../ui-core/stores/floatingStore';
 import { type PresetConfig } from '../../../ui-core/stores/floatingPresets';
 import { PRESET_WINDOWS } from '../../../ui-core/stores/devFloatingPresets';
+import { StoreSnapshotScope } from '../../../ui-core/stores/storeSnapshotScope';
 import {
   MENU_ROUTE_CONFIG,
   type ActiveMenuRoute,
@@ -118,47 +119,52 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
   return (
     <>
       {displayedRoute === 'main-menu' && (
-        <Layer1MainMenuRecipe
-          isLight={isLight}
-          contextVariation={layer1ContextMode}
-          touchMode={touchMode}
-          touchInputAgent={touchInputAgent}
-          onTouchInputAgentChange={setTouchInputAgent}
-          onResume={() => {
-            handleSelectRoute('layer-0');
-            showToast('Enter Level Zero Match (Layer 0 · No Menu State)');
-          }}
-          onNavigatePlay={() => handleSelectRoute('play')}
-          onNavigateGarage={() => handleSelectRoute('garage')}
-          onNavigateSettings={(tab) => {
-            if (tab) setSettingsTab(tab);
-            handleSelectRoute('settings');
-          }}
-          onNavigateManageRoom={() => handleSelectRoute('manage-room')}
-          onNavigateExpMultiBotsConfig={() => handleSelectRoute('exp-multi-bots')}
-          onReturnToFreeplay={() => {
-            onChangeLayer1ContextMode?.('freeplay');
-            showToast('Returned Free Play Base Menu (MENU)');
-          }}
-          onLeaveRoom={() => {
-            onChangeLayer1ContextMode?.('freeplay');
-            showToast('Left Room/Match and Return Free Play (MENU)');
-          }}
-          stateOverride={{
-            onExitEditMode: () => {
-              handleSelectRoute('static-training-pack');
-              showToast('Exited Edit Training Pack Return to training pack browser');
+        <StoreSnapshotScope
+          overrides={{
+            appStore: {
+              touchMode,
+              touchInputAgent,
+              setTouchInputAgent,
+              menuPowerSave: bgRenderPaused ? 'extreme' : '30',
             },
           }}
-          menuPowerSave={bgRenderPaused ? 'extreme' : '30'}
-        />
+        >
+          <Layer1MainMenuRecipe
+            isLight={isLight}
+            activeTab={layer1ContextMode}
+            onBack={() => {
+              handleSelectRoute('layer-0');
+              showToast('Enter Level Zero Match (Layer 0 · No Menu State)');
+            }}
+            onTabChange={(target) => {
+              if (target === 'play') handleSelectRoute('play');
+              else if (target === 'garage') handleSelectRoute('garage');
+              else if (target.startsWith('settings')) {
+                const tab = target.split(':')[1];
+                if (tab) setSettingsTab(tab);
+                handleSelectRoute('settings');
+              } else if (target === 'manage-room') handleSelectRoute('manage-room');
+              else if (target === 'exp-multi-bots') handleSelectRoute('exp-multi-bots');
+              else if (target === 'return-freeplay') {
+                onChangeLayer1ContextMode?.('freeplay');
+                showToast('Returned Free Play Base Menu (MENU)');
+              } else if (target === 'leave-room') {
+                onChangeLayer1ContextMode?.('freeplay');
+                showToast('Left Room/Match and Return Free Play (MENU)');
+              } else if (target === 'exit-edit-mode') {
+                handleSelectRoute('static-training-pack');
+                showToast('Exited Edit Training Pack Return to training pack browser');
+              }
+            }}
+          />
+        </StoreSnapshotScope>
       )}
 
       {displayedRoute === 'play' && (
         <Layer2PlayRecipe
           isLight={isLight}
           onBack={goBack}
-          onSelectMode={(m) => {
+          onTabChange={(m) => {
             setLastParentRoute('play');
             if (m === 'exhibition') handleSelectRoute('exhibition');
             else if (m === 'host-match' || m === 'multiplayer-match') handleSelectRoute('host-match');
@@ -178,7 +184,6 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
       {displayedRoute === 'garage' && (
         <Layer2GarageRecipe
           isLight={isLight}
-          initialTab={garageTab}
           activeTab={garageTab}
           onTabChange={setGarageTab}
           onBack={goBack}

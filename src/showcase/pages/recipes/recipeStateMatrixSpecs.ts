@@ -21,7 +21,7 @@ export interface RecipeStateSnapshotSpec<TProps> {
 }
 
 export const LAYER1_MAIN_MENU_STATES: RecipeStateSnapshotSpec<{
-  contextVariation: Layer1MenuContextMode;
+  activeTab: Layer1MenuContextMode;
 }>[] = LAYER1_CONTEXT_VARIATIONS.map((meta) => ({
   id: meta.id,
   label: meta.label,
@@ -29,7 +29,7 @@ export const LAYER1_MAIN_MENU_STATES: RecipeStateSnapshotSpec<{
   componentName: 'Layer1MainMenuRecipe',
   sourceFile: 'recipes/Layer1MainMenuRecipe.tsx',
   subViewFile: 'recipes/layer1MenuContextSpecs.ts',
-  props: { contextVariation: meta.id },
+  props: { activeTab: meta.id },
 }));
 
 export const LAYER2_GARAGE_STATES: RecipeStateSnapshotSpec<{

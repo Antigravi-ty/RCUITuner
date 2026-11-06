@@ -23,6 +23,7 @@ import { Layer1MainMenuRecipe } from '../../../ui-core/recipes/Layer1MainMenuRec
 import { Layer2PlayRecipe } from '../../../ui-core/recipes/Layer2PlayRecipe';
 import { Layer2GarageRecipe } from '../../../ui-core/recipes/Layer2GarageRecipe';
 import { Layer2SettingsRecipe } from '../../../ui-core/recipes/Layer2SettingsRecipe';
+import { StoreSnapshotScope } from '../../../ui-core/stores/storeSnapshotScope';
 
 export type EscMenuRoute = 'none' | 'main-menu' | 'play' | 'garage' | 'settings';
 
@@ -104,45 +105,54 @@ export const EdgeInspectorSceneOverlayAndMenu: React.FC<
             className="max-w-full max-h-full flex items-center justify-center"
           >
             {escMenuRoute === 'main-menu' && (
-              <Layer1MainMenuRecipe
-                isLight={isLight}
-                onResume={() => {
-                  setEscMenuRoute('none');
-                  showToast('Resume: Back 3D Training pack edit scene');
+              <StoreSnapshotScope
+                overrides={{
+                  appStore: {
+                    extraBottomAction: (
+                      <>
+                        <MenuDivider isLight={isLight} />
+                        <MainMenuRow
+                          icon={<LogOut className="h-5 w-5" />}
+                          title="Exit Edit Mode"
+                          subtitle="Save or discard training pack edits & leave editor"
+                          variant="danger"
+                          isLight={isLight}
+                          onClick={() => {
+                            openStaticTrainingExitConfirmDialogue((action) => {
+                              setEscMenuRoute('none');
+                              showToast(
+                                action === 'save'
+                                  ? '[ok] Saved changes and exited via main menu Edit Mode'
+                                  : '[!] Unsaved changes ignored and exited via the main menu Edit Mode'
+                              );
+                            });
+                          }}
+                        />
+                      </>
+                    ),
+                  },
                 }}
-                onNavigatePlay={() => setEscMenuRoute('play')}
-                onNavigateGarage={() => setEscMenuRoute('garage')}
-                onNavigateSettings={() => setEscMenuRoute('settings')}
-                extraBottomAction={
-                  <>
-                    <MenuDivider isLight={isLight} />
-                    <MainMenuRow
-                      icon={<LogOut className="h-5 w-5" />}
-                      title="Exit Edit Mode"
-                      subtitle="Save or discard training pack edits & leave editor"
-                      variant="danger"
-                      isLight={isLight}
-                      onClick={() => {
-                        openStaticTrainingExitConfirmDialogue((action) => {
-                          setEscMenuRoute('none');
-                          showToast(
-                            action === 'save'
-                              ? '[ok] Saved changes and exited via main menu Edit Mode'
-                              : '[!] Unsaved changes ignored and exited via the main menu Edit Mode'
-                          );
-                        });
-                      }}
-                    />
-                  </>
-                }
-              />
+              >
+                <Layer1MainMenuRecipe
+                  isLight={isLight}
+                  onBack={() => {
+                    setEscMenuRoute('none');
+                    showToast('Resume: Back 3D Training pack edit scene');
+                  }}
+                  onTabChange={(target) => {
+                    if (target === 'play') setEscMenuRoute('play');
+                    else if (target === 'garage') setEscMenuRoute('garage');
+                    else if (target.startsWith('settings')) setEscMenuRoute('settings');
+                  }}
+                />
+              </StoreSnapshotScope>
             )}
 
             {escMenuRoute === 'play' && (
               <Layer2PlayRecipe
                 isLight={isLight}
                 onBack={() => setEscMenuRoute('main-menu')}
-                onSelectMode={(mode) => {
+                onTabChange={(mode) => {
                   setEscMenuRoute('none');
                   showToast(`Switched play mode from main menu: ${mode}`);
                 }}

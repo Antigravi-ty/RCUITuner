@@ -3,6 +3,7 @@ import { ArrowUpRight } from 'lucide-react';
 import { Layer2PlayRecipe } from '../../../ui-core/recipes/Layer2PlayRecipe';
 import { Badge } from '../../../ui-core/primitives/Badge';
 import { Button } from '../../../ui-core/primitives/Button';
+import { StoreSnapshotScope } from '../../../ui-core/stores/storeSnapshotScope';
 import { LocalPanelSizingTuner } from '../recipes/LocalPanelSizingTuner';
 import type { PlayCardStyleVariant } from '../../../ui-core/stores/playCardStyleStore';
 
@@ -100,7 +101,9 @@ export const PlayCardMatrixShootoutSection: React.FC<PlayCardMatrixShootoutSecti
                     onClick={() => setVariant(v.id)} > {isCurrent ? '[ok] Applied to 7A Play Menu' : 'Apply Style to 7A Play Menu'}
                     </Button> </div> <div className={`flex justify-center p-5 rounded-xl border ${ isLight
                     ? 'bg-neutral-100/60 border-neutral-200/70' : 'bg-neutral-950/60 border-neutral-800/80' }`} >
-                    <Layer2PlayRecipe isLight={isLight} cardVariant={v.id} onBack={() => {}} />
+                    <StoreSnapshotScope overrides={{ playCardStyleStore: { variant: v.id } }}>
+                      <Layer2PlayRecipe isLight={isLight} onBack={() => {}} />
+                    </StoreSnapshotScope>
                 </div>
               </div>
             );
