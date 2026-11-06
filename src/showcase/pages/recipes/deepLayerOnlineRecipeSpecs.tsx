@@ -184,7 +184,7 @@ export const DEEP_LAYER_ONLINE_AND_USER_RECIPE_SPECS: DeepLayerRecipeSpec[] = [
     panelId: 'layer3-keybindings',
     tunerLabel: 'Layer 3 Key Bindings & Controls',
     recommendation: 'Three-column key and controller mapping table + Advanced Stick Settings',
-    renderPreview: (isLight) => <Layer3KeybindingsRecipe isLight={isLight} standalone={true} onBack={noop} />,
+    renderPreview: (isLight) => <Layer3KeybindingsRecipe isLight={isLight} onBack={noop} />,
   },
   {
     id: 'recipe-6a-12c-trajectory',

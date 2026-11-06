@@ -5,6 +5,7 @@ import { Button } from '../../ui-core/primitives/Button';
 import { KeycapBadge } from '../../ui-core/primitives/KeycapBadge';
 import { SliderControl } from '../../ui-core/primitives/SliderControl';
 import { Layer3BallTrajectoryRecipe } from '../../ui-core/recipes/Layer3BallTrajectoryRecipe';
+import { StoreSnapshotScope } from '../../ui-core/stores/storeSnapshotScope';
 import { useAppStore } from '../../ui-core/stores/appStore';
 import { CodeBlock } from '../CodeBlock';
 import { TunerConfigExporterBar } from '../components/tuner/TunerConfigExporterBar';
@@ -257,15 +258,21 @@ export const LivePreviewSimulationPage: React.FC<LivePreviewSimulationPageProps>
           onExpandFromDock={handleTriggerExpand}
         >
           {isContentVisible && (
-            <Layer3BallTrajectoryRecipe
-              isLight={isLight}
-              transparent={true}
-              onBack={() => {
-                exitPreview();
-                setAnimPhase('expanded');
+            <StoreSnapshotScope
+              overrides={{
+                appStore: {
+                  setLivePreviewCollapsed: handleTriggerCollapse,
+                },
               }}
-              onCollapsePreview={handleTriggerCollapse}
-            />
+            >
+              <Layer3BallTrajectoryRecipe
+                isLight={isLight}
+                onBack={() => {
+                  exitPreview();
+                  setAnimPhase('expanded');
+                }}
+              />
+            </StoreSnapshotScope>
           )}
         </MorphingStageShell>
 

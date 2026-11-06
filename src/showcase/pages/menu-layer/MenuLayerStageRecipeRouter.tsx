@@ -34,6 +34,7 @@ import { Layer4DevSignalingLabRecipe } from '../../../ui-core/recipes/Layer4DevS
 import { floatingStore, type FloatingWindowItem } from '../../../ui-core/stores/floatingStore';
 import { type PresetConfig } from '../../../ui-core/stores/floatingPresets';
 import { PRESET_WINDOWS } from '../../../ui-core/stores/devFloatingPresets';
+import { StoreSnapshotScope } from '../../../ui-core/stores/storeSnapshotScope';
 import {
   MENU_ROUTE_CONFIG,
   type ActiveMenuRoute,
@@ -243,11 +244,11 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
       )}
 
       {displayedRoute === 'audio-eq' && (
-        <Layer3AcousticsEqualizerRecipe
-          isLight={isLight}
-          developerMode={visibilityTier === 'developer'}
-          onBack={goBack}
-        />
+        <StoreSnapshotScope
+          overrides={{ appStore: { developerMode: visibilityTier === 'developer' } }}
+        >
+          <Layer3AcousticsEqualizerRecipe isLight={isLight} onBack={goBack} />
+        </StoreSnapshotScope>
       )}
 
       {displayedRoute === 'dev-quick-actions' && (
@@ -376,27 +377,39 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
       )}
 
       {displayedRoute === 'camera' && (
-        <Layer3CameraRecipe
-          isLight={isLight}
-          developerMode={visibilityTier === 'developer'}
-          onBack={() => {
-            setLiveAnimPhase('expanded');
-            goBack();
+        <StoreSnapshotScope
+          overrides={{
+            appStore: {
+              developerMode: visibilityTier === 'developer',
+              setLivePreviewCollapsed: handleTriggerCollapse,
+            },
           }}
-          onCollapsePreview={handleTriggerCollapse}
-        />
+        >
+          <Layer3CameraRecipe
+            isLight={isLight}
+            onBack={() => {
+              setLiveAnimPhase('expanded');
+              goBack();
+            }}
+          />
+        </StoreSnapshotScope>
       )}
 
       {displayedRoute === 'keybindings' && (
-        <Layer3KeybindingsRecipe
-          standalone
-          isLight={isLight}
-          onBack={goBack}
-          onNavigateAdvancedController={() => {
-            setLastParentRoute('keybindings');
-            handleSelectRoute('controller-settings');
+        <StoreSnapshotScope
+          overrides={{
+            appStore: {
+              navigate: (route: string) => {
+                if (route === 'controller-settings') {
+                  setLastParentRoute('keybindings');
+                  handleSelectRoute('controller-settings');
+                }
+              },
+            },
           }}
-        />
+        >
+          <Layer3KeybindingsRecipe isLight={isLight} onBack={goBack} />
+        </StoreSnapshotScope>
       )}
 
       {displayedRoute === 'exp-multi-bots' && (
@@ -533,16 +546,22 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
       )}
 
       {displayedRoute === 'trajectory' && (
-        <Layer3BallTrajectoryRecipe
-          isLight={isLight}
-          transparent={true}
-          developerMode={visibilityTier === 'developer'}
-          onBack={() => {
-            setLiveAnimPhase('expanded');
-            goBack();
+        <StoreSnapshotScope
+          overrides={{
+            appStore: {
+              developerMode: visibilityTier === 'developer',
+              setLivePreviewCollapsed: handleTriggerCollapse,
+            },
           }}
-          onCollapsePreview={handleTriggerCollapse}
-        />
+        >
+          <Layer3BallTrajectoryRecipe
+            isLight={isLight}
+            onBack={() => {
+              setLiveAnimPhase('expanded');
+              goBack();
+            }}
+          />
+        </StoreSnapshotScope>
       )}
     </>
   );
