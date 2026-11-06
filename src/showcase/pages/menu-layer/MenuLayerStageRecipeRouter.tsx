@@ -402,7 +402,6 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
       {displayedRoute === 'exp-multi-bots' && (
         <Layer3ExpMultiBotsRecipe
           isLight={isLight}
-          onLaunchFloatingControl={() => spawnPresetById('experimental-multi-bots')}
           onBack={goBack}
         />
       )}
@@ -410,7 +409,6 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
       {displayedRoute === 'exp-botpack-9700488' && (
         <Layer3ExpBotPackRecipe
           isLight={isLight}
-          onLaunchFloatingControl={() => spawnPresetById('experimental-multi-bots')}
           onBack={goBack}
         />
       )}
@@ -419,25 +417,6 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
         <Layer3DevSandboxesRecipe
           isLight={isLight}
           onBack={goBack}
-          onNavigateExpMultiBots={() => {
-            setLastParentRoute('dev-sandboxes');
-            handleSelectRoute('exp-multi-bots');
-          }}
-          onNavigateExpBotpack9700488={() => {
-            setLastParentRoute('dev-sandboxes');
-            handleSelectRoute('exp-botpack-9700488');
-          }}
-          onNavigateTemPackConverter={() => {
-            setLastParentRoute('dev-sandboxes');
-            handleSelectRoute('dev-tem-pack-converter');
-          }}
-          onEnterBench={(tabId) => {
-            if (tabId === 'exp-multi-bots') handleSelectRoute('exp-multi-bots');
-            else if (tabId === 'exp-botpack-9700488') handleSelectRoute('exp-botpack-9700488');
-            else if (tabId === 'tem-pack-converter') handleSelectRoute('dev-tem-pack-converter');
-            else if (tabId === 'replay-to-rcs-importer') spawnPresetById('replay-to-rcs-importer');
-            else spawnPresetById('subsystem-isolation-lab', tabId);
-          }}
         />
       )}
 
@@ -445,11 +424,6 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
         <Layer3DevActiveTunersRecipe
           isLight={isLight}
           onBack={goBack}
-          onNavigateAdvancedAudio={() => handleSelectRoute('advanced-audio')}
-          onNavigateEventTriggerRules={() => handleSelectRoute('event-trigger-rules')}
-          onAddPresetWindow={handleAddPresetWindow}
-          activeWindows={windows}
-          onClosePresetWindow={closeWindow}
         />
       )}
 
@@ -457,9 +431,6 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
         <Layer3DevCalibratedPresetsRecipe
           isLight={isLight}
           onBack={goBack}
-          onAddPresetWindow={handleAddPresetWindow}
-          activeWindows={windows}
-          onClosePresetWindow={closeWindow}
         />
       )}
 
@@ -467,10 +438,6 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
         <Layer3DevSelfTestRecipe
           isLight={isLight}
           onBack={goBack}
-          onNavigateSignalingLab={() => {
-            setLastParentRoute('dev-self-test');
-            handleSelectRoute('dev-signaling-lab');
-          }}
         />
       )}
 
