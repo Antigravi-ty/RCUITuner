@@ -1,6 +1,17 @@
-import React, { useEffect, Suspense, lazy } from 'react';
+import React, { useEffect, Suspense, lazy, useMemo } from 'react';
 import { Sidebar } from './showcase/Sidebar';
-import type { ShowcaseTab } from './showcase/sidebarNavConfig';
+import {
+  WORKSPACE_SECTIONS,
+  WORKSPACE_SPECS,
+  getApprovalLedgerSummary,
+  getNavItemMeta,
+  getWorkspaceForTab,
+  isValidShowcaseTab,
+  readWorkspaceFromUrl,
+  syncWorkspaceUrlParam,
+  type ShowcaseTab,
+  type TunerWorkspaceId,
+} from './showcase/sidebarNavConfig';
 import { OverviewPage } from './showcase/pages/OverviewPage';
 import { ViewportControls } from './showcase/ViewportControls';
 
@@ -30,11 +41,18 @@ const ComposableNestingPage = lazy(() => import('./showcase/pages/ComposableNest
 const FoundationsPage = lazy(() => import('./showcase/pages/FoundationsPage').then((m) => ({ default: m.FoundationsPage })));
 const ViewportSafeAreaPage = lazy(() => import('./showcase/pages/ViewportSafeAreaPage').then((m) => ({ default: m.ViewportSafeAreaPage })));
 const NameTagTunerPage = lazy(() => import('./showcase/pages/NameTagTunerPage').then((m) => ({ default: m.NameTagTunerPage })));
+
 import { SafeAreaHud } from './ui-core/viewport/SafeAreaHud';
 import { useViewportStore, viewportStore } from './ui-core/stores/viewportStore';
 import { DialogueStackContainer } from './ui-core/compounds/Dialogue';
 import { SectionErrorBoundary } from './showcase/components/SectionErrorBoundary';
-import { ShieldAlert, ArrowLeft } from 'lucide-react';
+import {
+  ShieldAlert,
+  ArrowLeft,
+  FlaskConical,
+  ClipboardCheck,
+  CheckCircle2,
+} from 'lucide-react';
 import { useAccentStore } from './showcase/stores/themeStore';
 import { readUrlParams, updateUrlParams } from './showcase/stores/urlSync';
 import { useSyncedState } from './showcase/stores/crossClientSync';
@@ -47,15 +65,32 @@ interface JumpOriginRecord {
   targetId?: string;
 }
 
+function resolveInitialTabFromUrl(): ShowcaseTab {
+  const rawTab = readUrlParams().tab;
+  if (isValidShowcaseTab(rawTab)) return rawTab;
+  const initialWs = readWorkspaceFromUrl('overview');
+  return initialWs === 'bravo' ? WORKSPACE_SPECS.bravo.defaultTab : 'overview';
+}
+
 export const App: React.FC = () => {
-  const initialUrlTab = (readUrlParams().tab as ShowcaseTab | undefined) || 'overview';
+  const initialUrlTab = resolveInitialTabFromUrl();
   const [activeTab, setActiveTab] = useSyncedState<ShowcaseTab>('app:activeTab', initialUrlTab);
-  // Default to light mode as requested, synced across connected clients
   const [isLight, setIsLight] = useSyncedState<boolean>('app:isLight', true);
   const [lastJumpOrigin, setLastJumpOrigin] = React.useState<JumpOriginRecord | null>(null);
+  const [lastTabByWorkspace, setLastTabByWorkspace] = React.useState<Record<TunerWorkspaceId, ShowcaseTab>>(() => {
+    const ws = getWorkspaceForTab(initialUrlTab);
+    return {
+      alpha: ws === 'alpha' ? initialUrlTab : WORKSPACE_SPECS.alpha.defaultTab,
+      bravo: ws === 'bravo' ? initialUrlTab : WORKSPACE_SPECS.bravo.defaultTab,
+    };
+  });
+
+  const activeWorkspace: TunerWorkspaceId = getWorkspaceForTab(activeTab);
+  const activeNavMeta = useMemo(() => getNavItemMeta(activeTab), [activeTab]);
+  const ledgerSummary = useMemo(() => getApprovalLedgerSummary(), []);
+
   const { safeAreaMargin, renderScale } = useViewportStore();
   const { tokens } = useAccentStore();
-
   const contentScale = renderScale / 100;
 
   const scrollToAnchorWithRetry = React.useCallback((targetId?: string) => {
@@ -70,55 +105,81 @@ export const App: React.FC = () => {
         return;
       }
       attempts += 1;
-      if (attempts < 18) {
-        window.setTimeout(tryScroll, 80);
-      }
+      if (attempts < 18) window.setTimeout(tryScroll, 80);
     };
     window.setTimeout(tryScroll, 60);
   }, []);
 
-  // Ensure initial URL query string has ?tab=... and scroll to initial hash if present
   useEffect(() => {
     updateUrlParams({ tab: activeTab });
+    syncWorkspaceUrlParam(getWorkspaceForTab(activeTab));
     if (typeof window !== 'undefined' && window.location.hash) {
       scrollToAnchorWithRetry(window.location.hash);
     }
   }, []);
 
-  // Sync activeTab into URL if changed externally (e.g., cross-client sync) without overwriting history stack
   useEffect(() => {
-    const urlTab = readUrlParams().tab;
-    if (urlTab !== activeTab) {
+    const ws = getWorkspaceForTab(activeTab);
+    setLastTabByWorkspace((prev) => (prev[ws] === activeTab ? prev : { ...prev, [ws]: activeTab }));
+    if (readUrlParams().tab !== activeTab) {
       updateUrlParams({ tab: activeTab });
     }
+    syncWorkspaceUrlParam(ws);
   }, [activeTab]);
 
-  // Listen to browser Back / Forward (popstate) to restore previous page & anchor
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const handlePopState = () => {
-      const params = readUrlParams();
-      const nextTab = (params.tab as ShowcaseTab | undefined) || 'overview';
+      const nextTab = resolveInitialTabFromUrl();
       setActiveTab(nextTab);
-      if (window.location.hash) {
-        scrollToAnchorWithRetry(window.location.hash);
-      }
+      if (window.location.hash) scrollToAnchorWithRetry(window.location.hash);
       setLastJumpOrigin((prev) => (prev && prev.fromTab === nextTab ? null : prev));
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, [setActiveTab, scrollToAnchorWithRetry]);
 
-  // Manual sidebar / page tab selection (pushes browser history entry)
   const handleSelectTab = React.useCallback(
     (nextTab: ShowcaseTab) => {
+      const nextWs = getWorkspaceForTab(nextTab);
+      setLastTabByWorkspace((prev) => ({ ...prev, [nextWs]: nextTab }));
       updateUrlParams({ tab: nextTab }, { push: true, hash: null });
+      syncWorkspaceUrlParam(nextWs);
       setActiveTab(nextTab);
     },
     [setActiveTab]
   );
 
-  // Cross-page navigation helper with browser history push & automatic anchor scroll after lazy module mount
+  const handleSelectWorkspace = React.useCallback(
+    (nextWorkspace: TunerWorkspaceId) => {
+      if (nextWorkspace === activeWorkspace) return;
+      const targetTab = lastTabByWorkspace[nextWorkspace] ?? WORKSPACE_SPECS[nextWorkspace].defaultTab;
+      updateUrlParams({ tab: targetTab }, { push: true, hash: null });
+      syncWorkspaceUrlParam(nextWorkspace);
+      setActiveTab(targetTab);
+    },
+    [activeWorkspace, lastTabByWorkspace, setActiveTab]
+  );
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!e.altKey || e.metaKey || e.ctrlKey) return;
+      const target = e.target as HTMLElement | null;
+      if (target && (['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) || target.isContentEditable)) {
+        return;
+      }
+      if (e.key === '1') {
+        e.preventDefault();
+        handleSelectWorkspace('alpha');
+      } else if (e.key === '2') {
+        e.preventDefault();
+        handleSelectWorkspace('bravo');
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleSelectWorkspace]);
+
   const handleNavigateShowcase = React.useCallback(
     (tab: ShowcaseTab, targetId?: string) => {
       if (typeof window !== 'undefined') {
@@ -135,14 +196,15 @@ export const App: React.FC = () => {
           targetId,
         });
       }
+      const targetWs = getWorkspaceForTab(tab);
+      setLastTabByWorkspace((prev) => ({ ...prev, [targetWs]: tab }));
       updateUrlParams(
         { tab, ...(tab === 'recipes' && targetId ? { recipe: targetId } : {}) },
         { push: true, hash: targetId ?? null }
       );
+      syncWorkspaceUrlParam(targetWs);
       setActiveTab(tab);
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new HashChangeEvent('hashchange'));
-      }
+      if (typeof window !== 'undefined') window.dispatchEvent(new HashChangeEvent('hashchange'));
       scrollToAnchorWithRetry(targetId);
     },
     [activeTab, setActiveTab, scrollToAnchorWithRetry]
@@ -161,7 +223,6 @@ export const App: React.FC = () => {
     setLastJumpOrigin(null);
   }, [lastJumpOrigin, setActiveTab]);
 
-  // Sync theme with document element (including explicit colorScheme so mobile browsers do not force auto-dark inversion)
   useEffect(() => {
     if (typeof document !== 'undefined') {
       document.documentElement.dataset.theme = isLight ? 'light' : 'dark';
@@ -171,19 +232,13 @@ export const App: React.FC = () => {
     }
   }, [isLight]);
 
-  return (
-    <div
-      className={`relative h-screen w-screen overflow-hidden transition-colors duration-150 ${
-        isLight ? 'bg-neutral-800' : 'bg-black'
-      }`}
-    >
-      {/* Global Safe Area HUD Overlay (Fixed directly to physical display window) */}
-      <SafeAreaHud isLight={isLight} />
+  const activeSectionMeta = activeNavMeta ? WORKSPACE_SECTIONS[activeNavMeta.workspaceSection] : undefined;
 
-      {/* Global Dialogue Stack Container: Handles all programmatic dialogue.show calls */}
+  return (
+    <div className={`relative h-screen w-screen overflow-hidden transition-colors duration-150 ${isLight ? 'bg-neutral-800' : 'bg-black'}`}>
+      <SafeAreaHud isLight={isLight} />
       <DialogueStackContainer isLight={isLight} />
 
-      {/* Emergency Safe Area Recovery Floating Pill (only shown when negative margin bleeds outer controls) */}
       {safeAreaMargin < 0 && (
         <div className="fixed bottom-3 right-3 z-[700] flex items-center gap-2.5 bg-neutral-900/95 text-neutral-200 border border-neutral-700/80 rounded-xl px-3 py-1.5 shadow-2xl backdrop-blur text-xs font-mono">
           <ShieldAlert className="h-3.5 w-3.5 text-amber-400" />
@@ -198,12 +253,6 @@ export const App: React.FC = () => {
         </div>
       )}
 
-      {/* Main UI Outer Frame:
-          Controlled by safeAreaMargin (-5% ~ +10%).
-          - When safeAreaMargin > 0 (+5%): Outer frame contracts inward by 5% on all 4 edges.
-          - When safeAreaMargin < 0 (-5%): Outer frame expands 5% OUTSIDE the physical screen bounds,
-            causing the header bar and sidebar to push outside the visible window.
-      */}
       <div
         className={`absolute flex flex-col transition-all duration-150 overflow-hidden ${
           isLight ? 'bg-white text-neutral-900' : 'bg-neutral-950 text-neutral-100'
@@ -215,37 +264,89 @@ export const App: React.FC = () => {
           right: `${safeAreaMargin}%`,
         }}
       >
-        {/* Top Header Bar: Always Fixed At UI Directly Above Frame */}
         <header
-          className={`h-16 px-6 md:px-8 border-b flex items-center justify-between shrink-0 z-20 transition-colors ${
-            isLight
-              ? 'bg-white border-neutral-200/90 shadow-2xs'
-              : 'bg-neutral-950 border-neutral-800'
+          className={`h-16 px-4 md:px-6 border-b flex items-center justify-between gap-3 shrink-0 z-20 transition-colors ${
+            isLight ? 'bg-white border-neutral-200/90 shadow-2xs' : 'bg-neutral-950 border-neutral-800'
           }`}
         >
-          <div className="flex items-center gap-3 text-xs">
-            <span className="font-bold tracking-tight">RCUITuner</span>
-            <span className="text-neutral-400">/</span>
-            <span className={`font-mono font-medium ${tokens.text}`}>Component Architecture</span>
+          <div className="flex items-center gap-2.5 text-xs min-w-0">
+            <span className="font-bold tracking-tight shrink-0">RCUITuner</span>
+            <span className="text-neutral-400 shrink-0">/</span>
+            {activeSectionMeta && (
+              <span className={`hidden lg:inline-flex px-1.5 py-0.5 rounded text-[10px] font-mono font-extrabold border shrink-0 ${activeSectionMeta.badgeColor}`}>
+                {activeSectionMeta.code}
+              </span>
+            )}
+            <span className={`font-mono font-medium truncate ${tokens.text}`}>
+              {activeNavMeta?.label ?? activeTab}
+            </span>
           </div>
 
-          {/* Right Toolbar: UI Scaling Slider + Safe Area Margin Button + HUD Toggle */}
-          <div className="flex items-center gap-4">
+          <div
+            className={`flex items-center gap-1 p-1 rounded-xl border shrink-0 ${
+              isLight ? 'bg-neutral-100/90 border-neutral-200/90' : 'bg-neutral-900/90 border-neutral-800'
+            }`}
+          >
+            <button
+              type="button"
+              onClick={() => handleSelectWorkspace('alpha')}
+              data-top-workspace="alpha"
+              title={`${WORKSPACE_SPECS.alpha.title} · ${WORKSPACE_SPECS.alpha.subtitle} (Shortcut: Alt+1)`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer ${
+                activeWorkspace === 'alpha'
+                  ? isLight
+                    ? 'bg-white text-amber-800 font-bold shadow-xs border border-amber-400/60'
+                    : 'bg-neutral-800 text-amber-300 font-bold shadow-xs border border-amber-500/50'
+                  : isLight
+                  ? 'text-neutral-600 hover:text-neutral-900 hover:bg-white/50'
+                  : 'text-neutral-400 hover:text-neutral-100 hover:bg-neutral-800/50'
+              }`}
+            >
+              <FlaskConical className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+              <span>Workspace Alpha</span>
+              <span className="hidden xl:inline text-[10px] opacity-75">· 母版与独立实验室</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleSelectWorkspace('bravo')}
+              data-top-workspace="bravo"
+              title={`${WORKSPACE_SPECS.bravo.title} · ${WORKSPACE_SPECS.bravo.subtitle} (Shortcut: Alt+2)`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer ${
+                activeWorkspace === 'bravo'
+                  ? isLight
+                    ? 'bg-white text-sky-800 font-bold shadow-xs border border-sky-400/60'
+                    : 'bg-neutral-800 text-sky-300 font-bold shadow-xs border border-sky-500/50'
+                  : isLight
+                  ? 'text-neutral-600 hover:text-neutral-900 hover:bg-white/50'
+                  : 'text-neutral-400 hover:text-neutral-100 hover:bg-neutral-800/50'
+              }`}
+            >
+              <ClipboardCheck className="h-3.5 w-3.5 text-sky-500 shrink-0" />
+              <span>Workspace Bravo</span>
+              <span className="hidden xl:inline text-[10px] opacity-75">· 面板审批与精调</span>
+              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                <CheckCircle2 className="h-2.5 w-2.5" />
+                <span>{ledgerSummary.approvedCount}/{ledgerSummary.totalSurfaces}</span>
+              </span>
+            </button>
+          </div>
+
+          <div className="flex items-center gap-3 shrink-0">
             <ViewportControls isLight={isLight} />
           </div>
         </header>
 
-        {/* Lower Workspace: Include left-fixed elements Sidebar With scrollable right side Content */}
         <div className="flex-1 flex overflow-hidden min-h-0 relative">
-          {/* Navigation Sidebar: Always pinned to left, Fixed Size 100%, Internal independent scroll */}
           <Sidebar
             activeTab={activeTab}
             onSelectTab={handleSelectTab}
+            activeWorkspace={activeWorkspace}
+            onSelectWorkspace={handleSelectWorkspace}
             isLight={isLight}
             onToggleTheme={() => setIsLight((prev) => !prev)}
           />
 
-          {/* Main Content Viewport: Independent Scroll Area, Scaling applies only here!  */}
           <main className="flex-1 h-full overflow-y-auto overflow-x-auto [overflow-anchor:none] min-w-0 relative select-text bg-white dark:bg-neutral-950">
             {lastJumpOrigin && lastJumpOrigin.toTab === activeTab && (
               <div
@@ -259,11 +360,8 @@ export const App: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => {
-                      if (typeof window !== 'undefined' && window.history.length > 1) {
-                        window.history.back();
-                      } else {
-                        handleReturnToJumpOrigin();
-                      }
+                      if (typeof window !== 'undefined' && window.history.length > 1) window.history.back();
+                      else handleReturnToJumpOrigin();
                     }}
                     className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-bold bg-amber-500 hover:bg-amber-400 text-neutral-950 transition-all cursor-pointer active:scale-95 shadow-2xs"
                   >
@@ -271,8 +369,7 @@ export const App: React.FC = () => {
                     <span>Return to previous page ({lastJumpOrigin.fromDesc})</span>
                   </button>
                   <span className="opacity-80">
-                    Jump recorded in browser History stack (use browser Back button or click left to return)
-                    {lastJumpOrigin.targetId ? ` · Anchor: #${lastJumpOrigin.targetId}` : ''}
+                    Jump recorded in browser History stack{lastJumpOrigin.targetId ? ` · Anchor: #${lastJumpOrigin.targetId}` : ''}
                   </span>
                 </div>
                 <button
@@ -284,19 +381,14 @@ export const App: React.FC = () => {
                 </button>
               </div>
             )}
+
             <div
               className={contentScale > 1.25 ? 'p-4 md:p-6' : 'p-6 md:p-10 lg:p-12'}
               style={contentScale === 1 ? undefined : { zoom: contentScale }}
             >
-              <SectionErrorBoundary
-                title={`Page: ${activeTab}`}
-                resetKey={activeTab}
-                isLight={isLight}
-              >
+              <SectionErrorBoundary title={`Page: ${activeTab}`} resetKey={activeTab} isLight={isLight}>
                 <Suspense fallback={<div className="py-12 text-xs font-mono text-neutral-400">Loading showcase module...</div>}>
-                  {activeTab === 'overview' && (
-                    <OverviewPage isLight={isLight} onSelectTab={handleSelectTab} />
-                  )}
+                  {activeTab === 'overview' && <OverviewPage isLight={isLight} onSelectTab={handleSelectTab} />}
                   {activeTab === 'foundations' && <FoundationsPage isLight={isLight} />}
                   {activeTab === 'badges' && <BadgesPage isLight={isLight} />}
                   {activeTab === 'tabs' && <TabsPage isLight={isLight} />}
@@ -310,19 +402,14 @@ export const App: React.FC = () => {
                   {activeTab === 'viewport-safe-area' && <ViewportSafeAreaPage isLight={isLight} />}
                   {activeTab === 'stacks' && <StacksPage isLight={isLight} />}
                   {activeTab === 'cards' && (
-                    <CardsPage
-                      isLight={isLight}
-                      onNavigateToPlayCards={() => handleNavigateShowcase('play-cards')}
-                    />
+                    <CardsPage isLight={isLight} onNavigateToPlayCards={() => handleNavigateShowcase('play-cards')} />
                   )}
                   {activeTab === 'play-cards' && (
                     <PlayCardPage
                       isLight={isLight}
                       onNavigateToSandboxPlay={() => {
-                        updateUrlParams(
-                          { tab: 'layer-preview', tier: 'user', route: 'play' },
-                          { push: true, hash: 'rc-ui-tuner-preview-stage' }
-                        );
+                        updateUrlParams({ tab: 'layer-preview', tier: 'user', route: 'play' }, { push: true, hash: 'rc-ui-tuner-preview-stage' });
+                        syncWorkspaceUrlParam('bravo');
                         setActiveTab('layer-preview');
                       }}
                     />
@@ -330,19 +417,15 @@ export const App: React.FC = () => {
                   {activeTab === 'panels' && <PanelsPage isLight={isLight} />}
                   {activeTab === 'dialogue' && <DialoguePage isLight={isLight} />}
                   {activeTab === 'quick-notification' && <QuickNotificationPage isLight={isLight} />}
-                  {activeTab === 'notification-integration' && (
-                    <NotificationIntegrationPage isLight={isLight} />
-                  )}
+                  {activeTab === 'notification-integration' && <NotificationIntegrationPage isLight={isLight} />}
                   {activeTab === 'layer-preview' && (
-                    <MenuLayerPreviewPage 
-                      isLight={isLight} 
+                    <MenuLayerPreviewPage
+                      isLight={isLight}
                       onNavigateToPlayCards={() => handleNavigateShowcase('play-cards')}
                       onNavigateShowcase={handleNavigateShowcase}
                     />
                   )}
-                  {activeTab === 'loading-preview' && (
-                    <LoadingScreenPreviewPage isLight={isLight} />
-                  )}
+                  {activeTab === 'loading-preview' && <LoadingScreenPreviewPage isLight={isLight} />}
                   {activeTab === 'navigation' && <NavigationPage isLight={isLight} />}
                   {activeTab === 'live-preview' && <LivePreviewSimulationPage isLight={isLight} />}
                   {activeTab === 'edge-inspector' && <EdgeInspectorSimulationPage isLight={isLight} />}

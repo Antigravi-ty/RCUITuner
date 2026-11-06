@@ -23,27 +23,44 @@ import {
   PanelRightClose,
   Megaphone,
 } from 'lucide-react';
+import {
+  WORKSPACE_SECTIONS,
+  WORKSPACE_SPECS,
+  getApprovalLedgerSummary,
+  syncWorkspaceUrlParam,
+  type ApprovalLedgerSummary,
+  type TunerWorkspaceId,
+  type TunerWorkspaceSpec,
+  type WorkspaceSectionId,
+  type WorkspaceSectionMeta,
+} from './workspaceSpecs';
+
+export {
+  WORKSPACE_SECTIONS,
+  WORKSPACE_SPECS,
+  getApprovalLedgerSummary,
+  syncWorkspaceUrlParam,
+  type ApprovalLedgerSummary,
+  type TunerWorkspaceId,
+  type TunerWorkspaceSpec,
+  type WorkspaceSectionId,
+  type WorkspaceSectionMeta,
+};
 
 export type ShowcaseTab =
-  // L0. Foundations (foundation and variables)
   | 'overview'
   | 'foundations'
-  // L1. Primitives (Atomic base primitives)
   | 'badges'
   | 'tabs'
-  // L2. Layout & Shells (Layout and Skeleton)
   | 'stacks'
   | 'cards'
   | 'play-cards'
   | 'panels'
-  // L3. Compounds (Composite interaction control)
   | 'composable-nesting'
   | 'dialogue'
   | 'quick-notification'
-  // L4. Motion (Animation and transition engine)
   | 'animation'
   | 'navigation'
-  // L5. Specials (Game and telemetry exclusive)
   | 'hud-elements'
   | 'center-upper-info'
   | 'takeover'
@@ -52,12 +69,10 @@ export type ShowcaseTab =
   | 'viewport-safe-area'
   | 'loading-preview'
   | 'name-tag-tuner'
-  // L6. Patterns (Scene templates and reference recipes)
   | 'recipes'
   | 'live-preview'
   | 'edge-inspector'
   | 'floating-windows'
-  // L7. Sandboxes (Integrated drill and sandbox)
   | 'layer-preview'
   | 'notification-integration';
 
@@ -124,184 +139,70 @@ export interface SidebarNavItem {
   label: string;
   icon: React.ReactNode;
   layer: keyof typeof PYRAMID_LAYERS;
+  workspace: TunerWorkspaceId;
+  workspaceSection: WorkspaceSectionId;
+  badgeText?: string;
 }
 
 export const SIDEBAR_NAV_ITEMS: SidebarNavItem[] = [
-  // L0. Foundations
-  {
-    id: 'overview',
-    label: 'Architecture overview and unidirectional dependency pyramid',
-    icon: <BookOpen className="h-4 w-4 text-amber-500" />,
-    layer: 'L0',
-  },
-  {
-    id: 'foundations',
-    label: 'Tokens color/corner radius/spacing/Easing',
-    icon: <Coins className="h-4 w-4" />,
-    layer: 'L0',
-  },
-
-  // L1. Primitives
-  {
-    id: 'badges',
-    label: 'Badge / Keycap / Button',
-    icon: <Tag className="h-4 w-4" />,
-    layer: 'L1',
-  },
-  {
-    id: 'tabs',
-    label: 'Tabs / Switch / Slider Step',
-    icon: <Sliders className="h-4 w-4" />,
-    layer: 'L1',
-  },
-
-  // L2. Layout & Shells
-  {
-    id: 'stacks',
-    label: 'Stack & HudAnchorStage Space',
-    icon: <Layers className="h-4 w-4" />,
-    layer: 'L2',
-  },
-  {
-    id: 'cards',
-    label: 'Card & SelectableCard',
-    icon: <Square className="h-4 w-4" />,
-    layer: 'L2',
-  },
-  {
-    id: 'play-cards',
-    label: '2B · PlayCard Three mode card styles',
-    icon: <Square className="h-4 w-4 text-amber-500" />,
-    layer: 'L2',
-  },
-  {
-    id: 'panels',
-    label: 'Panel (3-Stage Compound)',
-    icon: <LayoutTemplate className="h-4 w-4" />,
-    layer: 'L2',
-  },
-
-  // L3. Compounds
-  {
-    id: 'composable-nesting',
-    label: 'Dropdown & Tuner Tuning Controls',
-    icon: <Boxes className="h-4 w-4 text-amber-500" />,
-    layer: 'L3',
-  },
-  {
-    id: 'dialogue',
-    label: 'Dialogue Zero-mask relief popup',
-    icon: <MessageSquare className="h-4 w-4 text-amber-500" />,
-    layer: 'L3',
-  },
-  {
-    id: 'quick-notification',
-    label: 'Quick Notification Quick Notification',
-    icon: <BellDot className="h-4 w-4 text-amber-500" />,
-    layer: 'L3',
-  },
-
-  // L4. Motion
-  {
-    id: 'animation',
-    label: 'MorphContainer & HIG animation',
-    icon: <Activity className="h-4 w-4 text-purple-500" />,
-    layer: 'L4',
-  },
-  {
-    id: 'navigation',
-    label: 'MorphingShell & Route Transition',
-    icon: <Compass className="h-4 w-4" />,
-    layer: 'L4',
-  },
-
-  // L5. Specials (5A / T5A / 5B / 5C / 5D / 5E)
-  {
-    id: 'hud-elements',
-    label: '5A · Match HUD Independent Gauge',
-    icon: <Crosshair className="h-4 w-4 text-red-500" />,
-    layer: 'L5',
-  },
-  {
-    id: 'temporal-overlay',
-    label: 'T5A · Temporal Archive (Replay & Hourglass)',
-    icon: <Activity className="h-4 w-4 text-rose-500" />,
-    layer: 'L5',
-  },
-  {
-    id: 'charts-curves',
-    label: '5B · High-Clarity Telemetry Chart',
-    icon: <LineChart className="h-4 w-4 text-emerald-500" />,
-    layer: 'L5',
-  },
-  {
-    id: 'viewport-safe-area',
-    label: '5C · Viewport & Safe Area',
-    icon: <Monitor className="h-4 w-4 text-amber-500" />,
-    layer: 'L5',
-  },
-  {
-    id: 'loading-preview',
-    label: '5D · Loading Two-layer progress pipeline',
-    icon: <Loader2 className="h-4 w-4 text-sky-500" />,
-    layer: 'L5',
-  },
-  {
-    id: 'center-upper-info',
-    label: '5E · Center-Upper Alert Message',
-    icon: <Megaphone className="h-4 w-4 text-amber-500" />,
-    layer: 'L5',
-  },
-  {
-    id: 'takeover',
-    label: '5G · Takeover Handoff & Vignette',
-    icon: <Crosshair className="h-4 w-4 text-emerald-500" />,
-    layer: 'L5',
-  },
-  {
-    id: 'name-tag-tuner',
-    label: '5H · Multiplayer Name Tag & Boost',
-    icon: <Tag className="h-4 w-4 text-teal-400" />,
-    layer: 'L5',
-  },
-
-  // L6. Patterns & Recipes
-  {
-    id: 'recipes',
-    label: '6A · Layer 1-2-3 Menu Code Map',
-    icon: <FileCode2 className="h-4 w-4 text-sky-500" />,
-    layer: 'L6',
-  },
-  {
-    id: 'live-preview',
-    label: '6C · Live Preview Sidebar Storage',
-    icon: <Eye className="h-4 w-4 text-amber-500" />,
-    layer: 'L6',
-  },
-  {
-    id: 'floating-windows',
-    label: '6D · Floating Window orchestration',
-    icon: <AppWindow className="h-4 w-4 text-amber-500" />,
-    layer: 'L6',
-  },
-  {
-    id: 'edge-inspector',
-    label: '6E · Edge Inspector Side Inspector',
-    icon: <PanelRightClose className="h-4 w-4 text-amber-500" />,
-    layer: 'L6',
-  },
-
-  // L7. Sandboxes & Integration Demos
-  {
-    id: 'layer-preview',
-    label: '7A · Menu Layer full-link sandbox',
-    icon: <Layers className="h-4 w-4 text-rose-500" />,
-    layer: 'L7',
-  },
-  {
-    id: 'notification-integration',
-    label: '7B · Notification Concurrent Integration Test',
-    icon: <ShieldCheck className="h-4 w-4 text-emerald-500" />,
-    layer: 'L7',
-  },
+  { id: 'overview', label: 'Architecture overview and unidirectional dependency pyramid', icon: <BookOpen className="h-4 w-4 text-amber-500" />, layer: 'L0', workspace: 'alpha', workspaceSection: 'alpha-0', badgeText: 'L0–L7' },
+  { id: 'foundations', label: 'Tokens color/corner radius/spacing/Easing', icon: <Coins className="h-4 w-4" />, layer: 'L0', workspace: 'alpha', workspaceSection: 'alpha-1', badgeText: 'Tokens' },
+  { id: 'badges', label: 'Badge / Keycap / Button', icon: <Tag className="h-4 w-4" />, layer: 'L1', workspace: 'alpha', workspaceSection: 'alpha-2' },
+  { id: 'tabs', label: 'Tabs / Switch / Slider Step', icon: <Sliders className="h-4 w-4" />, layer: 'L1', workspace: 'alpha', workspaceSection: 'alpha-2' },
+  { id: 'composable-nesting', label: 'Dropdown & Tuner Tuning Controls', icon: <Boxes className="h-4 w-4 text-amber-500" />, layer: 'L3', workspace: 'alpha', workspaceSection: 'alpha-2' },
+  { id: 'dialogue', label: 'Dialogue Zero-mask relief popup', icon: <MessageSquare className="h-4 w-4 text-amber-500" />, layer: 'L3', workspace: 'alpha', workspaceSection: 'alpha-2' },
+  { id: 'quick-notification', label: 'Quick Notification Quick Notification', icon: <BellDot className="h-4 w-4 text-amber-500" />, layer: 'L3', workspace: 'alpha', workspaceSection: 'alpha-2' },
+  { id: 'panels', label: 'Panel (3-Stage Universal Shell)', icon: <LayoutTemplate className="h-4 w-4 text-indigo-500" />, layer: 'L2', workspace: 'alpha', workspaceSection: 'alpha-3', badgeText: '3-Stage' },
+  { id: 'cards', label: 'Card & SelectableCard', icon: <Square className="h-4 w-4" />, layer: 'L2', workspace: 'alpha', workspaceSection: 'alpha-3' },
+  { id: 'play-cards', label: '2B · PlayCard Three mode card styles', icon: <Square className="h-4 w-4 text-amber-500" />, layer: 'L2', workspace: 'alpha', workspaceSection: 'alpha-3', badgeText: '2B' },
+  { id: 'stacks', label: 'Stack & HudAnchorStage Space', icon: <Layers className="h-4 w-4" />, layer: 'L2', workspace: 'alpha', workspaceSection: 'alpha-3' },
+  { id: 'animation', label: 'MorphContainer & HIG animation', icon: <Activity className="h-4 w-4 text-purple-500" />, layer: 'L4', workspace: 'alpha', workspaceSection: 'alpha-3' },
+  { id: 'navigation', label: 'MorphingShell & Route Transition', icon: <Compass className="h-4 w-4" />, layer: 'L4', workspace: 'alpha', workspaceSection: 'alpha-3' },
+  { id: 'hud-elements', label: '5A · Match HUD Independent Gauge', icon: <Crosshair className="h-4 w-4 text-red-500" />, layer: 'L5', workspace: 'alpha', workspaceSection: 'alpha-4', badgeText: '5A' },
+  { id: 'temporal-overlay', label: 'T5A · Temporal Archive (Replay & Hourglass)', icon: <Activity className="h-4 w-4 text-rose-500" />, layer: 'L5', workspace: 'alpha', workspaceSection: 'alpha-4', badgeText: 'T5A' },
+  { id: 'charts-curves', label: '5B · High-Clarity Telemetry Chart', icon: <LineChart className="h-4 w-4 text-emerald-500" />, layer: 'L5', workspace: 'alpha', workspaceSection: 'alpha-4', badgeText: '5B' },
+  { id: 'viewport-safe-area', label: '5C · Viewport & Safe Area', icon: <Monitor className="h-4 w-4 text-amber-500" />, layer: 'L5', workspace: 'alpha', workspaceSection: 'alpha-4', badgeText: '5C' },
+  { id: 'loading-preview', label: '5D · Loading Two-layer progress pipeline', icon: <Loader2 className="h-4 w-4 text-sky-500" />, layer: 'L5', workspace: 'alpha', workspaceSection: 'alpha-4', badgeText: '5D' },
+  { id: 'center-upper-info', label: '5E · Center-Upper Alert Message', icon: <Megaphone className="h-4 w-4 text-amber-500" />, layer: 'L5', workspace: 'alpha', workspaceSection: 'alpha-4', badgeText: '5E' },
+  { id: 'takeover', label: '5G · Takeover Handoff & Vignette', icon: <Crosshair className="h-4 w-4 text-emerald-500" />, layer: 'L5', workspace: 'alpha', workspaceSection: 'alpha-4', badgeText: '5G' },
+  { id: 'name-tag-tuner', label: '5H · Multiplayer Name Tag & Boost', icon: <Tag className="h-4 w-4 text-teal-400" />, layer: 'L5', workspace: 'alpha', workspaceSection: 'alpha-4', badgeText: '5H' },
+  { id: 'recipes', label: '6A · Layer 1-2-3 Menu Code Map & Matrix', icon: <FileCode2 className="h-4 w-4 text-sky-500" />, layer: 'L6', workspace: 'bravo', workspaceSection: 'bravo-1', badgeText: '35 Surfaces' },
+  { id: 'layer-preview', label: '7A · Menu Layer full-link sandbox', icon: <Layers className="h-4 w-4 text-rose-500" />, layer: 'L7', workspace: 'bravo', workspaceSection: 'bravo-1', badgeText: 'Live Tree' },
+  { id: 'floating-windows', label: '6D · Floating Window orchestration & Wall', icon: <AppWindow className="h-4 w-4 text-amber-500" />, layer: 'L6', workspace: 'bravo', workspaceSection: 'bravo-2', badgeText: '29 Windows' },
+  { id: 'live-preview', label: '6C · Live Preview Sidebar Storage', icon: <Eye className="h-4 w-4 text-amber-500" />, layer: 'L6', workspace: 'bravo', workspaceSection: 'bravo-3', badgeText: '6C' },
+  { id: 'edge-inspector', label: '6E · Edge Inspector Side Inspector', icon: <PanelRightClose className="h-4 w-4 text-amber-500" />, layer: 'L6', workspace: 'bravo', workspaceSection: 'bravo-3', badgeText: '6E' },
+  { id: 'notification-integration', label: '7B · Notification Concurrent Integration Test', icon: <ShieldCheck className="h-4 w-4 text-emerald-500" />, layer: 'L7', workspace: 'bravo', workspaceSection: 'bravo-3', badgeText: '7B' },
 ];
+
+const TAB_TO_WORKSPACE_MAP: Record<ShowcaseTab, TunerWorkspaceId> = SIDEBAR_NAV_ITEMS.reduce(
+  (acc, item) => {
+    acc[item.id] = item.workspace;
+    return acc;
+  },
+  {} as Record<ShowcaseTab, TunerWorkspaceId>
+);
+
+export function isValidShowcaseTab(value: string | undefined | null): value is ShowcaseTab {
+  if (!value) return false;
+  return Object.prototype.hasOwnProperty.call(TAB_TO_WORKSPACE_MAP, value);
+}
+
+export function getWorkspaceForTab(tab: ShowcaseTab): TunerWorkspaceId {
+  return TAB_TO_WORKSPACE_MAP[tab] ?? 'alpha';
+}
+
+export function getNavItemMeta(tab: ShowcaseTab): SidebarNavItem | undefined {
+  return SIDEBAR_NAV_ITEMS.find((item) => item.id === tab);
+}
+
+export function readWorkspaceFromUrl(fallbackTab: ShowcaseTab): TunerWorkspaceId {
+  if (typeof window === 'undefined') return getWorkspaceForTab(fallbackTab);
+  try {
+    const sp = new URLSearchParams(window.location.search);
+    const rawWs = sp.get('workspace');
+    if (rawWs === 'alpha' || rawWs === 'bravo') return rawWs;
+  } catch {
+    // ignore URL parse error
+  }
+  return getWorkspaceForTab(fallbackTab);
+}
