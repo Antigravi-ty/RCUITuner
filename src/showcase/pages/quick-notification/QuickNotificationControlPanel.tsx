@@ -181,7 +181,7 @@ export const QuickNotificationControlPanel: React.FC<QuickNotificationControlPan
               { value: 'ongoing', label: 'Ongoing (Background Tasks/Progress)' },
             ]}
             value={temporalType}
-            onChange={setTemporalType}
+            onChange={(val) => setTemporalType(val as typeof temporalType)}
             isLight={isLight}
             fullWidth
           />

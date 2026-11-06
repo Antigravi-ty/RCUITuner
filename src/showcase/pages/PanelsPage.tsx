@@ -20,7 +20,7 @@ export const PanelsPage: React.FC<{ isLight?: boolean }> = ({ isLight = false })
     panelFooterFontSize,
   } = useMenuLayoutStore();
 
-  const [hoveredDesc, setHoveredDesc] = useState<string | null>(null);
+  const [hoveredDesc, setHoveredDesc] = useState<string | null>(null, 'hoveredDesc');
 
   return (
     <div className="flex flex-col gap-8 max-w-6xl w-full">

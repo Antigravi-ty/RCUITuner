@@ -5,7 +5,7 @@ import { Layer2PlayRecipe } from '../../../ui-core/recipes/Layer2PlayRecipe';
 import { Layer2GarageRecipe } from '../../../ui-core/recipes/Layer2GarageRecipe';
 import { Layer2SettingsRecipe } from '../../../ui-core/recipes/Layer2SettingsRecipe';
 import { Layer2ManageRoomRecipe, resolveOnlineSessionContextId } from '../../../ui-core/recipes/Layer2ManageRoomRecipe';
-import { Layer3AudioEqRecipe } from '../../../ui-core/recipes/Layer3AudioEqRecipe';
+import { Layer3AcousticsEqualizerRecipe } from '../../../ui-core/recipes/Layer3AcousticsEqualizerRecipe';
 import { Layer3BallTrajectoryRecipe } from '../../../ui-core/recipes/Layer3BallTrajectoryRecipe';
 import { Layer3HostMatchRecipe } from '../../../ui-core/recipes/Layer3HostMatchRecipe';
 import { Layer3HostTrainingRecipe } from '../../../ui-core/recipes/Layer3HostTrainingRecipe';
@@ -25,6 +25,7 @@ import { Layer3DevCalibratedPresetsRecipe } from '../../../ui-core/recipes/Layer
 import { Layer3DevSelfTestRecipe } from '../../../ui-core/recipes/Layer3DevSelfTestRecipe';
 import { Layer3DevUnderDevelopmentRecipe } from '../../../ui-core/recipes/Layer3DevUnderDevelopmentRecipe';
 import { Layer3DevRemoteProfileRecipe } from '../../../ui-core/recipes/Layer3DevRemoteProfileRecipe';
+import { Layer3DevQuickActionsRecipe } from '../../../ui-core/recipes/Layer3DevQuickActionsRecipe';
 import { Layer4StaticTrainingPackBrowseRecipe } from '../../../ui-core/recipes/Layer4StaticTrainingPackBrowseRecipe';
 import { Layer4AdvancedAudioRecipe } from '../../../ui-core/recipes/Layer4AdvancedAudioRecipe';
 import { Layer4ControllerSettingsRecipe } from '../../../ui-core/recipes/Layer4ControllerSettingsRecipe';
@@ -242,9 +243,16 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
       )}
 
       {displayedRoute === 'audio-eq' && (
-        <Layer3AudioEqRecipe
+        <Layer3AcousticsEqualizerRecipe
           isLight={isLight}
           developerMode={visibilityTier === 'developer'}
+          onBack={goBack}
+        />
+      )}
+
+      {displayedRoute === 'dev-quick-actions' && (
+        <Layer3DevQuickActionsRecipe
+          isLight={isLight}
           onBack={goBack}
         />
       )}

@@ -1,11 +1,12 @@
 import React, { useState as useLocalState, useEffect, useRef } from 'react';
 import { Layers } from 'lucide-react';
 import type { MenuPanelWidthAdaptiveMode } from '../../ui-core/navigation/menuPanelAdaptive';
-import { createScopedSyncedState } from '../stores/crossClientSync';
+import { crossClientSync, createScopedSyncedState } from '../stores/crossClientSync';
 import { useViewportStore } from '../../ui-core/stores/viewportStore';
 const useState = createScopedSyncedState('page:menu-layer-v2');
 import { floatingStore, useFloatingStore } from '../../ui-core/stores/floatingStore';
 import { type PresetConfig } from '../../ui-core/stores/floatingPresets';
+import { TunerConfigExporterBar } from '../components/tuner/TunerConfigExporterBar';
 import { PageJumpDirectory, JumpDirectoryItem } from '../PageJumpDirectory';
 import {
   type ActiveMenuRoute,
@@ -350,6 +351,41 @@ export const MenuLayerPreviewPage: React.FC<MenuLayerPreviewPageProps> = ({
     handleResetAutoMinWidth,
   };
 
+  const handleReset7ADefaults = () => {
+    crossClientSync.resetAll({ scopePrefix: 'page:menu-layer-v2:' });
+    showToast('[ok] Reset 7A Menu Layer adaptive engine and route sandbox defaults');
+  };
+
+  const build7AExportCode = () => {
+    const snapshot = {
+      routeState: {
+        visibilityTier,
+        currentRoute,
+        layer1ContextMode,
+        settingsTab,
+        garageTab,
+        transitionMode,
+      },
+      adaptiveEngine: {
+        widthMode,
+        containerPreset,
+        boundaryLocked,
+        effectiveStageSizePx: {
+          width: Math.round(effectiveStageW),
+          height: Math.round(effectiveStageH),
+        },
+        manualBoundarySize,
+        manualMinWidths,
+      },
+      stageOptions: {
+        touchMode,
+        bgRenderPaused,
+        ballSimSpeed,
+      },
+    };
+    return `// 7A Menu Layer Adaptive Engine & Route Sandbox Default Snapshot\nexport const DEFAULT_7A_MENU_LAYER_SNAPSHOT = ${JSON.stringify(snapshot, null, 2)};`;
+  };
+
   return (
     <MenuLayerSandboxProvider value={sandboxContextValue}>
       <div className="flex flex-col gap-5 w-full">
@@ -376,6 +412,18 @@ export const MenuLayerPreviewPage: React.FC<MenuLayerPreviewPageProps> = ({
         {/* 2. ADAPTIVE ENGINE & ROUTE CONTROL DECKS */}
         <MenuLayerAdaptiveControlDeck isLight={isLight} />
         <MenuLayerRouteSelectorBar isLight={isLight} />
+
+        <TunerConfigExporterBar
+          badge="7A-EXPORT"
+          title="Menu Layer Adaptive Engine & Route Sandbox One-Click Config Exporter"
+          subtitle="Exports 7A adaptive widthMode, canvas boundary lock, manual min-width overrides, transitionMode & active route/tier snapshot"
+          copyLabel="Copy 7A Menu Layer Config (Export Snapshot)"
+          codeTitle="Current 7A Menu Layer Adaptive & Route Parameter Snapshot (Paste directly into DEFAULT_7A_MENU_LAYER_SNAPSHOT)"
+          actionId="export-7a-menu-layer-config"
+          isLight={isLight}
+          buildExportCode={build7AExportCode}
+          onResetDefaults={handleReset7ADefaults}
+        />
 
         <PageJumpDirectory
           title={`7A · Menu Layer Full-link sandbox quick-jump directory (${

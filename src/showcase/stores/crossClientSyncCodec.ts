@@ -123,18 +123,3 @@ export function decodeEntriesFromWire(entries: Record<string, unknown>): Record<
   }
   return out;
 }
-
-export function buildValueSignature(val: unknown): string {
-  if (val === null) return 'null';
-  if (val === undefined) return 'undef';
-  const t = typeof val;
-  if (t === 'boolean') return `b:${val ? 1 : 0}`;
-  if (t === 'number') return `n:${val}`;
-  if (t === 'string') return `s:${(val as string).slice(0, 20)}`;
-  if (Array.isArray(val)) return `a:${val.length}`;
-  if (isPlainObject(val)) {
-    const keys = Object.keys(val).sort().join(',');
-    return `o:${keys.slice(0, 48)}`;
-  }
-  return t;
-}

@@ -35,36 +35,36 @@ const L1_TABS_JUMP_ITEMS: JumpDirectoryItem[] = [
 
 export const TabsPage: React.FC<{ isLight?: boolean }> = ({ isLight = false }) => {
   // Tabs State (testing multiple independent instances)
-  const [activeTab1, setActiveTab1] = useState('audio');
-  const [activeTab2, setActiveTab2] = useState('all');
+  const [activeTab1, setActiveTab1] = useState('audio', 'activeTab1');
+  const [activeTab2, setActiveTab2] = useState('all', 'activeTab2');
 
   // Segmented Switch States (testing multiple independent instances)
-  const [switch1, setSwitch1] = useState('performance');
-  const [switch2, setSwitch2] = useState('mid');
-  const [switch3, setSwitch3] = useState('long-label');
-  const [switch4, setSwitch4] = useState('proportional-2');
+  const [switch1, setSwitch1] = useState('performance', 'switch1');
+  const [switch2, setSwitch2] = useState('mid', 'switch2');
+  const [switch3, setSwitch3] = useState('long-label', 'switch3');
+  const [switch4, setSwitch4] = useState('proportional-2', 'switch4');
 
   // Sliders State
-  const [sliderNeutral, setSliderNeutral] = useState(75);
-  const [sliderAmber, setSliderAmber] = useState(50);
-  const [sliderCentered, setSliderCentered] = useState(18);
-  const [sliderTrim, setSliderTrim] = useState(-24);
-  const [sliderUnityGain, setSliderUnityGain] = useState(180);
+  const [sliderNeutral, setSliderNeutral] = useState(75, 'sliderNeutral');
+  const [sliderAmber, setSliderAmber] = useState(50, 'sliderAmber');
+  const [sliderCentered, setSliderCentered] = useState(18, 'sliderCentered');
+  const [sliderTrim, setSliderTrim] = useState(-24, 'sliderTrim');
+  const [sliderUnityGain, setSliderUnityGain] = useState(180, 'sliderUnityGain');
 
   // Dual-Grabber Slider States (SettingTwoGrabberSliderRow pattern)
-  const [bufferTargetAlpha, setBufferTargetAlpha] = useState(3);
-  const [deadbandOffsets, setDeadbandOffsets] = useState<[number, number]>([-2, 2]);
-  const [freeBand, setFreeBand] = useState<[number, number]>([120, 340]);
+  const [bufferTargetAlpha, setBufferTargetAlpha] = useState(3, 'bufferTargetAlpha');
+  const [deadbandOffsets, setDeadbandOffsets] = useState<[number, number]>([-2, 2], 'deadbandOffsets');
+  const [freeBand, setFreeBand] = useState<[number, number]>([120, 340], 'freeBand');
 
   // Precision Digit Picker State (DriftwoodsTunerControls pattern)
-  const [precisionStep, setPrecisionStep] = useState(0.001);
-  const [uvScaleX, setUvScaleX] = useState(1.0425);
-  const [lineSmoothness, setLineSmoothness] = useState(0.0512);
+  const [precisionStep, setPrecisionStep] = useState(0.001, 'precisionStep');
+  const [uvScaleX, setUvScaleX] = useState(1.0425, 'uvScaleX');
+  const [lineSmoothness, setLineSmoothness] = useState(0.0512, 'lineSmoothness');
 
   // Toggles State
-  const [toggleGreen, setToggleGreen] = useState(true);
-  const [toggleBlack, setToggleBlack] = useState(true);
-  const [toggleOrange, setToggleOrange] = useState(true);
+  const [toggleGreen, setToggleGreen] = useState(true, 'toggleGreen');
+  const [toggleBlack, setToggleBlack] = useState(true, 'toggleBlack');
+  const [toggleOrange, setToggleOrange] = useState(true, 'toggleOrange');
 
   const tabs1: TabItem[] = [
     { id: 'audio', label: 'Audio', icon: <Volume2 className="h-4 w-4" /> },

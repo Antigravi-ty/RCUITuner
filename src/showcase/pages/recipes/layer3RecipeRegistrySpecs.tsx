@@ -7,9 +7,9 @@ import {
   LAYER3_JOIN_ROOM_STATES,
 } from './recipeStateMatrixSpecs';
 
-const Layer3AudioEqRecipe = lazy(() =>
-  import('../../../ui-core/recipes/Layer3AudioEqRecipe').then((m) => ({
-    default: m.Layer3AudioEqRecipe,
+const Layer3AcousticsEqualizerRecipe = lazy(() =>
+  import('../../../ui-core/recipes/Layer3AcousticsEqualizerRecipe').then((m) => ({
+    default: m.Layer3AcousticsEqualizerRecipe,
   }))
 );
 const Layer3HostMatchRecipe = lazy(() =>
@@ -143,7 +143,7 @@ export function renderLayer3CoreRecipeStage(
         <div id="recipe-6a-7-audio" className="scroll-mt-6 flex flex-col gap-4">
           <div className={previewWrapClass}>
             <Suspense fallback={suspenseFallback}>
-              <Layer3AudioEqRecipe isLight={isLight} onBack={noop} />
+              <Layer3AcousticsEqualizerRecipe isLight={isLight} onBack={noop} />
             </Suspense>
           </div>
           <div className="flex items-center gap-2">
@@ -154,7 +154,7 @@ export function renderLayer3CoreRecipeStage(
           </div>
           <LocalPanelSizingTuner
             code="6A.7"
-            panelId="layer3-audio-eq"
+            panelId="layer3-acoustics-equalizer"
             label="Layer 3 Acoustics & EQ"
             recommendation="recommended Fixed: Lock height and automatically compress internal card spacing on error"
             isLight={isLight}

@@ -31,22 +31,26 @@ const PRESET_ICONS = [
   'check-circle',
 ];
 export const DialoguePage: React.FC<{ isLight?: boolean }> = ({ isLight = false }) => {
-  const [title, setTitle] = useState<string>('ALERT');
-  const [tone, setTone] = useState<DialogueTone>('error');
-  const [iconName, setIconName] = useState<string>('octagon-alert');
+  const [title, setTitle] = useState<string>('ALERT', 'title');
+  const [tone, setTone] = useState<DialogueTone>('error', 'tone');
+  const [iconName, setIconName] = useState<string>('octagon-alert', 'iconName');
   const [content, setContent] = useState<string>(
-    'Failed to establish signaling server through WebSocket.'
+    'Failed to establish signaling server through WebSocket.',
+    'content'
   );
-  const [buttons, setButtons] = useState<DialogueButtonConfig[]>([
-    { key: 'btn-1', label: 'Primary', variant: 'primary', disabled: false },
-    { key: 'btn-2', label: 'Outline', variant: 'outline', disabled: false },
-    { key: 'btn-3', label: 'Danger', variant: 'danger', disabled: false },
-  ]);
-  const [newButtonLabel, setNewButtonLabel] = useState<string>('Primary');
-  const [newButtonVariant, setNewButtonVariant] = useState<DialogueButtonVariant>('outline');
-  const [newButtonDisabled, setNewButtonDisabled] = useState<boolean>(false);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [copiedParams, setCopiedParams] = useState<boolean>(false);
+  const [buttons, setButtons] = useState<DialogueButtonConfig[]>(
+    [
+      { key: 'btn-1', label: 'Primary', variant: 'primary', disabled: false },
+      { key: 'btn-2', label: 'Outline', variant: 'outline', disabled: false },
+      { key: 'btn-3', label: 'Danger', variant: 'danger', disabled: false },
+    ],
+    'buttons'
+  );
+  const [newButtonLabel, setNewButtonLabel] = useState<string>('Primary', 'newButtonLabel');
+  const [newButtonVariant, setNewButtonVariant] = useState<DialogueButtonVariant>('outline', 'newButtonVariant');
+  const [newButtonDisabled, setNewButtonDisabled] = useState<boolean>(false, 'newButtonDisabled');
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false, 'isModalOpen');
+  const [copiedParams, setCopiedParams] = useState<boolean>(false, 'copiedParams');
   const { stack } = useDialogueStack();
   const handleAddButton = () => {
     const trimmed = newButtonLabel.trim();

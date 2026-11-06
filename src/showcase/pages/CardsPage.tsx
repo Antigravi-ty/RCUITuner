@@ -12,7 +12,7 @@ export const CardsPage: React.FC<{
   isLight?: boolean;
   onNavigateToPlayCards?: () => void;
 }> = ({ isLight = false, onNavigateToPlayCards }) => {
-  const [selectedCar, setSelectedCar] = useState('fennec');
+  const [selectedCar, setSelectedCar] = useState('fennec', 'selectedCar');
 
   return (
     <div className="flex flex-col gap-8 max-w-4xl">

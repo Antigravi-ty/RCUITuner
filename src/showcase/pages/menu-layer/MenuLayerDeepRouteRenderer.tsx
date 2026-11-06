@@ -162,9 +162,14 @@ export const MenuLayerDeepRouteRenderer: React.FC<MenuLayerDeepRouteRendererProp
                   panel: 'layer3-dev-under-development' as const,
                 },
                 {
+                  route: 'dev-quick-actions' as const,
+                  label: 'Quick Actions (Dev Quick Actions)',
+                  panel: 'layer3-dev-quick-actions' as const,
+                },
+                {
                   route: 'audio-eq' as const,
                   label: 'Acoustics & EQ (Acoustic Equalization)',
-                  panel: 'layer3-audio-eq' as const,
+                  panel: 'layer3-acoustics-equalizer' as const,
                 },
               ]
           ).map((item) => {

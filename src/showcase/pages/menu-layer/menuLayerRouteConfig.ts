@@ -35,6 +35,7 @@ export type ActiveMenuRoute =
   | 'dev-self-test'
   | 'dev-under-development'
   | 'dev-remote-profile'
+  | 'dev-quick-actions'
   | 'dev-tem-pack-converter'
   | 'static-training-pack'
   | 'advanced-audio'
@@ -48,7 +49,7 @@ export const ROUTE_TO_PANEL_ID: Record<Exclude<ActiveMenuRoute, 'layer-0'>, Menu
   'garage': 'layer2-garage',
   'settings': 'layer2-settings',
   'manage-room': 'layer2-manage-room',
-  'audio-eq': 'layer3-audio-eq',
+  'audio-eq': 'layer3-acoustics-equalizer',
   'trajectory': 'layer3-ball-trajectory',
   'host-match': 'layer3-host-match',
   'host-training': 'layer3-host-training',
@@ -68,6 +69,7 @@ export const ROUTE_TO_PANEL_ID: Record<Exclude<ActiveMenuRoute, 'layer-0'>, Menu
   'dev-self-test': 'layer3-dev-self-test',
   'dev-under-development': 'layer3-dev-under-development',
   'dev-remote-profile': 'layer3-dev-remote-profile',
+  'dev-quick-actions': 'layer3-dev-quick-actions',
   'dev-tem-pack-converter': 'layer4-static-training-pack',
   'static-training-pack': 'layer4-static-training-pack',
   'advanced-audio': 'layer4-advanced-audio',
@@ -114,7 +116,8 @@ export const MENU_SANDBOX_JUMP_ITEMS: SandboxJumpEntry[] = [
   { code: '7A.D8', componentName: 'Layer3DevSelfTestRecipe', label: 'Self Test Suites & Harnesses', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 3 · Dev', route: 'dev-self-test', tier: 'developer' },
   { code: '7A.D9', componentName: 'Layer3DevUnderDevelopmentRecipe', label: 'Under Development (Staging)', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 3 · Dev', route: 'dev-under-development', tier: 'developer' },
   { code: '7A.D9R', componentName: 'Layer3DevRemoteProfileRecipe', label: 'Remote Profile & Account Management', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 3 · Dev', route: 'dev-remote-profile', tier: 'developer' },
-  { code: '7A.D10', componentName: 'Layer3AudioEqRecipe', label: 'Acoustics & EQ Detail', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 3 · Dev', route: 'audio-eq', tier: 'developer' },
+  { code: '7A.D9Q', componentName: 'Layer3DevQuickActionsRecipe', label: 'Quick Actions & Match Toggles', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 3 · Dev', route: 'dev-quick-actions', tier: 'developer' },
+  { code: '7A.D10', componentName: 'Layer3AcousticsEqualizerRecipe', label: 'Acoustics & EQ Detail', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 3 · Dev', route: 'audio-eq', tier: 'developer' },
   { code: '7A.D11', componentName: 'Layer4AdvancedAudioRecipe', label: 'Advanced Audio Synthesis Pool', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 4 · Dev', route: 'advanced-audio', tier: 'developer' },
   { code: '7A.D12', componentName: 'Layer4EventTriggerRulesRecipe', label: 'Event & Trigger Rules Engine', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 4 · Dev', route: 'event-trigger-rules', tier: 'developer' },
   { code: '7A.D13', componentName: 'Layer4DevSignalingLabRecipe', label: '4-Server Signaling & Dual Bridge Lab', targetId: 'rc-ui-tuner-preview-stage', tag: 'Layer 4 · Dev', route: 'dev-signaling-lab', tier: 'developer' },
@@ -157,6 +160,7 @@ export const MENU_ROUTE_CONFIG: Record<ActiveMenuRoute, LayerRouteConfig> = {
   'dev-self-test': { id: 'dev-self-test', label: 'Self Test', layer: 3, width: 560, tier: 'developer', parentRoute: 'settings' },
   'dev-under-development': { id: 'dev-under-development', label: 'Under Development', layer: 3, width: 600, tier: 'developer', parentRoute: 'settings' },
   'dev-remote-profile': { id: 'dev-remote-profile', label: 'Remote Profile & Account Management', layer: 3, width: 620, tier: 'developer', parentRoute: 'settings' },
+  'dev-quick-actions': { id: 'dev-quick-actions', label: 'Quick Actions & Match Toggles', layer: 3, width: 560, tier: 'developer', parentRoute: 'main-menu' },
   'dev-tem-pack-converter': { id: 'dev-tem-pack-converter', label: 'Dev .tem Pack Converter', layer: 4, width: 680, tier: 'developer', parentRoute: 'dev-sandboxes' },
   'static-training-pack': { id: 'static-training-pack', label: 'Static Training Pack (.RCSPack)', layer: 4, width: 700, tier: 'user', parentRoute: 'self-training' },
   'advanced-audio': { id: 'advanced-audio', label: 'Advanced Audio Synthesis Pool', layer: 4, width: 720, tier: 'developer', parentRoute: 'dev-active-tuners' },

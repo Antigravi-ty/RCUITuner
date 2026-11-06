@@ -18,7 +18,7 @@ import {
   type EditSubMode,
   type StaticTrainingShotItem,
 } from '../../../ui-core/recipes/static-training/staticTrainingTypes';
-import { openStaticTrainingExitConfirmDialogue } from '../../../ui-core/recipes/Layer5StaticTrainingPackEditRecipe';
+import { openStaticTrainingExitConfirmDialogue } from '../../../ui-core/recipes/StaticTrainingShotInspectorDrawer';
 import { Layer1MainMenuRecipe } from '../../../ui-core/recipes/Layer1MainMenuRecipe';
 import { Layer2PlayRecipe } from '../../../ui-core/recipes/Layer2PlayRecipe';
 import { Layer2GarageRecipe } from '../../../ui-core/recipes/Layer2GarageRecipe';
@@ -26,15 +26,19 @@ import { Layer2SettingsRecipe } from '../../../ui-core/recipes/Layer2SettingsRec
 
 export type EscMenuRoute = 'none' | 'main-menu' | 'play' | 'garage' | 'settings';
 
+export interface EdgeInspectorDrawerLayoutSummary {
+  isDrawerExpanded: boolean;
+  expandedWidth: number;
+  collapsedWidth: number;
+  drawerSide: EdgeDrawerSide;
+}
+
 export interface EdgeInspectorSceneOverlayAndMenuProps {
   isLight: boolean;
   editSubMode: EditSubMode;
   safeIndex: number;
   activeShot: StaticTrainingShotItem;
-  isDrawerExpanded: boolean;
-  expandedWidth: number;
-  collapsedWidth: number;
-  drawerSide: EdgeDrawerSide;
+  drawerLayout: EdgeInspectorDrawerLayoutSummary;
   isEscMenuOpen: boolean;
   escMenuRoute: EscMenuRoute;
   setEscMenuRoute: React.Dispatch<React.SetStateAction<EscMenuRoute>>;
@@ -48,10 +52,7 @@ export const EdgeInspectorSceneOverlayAndMenu: React.FC<
   editSubMode,
   safeIndex,
   activeShot,
-  isDrawerExpanded,
-  expandedWidth,
-  collapsedWidth,
-  drawerSide,
+  drawerLayout: { isDrawerExpanded, expandedWidth, collapsedWidth, drawerSide },
   isEscMenuOpen,
   escMenuRoute,
   setEscMenuRoute,
