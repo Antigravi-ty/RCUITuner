@@ -322,10 +322,6 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
         <Layer3ExhibitionRecipe
           isLight={isLight}
           onBack={goBack}
-          onNavigateAdvancedMutators={() => {
-            setLastParentRoute('exhibition');
-            handleSelectRoute('exp-multi-bots');
-          }}
         />
       )}
 
@@ -333,7 +329,7 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
         <Layer3SelfTrainingRecipe
           isLight={isLight}
           onBack={goBack}
-          onSelectMode={(mode) => {
+          onTabChange={(mode) => {
             setLastParentRoute('self-training');
             if (mode === 'static-training-pack') {
               handleSelectRoute('static-training-pack');
@@ -365,13 +361,6 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
         <Layer3TrainingConfigRecipe
           isLight={isLight}
           onBack={goBack}
-          onNavigateTrajectory={() => {
-            setLastParentRoute('training-config');
-            handleSelectRoute('trajectory');
-          }}
-          onAddPresetWindow={handleAddPresetWindow}
-          activeWindows={windows}
-          onClosePresetWindow={closeWindow}
         />
       )}
 
