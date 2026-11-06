@@ -111,7 +111,7 @@ export function runTypeScriptCheck() {
   }
 }
 
-export function parseFileImports(content) {
+export function parseFileImports(content, fromFileAbs = null) {
   const imports = [];
   const staticRegex =
     /\b(?:import|export)\s+(?:(type)\s+)?(?:[^'"]*?\s+from\s+)?['"]([^'"]+)['"]/g;
@@ -125,7 +125,49 @@ export function parseFileImports(content) {
   while ((match = dynamicRegex.exec(content)) !== null) {
     imports.push({ spec: match[1], isTypeOnly: false });
   }
+  if (fromFileAbs) {
+    const globRegex =
+      /\b(?:import\.meta\.glob|importMetaGlob)\s*(?:<[\s\S]*?>)?\s*\(\s*['"]([^'"]+)['"]/g;
+    while ((match = globRegex.exec(content)) !== null) {
+      const pattern = match[1];
+      for (const expanded of expandRelativeGlobPattern(fromFileAbs, pattern)) {
+        imports.push({ spec: expanded, isTypeOnly: false });
+      }
+    }
+  }
   return imports;
+}
+
+function expandRelativeGlobPattern(fromFileAbs, pattern) {
+  if (!pattern.startsWith('.')) return [];
+  const fromDir = path.dirname(fromFileAbs);
+  const braceMatch = pattern.match(/^(.*)\{([^}]+)\}(.*)$/);
+  const subPatterns = braceMatch
+    ? braceMatch[2].split(',').map((opt) => `${braceMatch[1]}${opt.trim()}${braceMatch[3]}`)
+    : [pattern];
+
+  const results = [];
+  for (const sub of subPatterns) {
+    const targetDir = path.resolve(fromDir, path.posix.dirname(sub));
+    const filePattern = path.posix.basename(sub);
+    if (!fs.existsSync(targetDir) || !fs.statSync(targetDir).isDirectory()) continue;
+    const regexStr =
+      '^' +
+      filePattern
+        .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+        .replace(/\*/g, '.*') +
+      '$';
+    const fileRe = new RegExp(regexStr);
+    for (const entry of fs.readdirSync(targetDir, { withFileTypes: true })) {
+      if (entry.isFile() && fileRe.test(entry.name)) {
+        const absMatch = path.join(targetDir, entry.name);
+        let relSpec = path.relative(fromDir, absMatch).split(path.sep).join('/');
+        if (!relSpec.startsWith('.')) relSpec = `./${relSpec}`;
+        results.push(relSpec);
+      }
+    }
+  }
+  return results;
 }
 
 export function analyzeConfigPurity(content, relPath) {

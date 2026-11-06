@@ -106,7 +106,7 @@ for (const absFile of allFiles) {
   }
 
   const fromLayer = getLayerInfo(relFile);
-  const rawImports = parseFileImports(content);
+  const rawImports = parseFileImports(content, absFile);
   const resolvedDeps = [];
 
   for (const imp of rawImports) {
