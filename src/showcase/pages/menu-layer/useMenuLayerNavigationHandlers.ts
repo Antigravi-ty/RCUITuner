@@ -1,5 +1,7 @@
 import { useEffect } from 'react';
+import { dialogue } from '../../../ui-core/compounds/dialogue/dialogueStore';
 import { floatingStore } from '../../../ui-core/stores/floatingStore';
+import { useStaticTrainingPackStore } from '../../../ui-core/stores/staticTrainingPackStore';
 import type { ContainerTransitionMode } from '../../../ui-core/tokens/easing';
 import {
   resolveLayer1ContextSpec,
@@ -259,6 +261,7 @@ export function useMenuLayerNavigationHandlers({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.defaultPrevented || dialogue.getCount() > 0) return;
       const target = e.target as HTMLElement | null;
       const isEditable =
         target &&
@@ -270,6 +273,12 @@ export function useMenuLayerNavigationHandlers({
         if (currentRoute === 'trajectory' || currentRoute === 'camera') {
           e.preventDefault();
           handleToggleLivePreview();
+        } else if (
+          currentRoute === 'layer-0' &&
+          layer1ContextMode === 'static-training-edit'
+        ) {
+          e.preventDefault();
+          useStaticTrainingPackStore.getState().toggleEdgeInspectorExpanded();
         }
       } else if (e.key === 'Escape') {
         e.preventDefault();
@@ -283,6 +292,7 @@ export function useMenuLayerNavigationHandlers({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [
     currentRoute,
+    layer1ContextMode,
     liveAnimPhase,
     lastParentRoute,
     routeHistory,

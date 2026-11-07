@@ -1,5 +1,4 @@
 import React from 'react';
-import type { Layer1MenuContextMode } from '../../../ui-core/recipes/layer1MenuContextSpecs';
 import { Layer3AcousticsEqualizerRecipe } from '../../../ui-core/recipes/Layer3AcousticsEqualizerRecipe';
 import { Layer3BallTrajectoryRecipe } from '../../../ui-core/recipes/Layer3BallTrajectoryRecipe';
 import { Layer3CameraRecipe } from '../../../ui-core/recipes/Layer3CameraRecipe';
@@ -18,6 +17,7 @@ import { Layer4AdvancedAudioRecipe } from '../../../ui-core/recipes/Layer4Advanc
 import { Layer4ControllerSettingsRecipe } from '../../../ui-core/recipes/Layer4ControllerSettingsRecipe';
 import { Layer4EventTriggerRulesRecipe } from '../../../ui-core/recipes/Layer4EventTriggerRulesRecipe';
 import { Layer4DevSignalingLabRecipe } from '../../../ui-core/recipes/Layer4DevSignalingLabRecipe';
+import { useStaticTrainingPackStore } from '../../../ui-core/stores/staticTrainingPackStore';
 import { StoreSnapshotScope } from '../../../ui-core/stores/storeSnapshotScope';
 import { useMenuLayerSandbox } from './MenuLayerSandboxContext';
 
@@ -123,8 +123,27 @@ export const MenuLayerSecondaryRecipeRoutes = React.memo<MenuLayerSecondaryRecip
           <StoreSnapshotScope
             overrides={{
               appStore: {
-                onEnterPackEditor: () => {
-                  setLayer1ContextMode?.('training-pack-edit' as Layer1MenuContextMode);
+                closeMenu: () => handleSelectRoute('layer-0'),
+                setMatchMode: (mode: string) => {
+                  if (mode === 'static-training-pack') {
+                    const sessionMode = useStaticTrainingPackStore.getState().sessionMode;
+                    setLayer1ContextMode?.(
+                      sessionMode === 'edit' ? 'static-training-edit' : 'static-training-play'
+                    );
+                  }
+                },
+              },
+              staticTrainingPackStore: {
+                onEditPack: () => {
+                  useStaticTrainingPackStore.getState().setSessionMode('edit');
+                  useStaticTrainingPackStore.getState().setEdgeInspectorExpanded(true);
+                  setLayer1ContextMode?.('static-training-edit');
+                  handleSelectRoute('layer-0');
+                },
+                onPlayPack: () => {
+                  useStaticTrainingPackStore.getState().setSessionMode('play');
+                  setLayer1ContextMode?.('static-training-play');
+                  handleSelectRoute('layer-0');
                 },
               },
             }}
@@ -134,11 +153,40 @@ export const MenuLayerSecondaryRecipeRoutes = React.memo<MenuLayerSecondaryRecip
         )}
 
         {displayedRoute === 'dev-tem-pack-converter' && (
-          <Layer4StaticTrainingPackBrowseRecipe
-            isLight={isLight}
-            isDevMode={true}
-            onBack={onBack}
-          />
+          <StoreSnapshotScope
+            overrides={{
+              appStore: {
+                closeMenu: () => handleSelectRoute('layer-0'),
+                setMatchMode: (mode: string) => {
+                  if (mode === 'static-training-pack') {
+                    const sessionMode = useStaticTrainingPackStore.getState().sessionMode;
+                    setLayer1ContextMode?.(
+                      sessionMode === 'edit' ? 'static-training-edit' : 'static-training-play'
+                    );
+                  }
+                },
+              },
+              staticTrainingPackStore: {
+                onEditPack: () => {
+                  useStaticTrainingPackStore.getState().setSessionMode('edit');
+                  useStaticTrainingPackStore.getState().setEdgeInspectorExpanded(true);
+                  setLayer1ContextMode?.('static-training-edit');
+                  handleSelectRoute('layer-0');
+                },
+                onPlayPack: () => {
+                  useStaticTrainingPackStore.getState().setSessionMode('play');
+                  setLayer1ContextMode?.('static-training-play');
+                  handleSelectRoute('layer-0');
+                },
+              },
+            }}
+          >
+            <Layer4StaticTrainingPackBrowseRecipe
+              isLight={isLight}
+              isDevMode={true}
+              onBack={onBack}
+            />
+          </StoreSnapshotScope>
         )}
 
         {displayedRoute === 'advanced-audio' && (
