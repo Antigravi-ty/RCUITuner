@@ -28,12 +28,17 @@ export const MainMenuTypographyAndOutlineSection: React.FC<MainMenuTypographyAnd
 }) => {
   const store = useMainMenuStyleStore();
   const { variant, setParam, setItemIconColor } = store;
+  const cardCls = `p-4 rounded-xl border flex flex-col gap-4 ${
+    isLight ? 'bg-neutral-50/70 border-neutral-200/80' : 'bg-neutral-950/50 border-neutral-800'
+  }`;
+  const chipIdleCls = isLight
+    ? 'bg-white border-neutral-200 text-neutral-700 hover:bg-neutral-100'
+    : 'bg-neutral-900 border-neutral-700 text-neutral-300 hover:bg-neutral-800';
 
   return (
     <>
       {/* Group B: Title Typography & 8 Official Font Weights */}
-      <div className={`p-4 rounded-xl border flex flex-col gap-4 ${ isLight
-        ? 'bg-neutral-50/70 border-neutral-200/80' : 'bg-neutral-950/50 border-neutral-800' }`}>
+      <div className={cardCls}>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-xs font-bold text-amber-500">
             <Type className="h-4 w-4" />
@@ -56,9 +61,7 @@ export const MainMenuTypographyAndOutlineSection: React.FC<MainMenuTypographyAnd
                   className={`px-2.5 py-1 rounded-lg text-xs font-mono border cursor-pointer transition-all ${
                     store.titleFontFamily === f.id
                       ? 'bg-amber-500 text-white border-amber-500 font-bold'
-                      : isLight
-                      ? 'bg-white border-neutral-200 text-neutral-700'
-                      : 'bg-neutral-900 border-neutral-700 text-neutral-300'
+                      : chipIdleCls
                   }`}
                 >
                   {f.label}
@@ -71,7 +74,6 @@ export const MainMenuTypographyAndOutlineSection: React.FC<MainMenuTypographyAnd
           </div>
         </div>
 
-        {/* Cross-Platform Font & Weight Fallback Bar (Apple Sans 800 -> Non-Apple JetBrains Mono Regular 400) */}
         {store.titleFontFamily === 'sans' && (
           <div
             className={`px-3 py-2 rounded-lg border flex flex-wrap items-center justify-between gap-2 text-xs font-mono ${
@@ -105,9 +107,7 @@ export const MainMenuTypographyAndOutlineSection: React.FC<MainMenuTypographyAnd
                   className={`px-2 py-0.5 rounded text-[11px] font-mono border cursor-pointer transition-all ${
                     store.platformPreviewMode === m.id
                       ? 'bg-amber-500 text-white border-amber-500 font-bold'
-                      : isLight
-                      ? 'bg-white border-neutral-200 text-neutral-600 hover:bg-neutral-100'
-                      : 'bg-neutral-900 border-neutral-700 text-neutral-300 hover:bg-neutral-800'
+                      : chipIdleCls
                   }`}
                 >
                   {m.label}
@@ -164,9 +164,7 @@ export const MainMenuTypographyAndOutlineSection: React.FC<MainMenuTypographyAnd
                 className={`py-1.5 px-2 rounded-lg text-xs border cursor-pointer transition-all ${
                   store.titleFontWeight === opt.weight
                     ? 'bg-amber-500 text-white border-amber-500 shadow-2xs'
-                    : isLight
-                    ? 'bg-white border-neutral-200 text-neutral-700 hover:bg-neutral-100'
-                    : 'bg-neutral-900 border-neutral-700 text-neutral-300 hover:bg-neutral-800'
+                    : chipIdleCls
                 }`}
               >
                 {opt.label} ({opt.weight})
@@ -175,7 +173,6 @@ export const MainMenuTypographyAndOutlineSection: React.FC<MainMenuTypographyAnd
           </div>
         </div>
 
-        {/* Optional Description Sliders when showDescription is enabled */}
         {store.showDescription && (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-neutral-200/60 dark:border-neutral-800/70">
             <SliderControl label="Description font size (descSize)" value={store.descFontSizePx} min={10} max={16}
@@ -192,13 +189,7 @@ export const MainMenuTypographyAndOutlineSection: React.FC<MainMenuTypographyAnd
       </div>
 
       {/* Group E: Per-Item Independent Icon Colors & Style 2 Watermark */}
-      <div
-        className={`p-4 rounded-xl border flex flex-col gap-3.5 ${
-          isLight
-            ? 'bg-neutral-50/70 border-neutral-200/80'
-            : 'bg-neutral-950/50 border-neutral-800'
-        }`}
-      >
+      <div className={cardCls}>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-xs font-bold text-amber-500">
             <Palette className="h-4 w-4" />
@@ -223,17 +214,19 @@ export const MainMenuTypographyAndOutlineSection: React.FC<MainMenuTypographyAnd
               const isCustom = isCustomPlayCardColor(currentColor);
               const resolvedHex = resolvePlayCardIconHex(currentColor, isLight);
               const rgb = hexToRgbTuple(resolvedHex);
-              const presetLabel = PLAY_CARD_ICON_COLOR_OPTIONS.find(
-                (c) => c.id === currentColor
-              )?.label;
+              const presetLabel = PLAY_CARD_ICON_COLOR_OPTIONS.find((c) => c.id === currentColor)?.label;
+              const swatchActiveCls = isLight
+                ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
+                : 'bg-white text-neutral-950 border-white font-bold';
+              const swatchIdleCls = isLight
+                ? 'bg-neutral-50 hover:bg-neutral-100 border-neutral-200 text-neutral-600'
+                : 'bg-neutral-850 hover:bg-neutral-800 border-neutral-700/80 text-neutral-300';
 
               return (
                 <div
                   key={slot.id}
                   className={`p-3 rounded-xl border flex flex-col gap-2 ${
-                    isLight
-                      ? 'bg-white border-neutral-200/90'
-                      : 'bg-neutral-900 border-neutral-800'
+                    isLight ? 'bg-white border-neutral-200/90' : 'bg-neutral-900 border-neutral-800'
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
@@ -244,37 +237,24 @@ export const MainMenuTypographyAndOutlineSection: React.FC<MainMenuTypographyAnd
                   </div>
 
                   <div className="flex flex-wrap items-center gap-1">
-                    {PLAY_CARD_ICON_COLOR_OPTIONS.map((opt) => {
-                      const isSelected = currentColor === opt.id;
-                      return (
-                        <button
-                          key={opt.id}
-                          type="button"
-                          onClick={() => setItemIconColor(slotId, opt.id)}
-                          title={opt.label}
-                          className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-mono border transition-all cursor-pointer ${
-                            isSelected
-                              ? isLight
-                                ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
-                                : 'bg-white text-neutral-950 border-white font-bold'
-                              : isLight
-                              ? 'bg-neutral-50 hover:bg-neutral-100 border-neutral-200 text-neutral-600'
-                              : 'bg-neutral-850 hover:bg-neutral-800 border-neutral-700/80 text-neutral-300'
-                          }`}
-                        >
-                          <span className={`h-2 w-2 rounded-full shrink-0 ${opt.dotClass}`} />
-                          <span>{opt.shortLabel}</span>
-                        </button>
-                      );
-                    })}
+                    {PLAY_CARD_ICON_COLOR_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => setItemIconColor(slotId, opt.id)}
+                        title={opt.label}
+                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-mono border transition-all cursor-pointer ${
+                          currentColor === opt.id ? swatchActiveCls : swatchIdleCls
+                        }`}
+                      >
+                        <span className={`h-2 w-2 rounded-full shrink-0 ${opt.dotClass}`} />
+                        <span>{opt.shortLabel}</span>
+                      </button>
+                    ))}
 
                     <label
                       className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border cursor-pointer text-[10px] font-mono ${
-                        isCustom
-                          ? 'border-amber-500 text-amber-500 font-bold'
-                          : isLight
-                          ? 'bg-neutral-50 border-neutral-200 text-neutral-600'
-                          : 'bg-neutral-850 border-neutral-700 text-neutral-300'
+                        isCustom ? 'border-amber-500 text-amber-500 font-bold' : swatchIdleCls
                       }`}
                     >
                       <input
@@ -292,61 +272,20 @@ export const MainMenuTypographyAndOutlineSection: React.FC<MainMenuTypographyAnd
           </div>
         )}
 
-        {/* Style 2 Watermark Sliders */}
         {variant === 'mono-watermark-row' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-3 border-t border-neutral-200/60 dark:border-neutral-800/70">
-            <SliderControl
-              label="watermark Icon size (watermarkSize)"
-              value={store.watermarkSizePx}
-              min={32}
-              max={120}
-              step={2}
-              unit="px"
-              editable
-              allowOutOfBoundsInput
-              colorScheme="amber"
-              onChange={(v) => setParam('watermarkSizePx', v)}
-              isLight={isLight}
-            />
-            <SliderControl
-              label="Default watermark opacity (opacity)"
-              value={store.watermarkOpacityPct}
-              min={5}
-              max={80}
-              step={1}
-              unit="%"
-              editable
-              allowOutOfBoundsInput
-              colorScheme="emerald"
-              onChange={(v) => setParam('watermarkOpacityPct', v)}
-              isLight={isLight}
-            />
-            <SliderControl
-              label="watermark Hover opacity"
-              value={store.watermarkHoverOpacityPct}
-              min={10}
-              max={95}
-              step={1}
-              unit="%"
-              editable
-              allowOutOfBoundsInput
-              colorScheme="emerald"
-              onChange={(v) => setParam('watermarkHoverOpacityPct', v)}
-              isLight={isLight}
-            />
-            <SliderControl
-              label="Watermark Rotation (rotateDeg)"
-              value={store.watermarkRotateDeg}
-              min={-40}
-              max={40}
-              step={1}
-              unit="°"
-              editable
-              allowOutOfBoundsInput
-              colorScheme="sky"
-              onChange={(v) => setParam('watermarkRotateDeg', v)}
-              isLight={isLight}
-            />
+            <SliderControl label="watermark Icon size (watermarkSize)" value={store.watermarkSizePx} min={32} max={120}
+              step={2} unit="px" editable allowOutOfBoundsInput colorScheme="amber"
+              onChange={(v) => setParam('watermarkSizePx', v)} isLight={isLight} />
+            <SliderControl label="Default watermark opacity (opacity)" value={store.watermarkOpacityPct} min={5} max={80}
+              step={1} unit="%" editable allowOutOfBoundsInput colorScheme="emerald"
+              onChange={(v) => setParam('watermarkOpacityPct', v)} isLight={isLight} />
+            <SliderControl label="watermark Hover opacity" value={store.watermarkHoverOpacityPct} min={10} max={95}
+              step={1} unit="%" editable allowOutOfBoundsInput colorScheme="emerald"
+              onChange={(v) => setParam('watermarkHoverOpacityPct', v)} isLight={isLight} />
+            <SliderControl label="Watermark Rotation (rotateDeg)" value={store.watermarkRotateDeg} min={-40} max={40}
+              step={1} unit="°" editable allowOutOfBoundsInput colorScheme="sky"
+              onChange={(v) => setParam('watermarkRotateDeg', v)} isLight={isLight} />
           </div>
         )}
       </div>

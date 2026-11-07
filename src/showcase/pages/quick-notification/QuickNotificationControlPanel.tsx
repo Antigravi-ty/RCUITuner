@@ -1,25 +1,14 @@
 import React from 'react';
 import { Sliders, Eye, Type } from 'lucide-react';
-import type {
-  QuickNotificationGlowLevel,
-} from '../../../ui-core/compounds/QuickNotification';
+import type { QuickNotificationGlowLevel } from '../../../ui-core/compounds/QuickNotification';
 import { SegmentedSwitch } from '../../../ui-core/primitives/SegmentedSwitch';
 import { ToggleSwitch } from '../../../ui-core/primitives/ToggleSwitch';
 import { QuickNotificationButtonsBuilderSection } from './QuickNotificationButtonsBuilderSection';
 import { useQuickNotificationDraftState } from './useQuickNotificationDraftState';
 
 const PRESET_ICONS = [
-  'bell',
-  'loader-2',
-  'download',
-  'octagon-alert',
-  'triangle-alert',
-  'info',
-  'flame',
-  'sparkles',
-  'check-circle',
-  'shield-alert',
-  'activity',
+  'bell', 'loader-2', 'download', 'octagon-alert', 'triangle-alert', 'info',
+  'flame', 'sparkles', 'check-circle', 'shield-alert', 'activity',
 ];
 
 const PRESET_TONES: { key: QuickNotificationGlowLevel; label: string; dotClass: string }[] = [
@@ -37,43 +26,28 @@ export interface QuickNotificationControlPanelProps {
 export const QuickNotificationControlPanel: React.FC<QuickNotificationControlPanelProps> = React.memo(
   ({ isLight }) => {
     const {
-      showStackIcon,
-      setShowStackIcon,
-      liveMode,
-      setLiveMode,
-      totalChars,
-      chineseChars,
-      asciiChars,
-      estimatedContentWidthPx,
-      temporalType,
-      setTemporalType,
-      effectiveDuration,
-      durationPreset,
-      setDurationPreset,
-      customDurationMs,
-      setCustomDurationMs,
-      ongoingProgressMode,
-      setOngoingProgressMode,
-      ongoingProgressPct,
-      setOngoingProgressPct,
-      isSpinningIcon,
-      setIsSpinningIcon,
-      tone,
-      setTone,
-      iconName,
-      setIconName,
-      content,
-      setContent,
-      buttons,
-      setButtons,
+      showStackIcon, setShowStackIcon, liveMode, setLiveMode,
+      totalChars, chineseChars, asciiChars, estimatedContentWidthPx,
+      temporalType, setTemporalType, effectiveDuration,
+      durationPreset, setDurationPreset, customDurationMs, setCustomDurationMs,
+      ongoingProgressMode, setOngoingProgressMode, ongoingProgressPct, setOngoingProgressPct,
+      isSpinningIcon, setIsSpinningIcon, tone, setTone,
+      iconName, setIconName, content, setContent, buttons, setButtons,
     } = useQuickNotificationDraftState();
+
+    const activePillCls = isLight
+      ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
+      : 'bg-white text-neutral-950 border-white font-bold';
+    const idlePillCls = isLight
+      ? 'bg-neutral-100/60 border-neutral-300 text-neutral-700 hover:bg-neutral-100'
+      : 'bg-neutral-800/60 border-neutral-700 text-neutral-300 hover:bg-neutral-800';
+
     return (
       <div
         className={`lg:col-span-7 flex flex-col gap-5 p-5 rounded-2xl border ${
           isLight ? 'bg-white border-neutral-200' : 'bg-neutral-900/60 border-neutral-800'
         }`}
       >
-        {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-neutral-200 dark:border-neutral-800">
           <div className="flex items-center gap-2">
             <Sliders className="h-4 w-4 text-amber-500" />
@@ -91,7 +65,6 @@ export const QuickNotificationControlPanel: React.FC<QuickNotificationControlPan
           </div>
         </div>
 
-        {/* Mode Switch: Live Mode Toggle */}
         <div
           className={`p-3.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
             liveMode
@@ -102,11 +75,7 @@ export const QuickNotificationControlPanel: React.FC<QuickNotificationControlPan
           }`}
         >
           <div className="flex items-start gap-2.5">
-            <Eye
-              className={`h-4 w-4 mt-0.5 shrink-0 ${
-                liveMode ? 'text-amber-500' : 'text-neutral-400'
-              }`}
-            />
+            <Eye className={`h-4 w-4 mt-0.5 shrink-0 ${liveMode ? 'text-amber-500' : 'text-neutral-400'}`} />
             <div>
               <div className="text-xs font-bold flex items-center gap-2">
                 <span>Live Real-time tuning mode (Live Preview Mode)</span>
@@ -127,7 +96,6 @@ export const QuickNotificationControlPanel: React.FC<QuickNotificationControlPan
           </div>
         </div>
 
-        {/* Character Count & Width Telemetry Card (Always visible, highlighted in Live Mode) */}
         <div
           className={`p-3 rounded-xl border flex flex-wrap items-center justify-between gap-3 text-[11px] font-mono ${
             isLight
@@ -148,9 +116,7 @@ export const QuickNotificationControlPanel: React.FC<QuickNotificationControlPan
             <span>Est. Text Width:</span>
             <strong
               className={
-                estimatedContentWidthPx > 260
-                  ? 'text-amber-500'
-                  : 'text-neutral-900 dark:text-neutral-100'
+                estimatedContentWidthPx > 260 ? 'text-amber-500' : 'text-neutral-900 dark:text-neutral-100'
               }
             >
               ~{estimatedContentWidthPx}px
@@ -161,7 +127,6 @@ export const QuickNotificationControlPanel: React.FC<QuickNotificationControlPan
           </div>
         </div>
 
-        {/* Temporal Type & Duration */}
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between text-xs font-bold text-neutral-400 uppercase tracking-wider">
             <span>1. Lifecycle Type (Temporal Type)</span>
@@ -197,13 +162,7 @@ export const QuickNotificationControlPanel: React.FC<QuickNotificationControlPan
                       type="button"
                       onClick={() => setDurationPreset(preset)}
                       className={`px-2.5 py-1 rounded-md text-xs font-mono border transition-all cursor-pointer ${
-                        durationPreset === preset
-                          ? isLight
-                            ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
-                            : 'bg-white text-neutral-950 border-white font-bold'
-                          : isLight
-                          ? 'bg-neutral-100 border-neutral-300 text-neutral-700 hover:bg-neutral-200'
-                          : 'bg-neutral-800 border-neutral-700 text-neutral-300 hover:bg-neutral-700'
+                        durationPreset === preset ? activePillCls : idlePillCls
                       }`}
                     >
                       {preset === '3000' ? '3s (3000ms)' : preset === '5000' ? '5s (5000ms)' : 'Custom'}
@@ -241,9 +200,7 @@ export const QuickNotificationControlPanel: React.FC<QuickNotificationControlPan
                       onClick={() => setOngoingProgressMode(m)}
                       className={`px-2 py-0.5 rounded text-[11px] border cursor-pointer ${
                         ongoingProgressMode === m
-                          ? isLight
-                            ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
-                            : 'bg-white text-neutral-950 border-white font-bold'
+                          ? activePillCls
                           : 'border-neutral-300 dark:border-neutral-700 text-neutral-500'
                       }`}
                     >
@@ -279,42 +236,31 @@ export const QuickNotificationControlPanel: React.FC<QuickNotificationControlPan
           )}
         </div>
 
-        {/* Tone / Inner Glow Selection */}
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between text-xs font-bold text-neutral-400 uppercase tracking-wider">
-            <span>2. Visual style and inner glow (Tone & Inner Glow Level)</span>
+            <span>2. Visual style and inner glow (Tone &amp; Inner Glow Level)</span>
             <span className="text-[11px] text-neutral-500 lowercase font-normal">
               4 Glow Level + 1 Level 0 non-glowing base plate
             </span>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
-            {PRESET_TONES.map((t) => {
-              const isSelected = tone === t.key;
-              return (
-                <button
-                  key={t.key}
-                  type="button"
-                  onClick={() => setTone(t.key)}
-                  className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
-                    isSelected
-                      ? isLight
-                        ? 'bg-neutral-900 text-white border-neutral-900 font-bold shadow-2xs'
-                        : 'bg-white text-neutral-950 border-white font-bold shadow-2xs'
-                      : isLight
-                      ? 'bg-neutral-100/60 hover:bg-neutral-100 border-neutral-300 text-neutral-700'
-                      : 'bg-neutral-800/60 hover:bg-neutral-800 border-neutral-700 text-neutral-300'
-                  }`}
-                >
-                  <span className={`h-2 w-2 rounded-full ${t.dotClass} shrink-0`} />
-                  <span className="truncate">{t.key}</span>
-                </button>
-              );
-            })}
+            {PRESET_TONES.map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => setTone(t.key)}
+                className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
+                  tone === t.key ? `${activePillCls} shadow-2xs` : idlePillCls
+                }`}
+              >
+                <span className={`h-2 w-2 rounded-full ${t.dotClass} shrink-0`} />
+                <span className="truncate">{t.key}</span>
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Leading Icon Selection */}
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between text-xs font-bold text-neutral-400 uppercase tracking-wider">
             <span>3. Leading Icon (Leading Lucide Icon)</span>
@@ -322,27 +268,18 @@ export const QuickNotificationControlPanel: React.FC<QuickNotificationControlPan
           </div>
 
           <div className="flex flex-wrap items-center gap-1.5">
-            {PRESET_ICONS.map((icon) => {
-              const isSelected = iconName === icon;
-              return (
-                <button
-                  key={icon}
-                  type="button"
-                  onClick={() => setIconName(icon)}
-                  className={`px-2.5 py-1 rounded-lg border text-xs font-mono transition-all cursor-pointer flex items-center gap-1.5 ${
-                    isSelected
-                      ? isLight
-                        ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
-                        : 'bg-white text-neutral-950 border-white font-bold'
-                      : isLight
-                      ? 'bg-neutral-100/60 border-neutral-300 text-neutral-700 hover:bg-neutral-100'
-                      : 'bg-neutral-800/60 border-neutral-700 text-neutral-300 hover:bg-neutral-800'
-                  }`}
-                >
-                  <span>{icon}</span>
-                </button>
-              );
-            })}
+            {PRESET_ICONS.map((icon) => (
+              <button
+                key={icon}
+                type="button"
+                onClick={() => setIconName(icon)}
+                className={`px-2.5 py-1 rounded-lg border text-xs font-mono transition-all cursor-pointer flex items-center gap-1.5 ${
+                  iconName === icon ? activePillCls : idlePillCls
+                }`}
+              >
+                <span>{icon}</span>
+              </button>
+            ))}
           </div>
 
           <div className="flex items-center gap-2 mt-1">
@@ -357,7 +294,6 @@ export const QuickNotificationControlPanel: React.FC<QuickNotificationControlPan
           </div>
         </div>
 
-        {/* Content Input */}
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between text-xs font-bold text-neutral-400 uppercase tracking-wider">
             <span>4. Notification Body (Notification Content)</span>
@@ -373,7 +309,6 @@ export const QuickNotificationControlPanel: React.FC<QuickNotificationControlPan
           />
         </div>
 
-        {/* Dynamic Business Action Buttons */}
         <QuickNotificationButtonsBuilderSection
           isLight={isLight}
           buttons={buttons}
