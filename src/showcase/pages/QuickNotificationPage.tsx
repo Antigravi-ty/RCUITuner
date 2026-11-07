@@ -8,12 +8,49 @@ import {
   MONO_FONT_STACK,
   type QuickNotificationGlowLevel, type QuickNotificationType, type QuickNotificationButtonConfig,
 } from '../../ui-core/compounds/QuickNotification';
-import { QuickNotificationSystem, type NotificationIconLifecycle, } from '../../ui-core/navigation/QuickNotificationSystem';
+import { QuickNotificationSystem, type NotificationIconLifecycle } from '../../ui-core/navigation/QuickNotificationSystem';
 import { CodeBlock } from '../CodeBlock';
 import { QuickNotificationControlPanel } from './quick-notification/QuickNotificationControlPanel';
 import { QuickNotificationPresetsPanel } from './quick-notification/QuickNotificationPresetsPanel';
 import { QuickNotificationTelemetryStatusBar } from './quick-notification/QuickNotificationTelemetryStatusBar';
 import { useQuickNotificationDraftState } from './quick-notification/useQuickNotificationDraftState';
+
+const LAZY_LOADING_SIM_STEPS: Array<{
+  delayMs: number;
+  content: string;
+  icon: string;
+  progress: number;
+  isSpinningIcon: boolean;
+}> = [
+  {
+    delayMs: 1200,
+    content: 'Step 2/5: Audio sound packs 25% (2.4MB / 9.6MB)',
+    icon: 'download',
+    progress: 0.25,
+    isSpinningIcon: false,
+  },
+  {
+    delayMs: 2500,
+    content: 'Step 3/5: Stadium textures 60% (14.4MB / 24.0MB)',
+    icon: 'download',
+    progress: 0.6,
+    isSpinningIcon: false,
+  },
+  {
+    delayMs: 3800,
+    content: 'Step 4/5: Compiling WebGPU shaders (34/40 variants)',
+    icon: 'loader-2',
+    progress: 0.85,
+    isSpinningIcon: true,
+  },
+  {
+    delayMs: 5000,
+    content: 'Step 5/5: Finalizing non-essential assets 100%',
+    icon: 'loader-2',
+    progress: 1.0,
+    isSpinningIcon: true,
+  },
+];
 
 export const QuickNotificationPage: React.FC<{ isLight?: boolean }> = ({ isLight = false }) => {
   const {
@@ -39,7 +76,6 @@ export const QuickNotificationPage: React.FC<{ isLight?: boolean }> = ({ isLight
     livePreviewDraft,
   } = useQuickNotificationDraftState();
 
-  // Simulation timer refs for clean lifecycle teardown
   const simTimersRef = useRef<Array<ReturnType<typeof setTimeout>>>([]);
   const clearSimTimers = () => {
     simTimersRef.current.forEach((t) => clearTimeout(t));
@@ -102,9 +138,7 @@ export const QuickNotificationPage: React.FC<{ isLight?: boolean }> = ({ isLight
       0,
       'octagon-alert',
       'Critical: Main game loop frame drop detected',
-      [
-        { key: 'reconnect', label: 'Reconnect', icon: 'rotate-ccw', format: 'icon-text', color: 'amber' },
-      ]
+      [{ key: 'reconnect', label: 'Reconnect', icon: 'rotate-ccw', format: 'icon-text', color: 'amber' }]
     );
     setTimeout(() => {
       handlePushPreset(
@@ -120,24 +154,14 @@ export const QuickNotificationPage: React.FC<{ isLight?: boolean }> = ({ isLight
       );
     }, 450);
     setTimeout(() => {
-      handlePushPreset(
-        'info',
-        'temporary',
-        5000,
-        'bell',
-        'Notice: Sync token refreshed successfully'
-      );
+      handlePushPreset('info', 'temporary', 5000, 'bell', 'Notice: Sync token refreshed successfully');
     }, 900);
   };
 
-  /**
-   * Simulation 1: Real-world Lazy Loading pipeline simulation (5 steps)
-   */
   const handleRunLazyLoadingSimulation = () => {
     clearSimTimers();
     const taskId = 'lazy-load-sim';
 
-    // Step 1: 0ms - Indeterminate manifest verification
     pushOngoingNotification({
       id: taskId,
       content: 'Step 1/5: Verifying optional asset manifests...',
@@ -147,59 +171,20 @@ export const QuickNotificationPage: React.FC<{ isLight?: boolean }> = ({ isLight
       tone: 'none',
     });
 
-    // Step 2: 1200ms - Audio pack download (25%)
-    simTimersRef.current.push(
-      setTimeout(() => {
-        updateOngoingNotification(taskId, {
-          content: 'Step 2/5: Audio sound packs 25% (2.4MB / 9.6MB)',
-          icon: 'download',
-          progress: 0.25,
-          isSpinningIcon: false,
-          tone: 'none',
-        });
-      }, 1200)
-    );
+    for (const step of LAZY_LOADING_SIM_STEPS) {
+      simTimersRef.current.push(
+        setTimeout(() => {
+          updateOngoingNotification(taskId, {
+            content: step.content,
+            icon: step.icon,
+            progress: step.progress,
+            isSpinningIcon: step.isSpinningIcon,
+            tone: 'none',
+          });
+        }, step.delayMs)
+      );
+    }
 
-    // Step 3: 2500ms - Stadium high-res textures (60%)
-    simTimersRef.current.push(
-      setTimeout(() => {
-        updateOngoingNotification(taskId, {
-          content: 'Step 3/5: Stadium textures 60% (14.4MB / 24.0MB)',
-          icon: 'download',
-          progress: 0.6,
-          isSpinningIcon: false,
-          tone: 'none',
-        });
-      }, 2500)
-    );
-
-    // Step 4: 3800ms - WebGPU Shaders Warmup (85%)
-    simTimersRef.current.push(
-      setTimeout(() => {
-        updateOngoingNotification(taskId, {
-          content: 'Step 4/5: Compiling WebGPU shaders (34/40 variants)',
-          icon: 'loader-2',
-          progress: 0.85,
-          isSpinningIcon: true,
-          tone: 'none',
-        });
-      }, 3800)
-    );
-
-    // Step 5: 5000ms - Finalizing (100%)
-    simTimersRef.current.push(
-      setTimeout(() => {
-        updateOngoingNotification(taskId, {
-          content: 'Step 5/5: Finalizing non-essential assets 100%',
-          icon: 'loader-2',
-          progress: 1.0,
-          isSpinningIcon: true,
-          tone: 'none',
-        });
-      }, 5000)
-    );
-
-    // Step 6: 6200ms - Remote Complete & Smooth Auto-dismiss
     simTimersRef.current.push(
       setTimeout(() => {
         completeOngoingNotification(taskId, {
@@ -212,18 +197,10 @@ export const QuickNotificationPage: React.FC<{ isLight?: boolean }> = ({ isLight
     );
   };
 
-  /**
-   * Simulation 2: Priority Preemption & Restore Test (Cover & Restore)
-   * 1. Starts a background download task.
-   * 2. After 700ms, a high-priority 3s temporary warning notification is pushed.
-   * 3. The warning takes over the drawer immediately (ongoing yields/covered).
-   * 4. When 3s finishes and warning collapses to unread bubble [1], ongoing automatically restores!
-   */
   const handleRunPriorityPreemptionTest = () => {
     clearSimTimers();
     const taskId = 'bg-stream-task';
 
-    // Start background streaming
     pushOngoingNotification({
       id: taskId,
       content: 'Lazy Loading: Streaming Champions Field textures (32%)...',
@@ -233,7 +210,6 @@ export const QuickNotificationPage: React.FC<{ isLight?: boolean }> = ({ isLight
       tone: 'none',
     });
 
-    // Inject high-priority temporary notification after 700ms
     simTimersRef.current.push(
       setTimeout(() => {
         pushNotification({
@@ -250,9 +226,6 @@ export const QuickNotificationPage: React.FC<{ isLight?: boolean }> = ({ isLight
     );
   };
 
-  /**
-   * Simulation 3: Multi-task Conflict & Stack Test
-   */
   const handleRunMultiTaskTest = () => {
     clearSimTimers();
     pushOngoingNotification({
@@ -283,18 +256,16 @@ import {
   dismissOngoingNotification, completeOngoingNotification,
 } from '@/ui-core/stores/quickNotificationStore';
 
-// ── scene A: Background Task / Lazy Loading Notification (Lowest Priority, Non-dismissible, Auto-overwrite and restore) ──
-// 1. Start background async task (e.g. Lazy Loading Non-essential assets)
+// ── scene A: Background Task / Lazy Loading Notification ──
 const taskId = pushOngoingNotification({
-  id: 'lazy-pack-downloader', // Optional specification ID, Used for subsequent precise updates and closing
+  id: 'lazy-pack-downloader',
   content: 'Lazy Loading: Downloading optional textures (45%)...',
-  icon: 'download',           // Lucide Icon name
-  progress: 0.45,             // 0~1 Confirm percentage, or 'indeterminate' Indeterminate flow light breathing wave
-  isSpinningIcon: false,      // Whether icon rotates
-  tone: 'none',               // Standard base without glow
+  icon: 'download',
+  progress: 0.45,
+  isSpinningIcon: false,
+  tone: 'none',
 });
 
-// 2. Smooth in-place progress update (Does not trigger redraws or entry/exit flickering)
 updateOngoingNotification(taskId, {
   content: 'Lazy Loading: Compiling shaders (85%)...',
   progress: 0.85,
@@ -302,13 +273,12 @@ updateOngoingNotification(taskId, {
   isSpinningIcon: true,
 });
 
-// 3. On asynchronous task completion, Remote notification complete and auto-graceful exit
 completeOngoingNotification(taskId, {
   content: 'All background assets ready!',
-  autoDismissMs: 1400, // Hover 1.4s Automatically collapse and unload after flashing ready state
+  autoDismissMs: 1400,
 });
 
-// ── scene B: Standard interaction notification (Temporary / Persistent - High priority, Auto-override background tasks) ──
+// ── scene B: Standard interaction notification ──
 pushQuickNotification({
   content: ${JSON.stringify(content)},
   tone: '${tone}',
@@ -318,16 +288,11 @@ pushQuickNotification({
   buttons: ${JSON.stringify(buttons, null, 2)},
 });
 
-// ── scene C: Receiver container (Ready to use, Automatic priority scheduling and yield flow) ──
-<QuickNotificationSystem
-  slotRight={/* Custom Slot 1 Node or boolean */}
-/>`;
+// ── scene C: Receiver container ──
+<QuickNotificationSystem slotRight={true} />`;
 
   return (
     <div style={{ fontFamily: MONO_FONT_STACK }} className="flex flex-col gap-5 w-full relative font-mono text-xs">
-      {/* ──────────────────────────────────────────────────────────────────
-          1. Page Header (Top bar title)
-         ────────────────────────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-neutral-200/80 dark:border-neutral-800">
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 rounded-lg bg-neutral-200/80 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 flex items-center justify-center shrink-0">
@@ -336,40 +301,31 @@ pushQuickNotification({
           <div>
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Quick Notification Quick notification system</h1>
             <p className={`text-xs mt-0.5 ${isLight ? 'text-neutral-500' : 'text-neutral-400'}`}>
-              Lightweight drawer notification. 4 Level inner glow and non-glow regular base plate, Far-right collapse button, Multi-business button color palettes and horizontal drawer expansion animations. 
+              Lightweight drawer notification. 4 Level inner glow and non-glow regular base plate, Far-right collapse button, Multi-business button color palettes and horizontal drawer expansion animations.
             </p>
           </div>
         </div>
       </div>
 
-      {/* ──────────────────────────────────────────────────────────────────
-          2. Active Canvas Stage (Placed at the top, Expanded view)
-         ────────────────────────────────────────────────────────────────── */}
       <div
         className={`relative w-full min-h-[520px] rounded-2xl border p-6 overflow-hidden select-none transition-colors ${
         isLight ? 'bg-neutral-100/70 border-neutral-200 shadow-inner'
         : 'bg-neutral-950/80 border-neutral-800 shadow-inner' }`} style={{ backgroundImage: isLight
         ? 'radial-gradient(#d4d4d8 1px, transparent 1px)' : 'radial-gradient(#27272a 1px, transparent 1px)',
-        backgroundSize: '24px 24px', }}>
-        {/* Background Canvas Ambient Notice */}
+        backgroundSize: '24px 24px' }}>
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-30 select-none">
           <span className="text-3xl mb-1">[Bell]</span>
           <span className="text-xs font-mono font-bold text-neutral-800 dark:text-neutral-200">
             [Quick Notification Simulation Canvas]
           </span>
           <span className="text-[11px] text-neutral-400 max-w-md text-center mt-1">
-            Top-right dual slots: Slot 1 (Stack Icon / Empty slot) and Slot 2 (Notification Icon). Each drawer slides out from right to left when the unread stack expands. 
+            Top-right dual slots: Slot 1 (Stack Icon / Empty slot) and Slot 2 (Notification Icon). Each drawer slides out from right to left when the unread stack expands.
           </span>
         </div>
 
-        {/* 
-          Quick Notification Visual System (Hosts the top-right cluster, drawer, and unread dropdown)
-          Decoupled: supports controlled previewNotification, custom slotRight, and autonomous animation lifecycle.
-        */}
         <QuickNotificationSystem isLight={isLight} absolute={true} slotRight={showStackIcon}
           previewNotification={liveMode ? livePreviewDraft : null} onLifecycleChange={setIconLifecycle} />
 
-        {/* Floating live mode watermark overlay on canvas */}
         {liveMode && (
           <div className="absolute bottom-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-lg border border-amber-500/40 bg-amber-500/10 text-amber-500 text-[11px] font-mono pointer-events-none">
             <Eye className="h-3.5 w-3.5 animate-pulse" />
@@ -378,10 +334,6 @@ pushQuickNotification({
         )}
       </div>
 
-      {/* ──────────────────────────────────────────────────────────────────
-          3. State Active & Telemetry Status Bar (Move to Simulation Canvas Bottom)
-             Include clear notification button, Active status, Unread count and quick push
-         ────────────────────────────────────────────────────────────────── */}
       <QuickNotificationTelemetryStatusBar
         isLight={isLight}
         iconLifecycle={iconLifecycle}
@@ -390,9 +342,6 @@ pushQuickNotification({
         handlePushCurrent={handlePushCurrent}
       />
 
-      {/* ──────────────────────────────────────────────────────────────────
-          4. Lower Grid: Control Panel (Left 7 cols) & Test Presets (Right 5 cols)
-         ────────────────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         <QuickNotificationControlPanel isLight={isLight} />
 
@@ -404,9 +353,6 @@ pushQuickNotification({
           activeOngoingTask={activeOngoingTask} />
       </div>
 
-      {/* ──────────────────────────────────────────────────────────────────
-          5. Code Recipe & Export Block
-         ────────────────────────────────────────────────────────────────── */}
       <div className="mt-2">
         <CodeBlock code={generatedUsageCode} language="tsx" title="QuickNotification Recipe (Code usage demo)" />
       </div>

@@ -11,6 +11,54 @@ import {
   buildSvgDropShadowFilter,
 } from '../../../ui-core/primitives/svg/packagedSvgDefinitions';
 
+export const DEMO_COLOR_SWATCHES = [
+  { hex: '#EF4444', label: 'Crimson Red' },
+  { hex: '#F97316', label: 'Flame Orange' },
+  { hex: '#FACC15', label: 'Solar Yellow' },
+  { hex: '#38BDF8', label: 'Cyan Glow' },
+  { hex: '#A855F7', label: 'Neon Purple' },
+  { hex: '#FFFFFF', label: 'Pure White' },
+] as const;
+
+export const DEMO_ROSTER_SPECS: Array<[
+  1 | 2 | 3 | 4 | 5 | 6,
+  'left' | 'right',
+  string,
+  number,
+  number,
+]> = [
+  [1, 'left', 'You (Octane_99)', 85, 100],
+  [2, 'left', 'Zen_Master_RL', 42, 110],
+  [3, 'left', 'Vatira_KC', 100, 120],
+  [4, 'right', 'Firstkiller_NA', 64, 130],
+  [5, 'right', 'BeastMode_Fennec', 18, 140],
+  [6, 'right', 'Daniel_SSG', 90, 150],
+];
+
+export function buildDemoPreviewRosters(
+  persistentDemo: boolean,
+  demoSlots: Record<1 | 2 | 3 | 4 | 5 | 6, boolean>,
+  respawnRemSec: number
+): [EdgePlayerSlotState[], EdgePlayerSlotState[]] {
+  const all: EdgePlayerSlotState[] = DEMO_ROSTER_SPECS.map(
+    ([slotKey, team, name, boostAmount, demolishedAtMs]) => ({
+      slotKey,
+      team,
+      name,
+      boostAmount,
+      demolishedAtMs,
+      exists: true,
+      isSelf: slotKey === 1,
+      isFocusedPov: slotKey === 1,
+      isDemolished: persistentDemo && demoSlots[slotKey],
+      demoRespawnRemainingSec:
+        slotKey === 5 ? Math.max(0.2, respawnRemSec - 0.8) : respawnRemSec,
+      demoRespawnTotalSec: 3.0,
+    })
+  );
+  return [all.slice(0, 3), all.slice(3, 6)];
+}
+
 export interface EdgeDemoStagePreviewProps {
   isLight: boolean;
   viewMode: HudRosterViewMode;

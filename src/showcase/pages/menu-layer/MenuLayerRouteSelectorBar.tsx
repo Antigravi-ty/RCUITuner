@@ -9,6 +9,7 @@ import { useMenuLayoutStore } from '../../../ui-core/stores/menuLayoutStore';
 import { DEFAULT_PANEL_SIZING, type MenuPanelId } from '../../../ui-core/tokens/menuLayoutTokens';
 import { Layer1ContextGroupedSelector } from '../recipes/Layer1ContextGroupedSelector';
 import { resolveLayer1ContextSpec } from '../../../ui-core/recipes/layer1MenuContextSpecs';
+import type { ActiveMenuRoute } from './menuLayerRouteConfig';
 import {
   USER_LINEAR_PLAYLIST, DEV_LINEAR_PLAYLIST,
   findPlaylistStepIndex,
@@ -83,41 +84,63 @@ export const MenuLayerRouteSelectorBar = React.memo<MenuLayerRouteSelectorBarPro
     if (step.route === 'garage' && step.subtab) {
       setGarageTab(step.subtab);
     }
-    if (step.progressStatus) {
-      onChangeLayer3StepOverride?.({
-        progressStatus: step.progressStatus,
-        currentStep: step.currentStep ?? 1,
-        defaultEditingConfig: Boolean(step.defaultEditingConfig),
-      });
-    } else {
-      onChangeLayer3StepOverride?.({
-        progressStatus: 'idle',
-        currentStep: 1,
-        defaultEditingConfig: false,
-      });
-    }
+    onChangeLayer3StepOverride?.(
+      step.progressStatus
+        ? {
+            progressStatus: step.progressStatus,
+            currentStep: step.currentStep ?? 1,
+            defaultEditingConfig: Boolean(step.defaultEditingConfig),
+          }
+        : {
+            progressStatus: 'idle',
+            currentStep: 1,
+            defaultEditingConfig: false,
+          }
+    );
     handleSelectRoute(step.route);
     showToast(`[${wrapped + 1}/${activePlaylist.length}] ${step.label}`);
   };
 
+  const getRouteBtnCls = (route: ActiveMenuRoute) =>
+    `flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
+      currentRoute === route
+        ? 'bg-amber-500 text-white border-amber-500 font-semibold shadow-2xs'
+        : isLight
+        ? 'bg-neutral-50 hover:bg-neutral-100 border-neutral-200 text-neutral-800'
+        : 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-neutral-200'
+    }`;
+
+  const stepNavBtnCls = `flex items-center gap-1 px-3 py-1.5 rounded-xl border text-xs font-semibold cursor-pointer transition-all active:scale-95 ${
+    isLight
+      ? 'bg-neutral-100 hover:bg-neutral-200 border-neutral-300 text-neutral-800'
+      : 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-neutral-100'
+  }`;
+
+  const inactiveTierCls = isLight
+    ? 'text-neutral-600 hover:text-neutral-900'
+    : 'text-neutral-400 hover:text-neutral-200';
+
   return (
-    <div className={`p-4 rounded-2xl border flex flex-col gap-3.5 transition-colors ${
-      isLight ? 'bg-white border-neutral-200 shadow-2xs' : 'bg-neutral-900/70 border-neutral-800' }`}>
+    <div
+      className={`p-4 rounded-2xl border flex flex-col gap-3.5 transition-colors ${
+        isLight
+          ? 'bg-white border-neutral-200 shadow-2xs'
+          : 'bg-neutral-900/70 border-neutral-800'
+      }`}
+    >
       {/* Top Bar: Strict User Only vs Developer Only Split + < Prev Page | Next Page > Linear Scanner */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-neutral-200/80 dark:border-neutral-800">
         {/* Strict Tier Switcher */}
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">View isolation (Strict Tier):</span>
+          <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">
+            View isolation (Strict Tier):
+          </span>
           <div className="flex items-center gap-1 p-1 rounded-xl border bg-neutral-100/80 dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800">
             <button
               type="button"
               onClick={() => onChangeVisibilityTier('user')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all ${
-                visibilityTier === 'user'
-                  ? 'bg-emerald-500 text-white shadow-2xs'
-                  : isLight
-                  ? 'text-neutral-600 hover:text-neutral-900'
-                  : 'text-neutral-400 hover:text-neutral-200'
+                visibilityTier === 'user' ? 'bg-emerald-500 text-white shadow-2xs' : inactiveTierCls
               }`}
             >
               <User className="h-3.5 w-3.5" />
@@ -128,11 +151,7 @@ export const MenuLayerRouteSelectorBar = React.memo<MenuLayerRouteSelectorBarPro
               type="button"
               onClick={() => onChangeVisibilityTier('developer')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all ${
-                visibilityTier === 'developer'
-                  ? 'bg-amber-500 text-white shadow-2xs'
-                  : isLight
-                  ? 'text-neutral-600 hover:text-neutral-900'
-                  : 'text-neutral-400 hover:text-neutral-200'
+                visibilityTier === 'developer' ? 'bg-amber-500 text-white shadow-2xs' : inactiveTierCls
               }`}
             >
               <Terminal className="h-3.5 w-3.5" />
@@ -164,31 +183,29 @@ export const MenuLayerRouteSelectorBar = React.memo<MenuLayerRouteSelectorBarPro
           <button
             type="button"
             onClick={() => applyPlaylistStep(currentPlaylistIndex - 1)}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-xl border text-xs font-semibold cursor-pointer transition-all active:scale-95 ${
-              isLight
-                ? 'bg-neutral-100 hover:bg-neutral-200 border-neutral-300 text-neutral-800'
-                : 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-neutral-100'
-            }`}
+            className={stepNavBtnCls}
           >
             <ChevronLeft className="h-3.5 w-3.5" />
             <span>Prev Page</span>
           </button>
 
-          <div className={`px-3 py-1.5 rounded-xl border font-mono text-xs flex items-center gap-2 ${ isLight
-            ? 'bg-neutral-50 border-neutral-200 text-neutral-800'
-            : 'bg-neutral-950 border-neutral-800 text-neutral-200' }`}>
-            <span className="font-bold text-amber-500">[{currentPlaylistIndex + 1} / {activePlaylist.length}]</span>
+          <div
+            className={`px-3 py-1.5 rounded-xl border font-mono text-xs flex items-center gap-2 ${
+              isLight
+                ? 'bg-neutral-50 border-neutral-200 text-neutral-800'
+                : 'bg-neutral-950 border-neutral-800 text-neutral-200'
+            }`}
+          >
+            <span className="font-bold text-amber-500">
+              [{currentPlaylistIndex + 1} / {activePlaylist.length}]
+            </span>
             <span className="truncate max-w-[230px] font-semibold">{currentStep?.label}</span>
           </div>
 
           <button
             type="button"
             onClick={() => applyPlaylistStep(currentPlaylistIndex + 1)}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-xl border text-xs font-semibold cursor-pointer transition-all active:scale-95 ${
-              isLight
-                ? 'bg-neutral-100 hover:bg-neutral-200 border-neutral-300 text-neutral-800'
-                : 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-neutral-100'
-            }`}
+            className={stepNavBtnCls}
           >
             <span>Next Page</span>
             <ChevronRight className="h-3.5 w-3.5" />
@@ -210,13 +227,7 @@ export const MenuLayerRouteSelectorBar = React.memo<MenuLayerRouteSelectorBarPro
             <button
               type="button"
               onClick={() => handleSelectRoute('layer-0')}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
-                currentRoute === 'layer-0'
-                  ? 'bg-amber-500 text-white border-amber-500 font-semibold shadow-2xs'
-                  : isLight
-                  ? 'bg-neutral-50 hover:bg-neutral-100 border-neutral-200 text-neutral-800'
-                  : 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-neutral-200'
-              }`}
+              className={getRouteBtnCls('layer-0')}
             >
               <Play className="h-3.5 w-3.5" />
               <span>Active Match (Level Zero Real-Time Match · No Menu State)</span>
@@ -264,58 +275,71 @@ export const MenuLayerRouteSelectorBar = React.memo<MenuLayerRouteSelectorBarPro
           <div className="flex flex-wrap items-center gap-2">
             {visibilityTier === 'user' ? (
               <>
-                <button type="button" onClick={() => handleSelectRoute('play')}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
-                    currentRoute === 'play' ? 'bg-amber-500 text-white border-amber-500 font-semibold shadow-2xs'
-                      : isLight ? 'bg-neutral-50 hover:bg-neutral-100 border-neutral-200 text-neutral-800'
-                      : 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-neutral-200'}`}>
+                <button
+                  type="button"
+                  onClick={() => handleSelectRoute('play')}
+                  className={getRouteBtnCls('play')}
+                >
                   <Gamepad2 className="h-3.5 w-3.5" />
                   <span>Play (6 Game Mode Grid)</span>
-                  <span className="font-mono text-[10px] opacity-75">{getPanelWidth('layer2-play')}px</span>
+                  <span className="font-mono text-[10px] opacity-75">
+                    {getPanelWidth('layer2-play')}px
+                  </span>
                 </button>
 
-                <button type="button" onClick={() => handleSelectRoute('garage')}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
-                    currentRoute === 'garage' ? 'bg-amber-500 text-white border-amber-500 font-semibold shadow-2xs'
-                      : isLight ? 'bg-neutral-50 hover:bg-neutral-100 border-neutral-200 text-neutral-800'
-                      : 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-neutral-200'}`}>
+                <button
+                  type="button"
+                  onClick={() => handleSelectRoute('garage')}
+                  className={getRouteBtnCls('garage')}
+                >
                   <Wrench className="h-3.5 w-3.5" />
                   <span>Garage (5 Tabs incl. Materials)</span>
-                  <span className="font-mono text-[10px] opacity-75">{getPanelWidth('layer2-garage')}px</span>
+                  <span className="font-mono text-[10px] opacity-75">
+                    {getPanelWidth('layer2-garage')}px
+                  </span>
                 </button>
 
-                <button type="button" onClick={() => {
+                <button
+                  type="button"
+                  onClick={() => {
                     if (settingsTab === 'developer') setSettingsTab('gameplay');
                     handleSelectRoute('settings');
                   }}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
-                    currentRoute === 'settings' ? 'bg-amber-500 text-white border-amber-500 font-semibold shadow-2xs'
-                      : isLight ? 'bg-neutral-50 hover:bg-neutral-100 border-neutral-200 text-neutral-800'
-                      : 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-neutral-200'}`}>
+                  className={getRouteBtnCls('settings')}
+                >
                   <Settings className="h-3.5 w-3.5" />
                   <span>Settings (User 4 Tabs · icon+text)</span>
-                  <span className="font-mono text-[10px] opacity-75">{getPanelWidth('layer2-settings')}px</span>
+                  <span className="font-mono text-[10px] opacity-75">
+                    {getPanelWidth('layer2-settings')}px
+                  </span>
                 </button>
 
-                <button type="button" onClick={() => handleSelectRoute('manage-room')}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
-                    currentRoute === 'manage-room' ? 'bg-amber-500 text-white border-amber-500 font-semibold shadow-2xs'
-                      : isLight ? 'bg-neutral-50 hover:bg-neutral-100 border-neutral-200 text-neutral-800'
-                      : 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-neutral-200'}`}>
+                <button
+                  type="button"
+                  onClick={() => handleSelectRoute('manage-room')}
+                  className={getRouteBtnCls('manage-room')}
+                >
                   <Server className="h-3.5 w-3.5" />
                   <span>Room Host Control (Host Console)</span>
-                  <span className="font-mono text-[10px] opacity-75">{getPanelWidth('layer2-manage-room')}px</span>
+                  <span className="font-mono text-[10px] opacity-75">
+                    {getPanelWidth('layer2-manage-room')}px
+                  </span>
                 </button>
               </>
             ) : (
-              <button type="button" onClick={() => { setSettingsTab('developer'); handleSelectRoute('settings'); }}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
-                  currentRoute === 'settings' ? 'bg-amber-500 text-white border-amber-500 font-semibold shadow-2xs'
-                    : isLight ? 'bg-neutral-50 hover:bg-neutral-100 border-neutral-200 text-neutral-800'
-                    : 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-neutral-200'}`}>
+              <button
+                type="button"
+                onClick={() => {
+                  setSettingsTab('developer');
+                  handleSelectRoute('settings');
+                }}
+                className={getRouteBtnCls('settings')}
+              >
                 <Sliders className="h-3.5 w-3.5" />
                 <span>Settings → Developer Tab (5 Developer Hub Portals)</span>
-                <span className="font-mono text-[10px] opacity-75">{getPanelWidth('layer2-settings')}px</span>
+                <span className="font-mono text-[10px] opacity-75">
+                  {getPanelWidth('layer2-settings')}px
+                </span>
               </button>
             )}
           </div>

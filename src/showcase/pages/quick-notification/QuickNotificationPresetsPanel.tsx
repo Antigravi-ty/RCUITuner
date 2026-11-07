@@ -44,6 +44,76 @@ export interface QuickNotificationPresetsPanelProps {
   activeOngoingTask: QuickNotificationItem | null;
 }
 
+const PRESET_SAMPLES: Array<{
+  key: string;
+  label: string;
+  badgeText: string;
+  badgeColor: string;
+  leadingCheck?: boolean;
+  tone: QuickNotificationGlowLevel;
+  type: QuickNotificationType;
+  duration: number;
+  icon: string;
+  content: string;
+  buttons?: QuickNotificationButtonConfig[];
+}> = [
+  {
+    key: 'accept-reject',
+    label: 'Accept + Reject Notification (ThumbsDown Reject)',
+    badgeText: 'persistent · Dual Buttons',
+    badgeColor: 'text-emerald-500',
+    leadingCheck: true,
+    tone: 'info',
+    type: 'persistent',
+    duration: 0,
+    icon: 'bell',
+    content: 'Join cross-region match lobby #US-East-8?',
+    buttons: [
+      { key: 'accept', label: 'Accept', icon: 'check', format: 'icon-text', color: 'green' },
+      { key: 'reject', label: 'Reject', icon: 'thumbs-down', format: 'icon-only', color: 'red' },
+    ],
+  },
+  {
+    key: 'warn-3s',
+    label: '3sec Temporary alert notification (Warning 3s)',
+    badgeText: '3000ms',
+    badgeColor: 'text-amber-500',
+    tone: 'warning',
+    type: 'temporary',
+    duration: 3000,
+    icon: 'triangle-alert',
+    content: 'Telemetry latency spike: 142ms > 80ms threshold',
+    buttons: [
+      { key: 'inspect', label: 'Inspect', icon: 'rotate-ccw', format: 'icon-text', color: 'amber' },
+    ],
+  },
+  {
+    key: 'info-5s',
+    label: '5sec Temporary info notification (Info 5s)',
+    badgeText: '5000ms',
+    badgeColor: 'text-sky-500',
+    tone: 'info',
+    type: 'temporary',
+    duration: 5000,
+    icon: 'info',
+    content: 'WASM game state synced with WebSocket gateway',
+  },
+  {
+    key: 'err-persist',
+    label: 'Persistent Error Notification (Dark collapse button on far right)',
+    badgeText: 'persistent',
+    badgeColor: 'text-red-500',
+    tone: 'error',
+    type: 'persistent',
+    duration: 0,
+    icon: 'octagon-alert',
+    content: 'Critical error: Failed to initialize WebGPU context',
+    buttons: [
+      { key: 'retry', label: 'Retry', icon: 'rotate-ccw', format: 'icon-text', color: 'neutral' },
+    ],
+  },
+];
+
 export const QuickNotificationPresetsPanel: React.FC<QuickNotificationPresetsPanelProps> = React.memo(
   ({
     isLight,
@@ -56,9 +126,14 @@ export const QuickNotificationPresetsPanel: React.FC<QuickNotificationPresetsPan
     ongoingConflictPolicy,
     activeOngoingTask,
   }) => {
+    const presetRowClass = `py-2 px-3 rounded-xl border text-xs text-left font-medium transition-all cursor-pointer flex items-center justify-between ${
+      isLight
+        ? 'bg-neutral-50 hover:bg-neutral-100 border-neutral-200 text-neutral-800'
+        : 'bg-neutral-850 hover:bg-neutral-800 border-neutral-750 text-neutral-200'
+    }`;
+
     return (
       <div className="lg:col-span-5 flex flex-col gap-5">
-        {/* Quick Test Presets */}
         <div
           className={`p-5 rounded-2xl border flex flex-col gap-3 ${
             isLight ? 'bg-white border-neutral-200' : 'bg-neutral-900/60 border-neutral-800'
@@ -96,108 +171,23 @@ export const QuickNotificationPresetsPanel: React.FC<QuickNotificationPresetsPan
               <span>Quick preset sample test (Preset Samples)</span>
             </div>
 
-            {/* Preset 1: Accept + Reject */}
-            <button
-              type="button"
-              onClick={() =>
-                handlePushPreset(
-                  'info',
-                  'persistent',
-                  0,
-                  'bell',
-                  'Join cross-region match lobby #US-East-8?',
-                  [
-                    { key: 'accept', label: 'Accept', icon: 'check', format: 'icon-text', color: 'green' },
-                    { key: 'reject', label: 'Reject', icon: 'thumbs-down', format: 'icon-only', color: 'red' },
-                  ]
-                )
-              }
-              className={`py-2 px-3 rounded-xl border text-xs text-left font-medium transition-all cursor-pointer flex items-center justify-between ${
-                isLight
-                  ? 'bg-neutral-50 hover:bg-neutral-100 border-neutral-200 text-neutral-800'
-                  : 'bg-neutral-850 hover:bg-neutral-800 border-neutral-750 text-neutral-200'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <Check className="h-3.5 w-3.5 text-emerald-500" />
-                <span>Accept + Reject Notification (ThumbsDown Reject)</span>
-              </div>
-              <span className="text-[10px] text-emerald-500 font-bold">persistent · Dual Buttons</span>
-            </button>
+            {PRESET_SAMPLES.map((p) => (
+              <button
+                key={p.key}
+                type="button"
+                onClick={() =>
+                  handlePushPreset(p.tone, p.type, p.duration, p.icon, p.content, p.buttons)
+                }
+                className={presetRowClass}
+              >
+                <div className="flex items-center gap-2">
+                  {p.leadingCheck && <Check className="h-3.5 w-3.5 text-emerald-500" />}
+                  <span>{p.label}</span>
+                </div>
+                <span className={`text-[10px] font-bold ${p.badgeColor}`}>{p.badgeText}</span>
+              </button>
+            ))}
 
-            {/* Preset 2: 3s Warning */}
-            <button
-              type="button"
-              onClick={() =>
-                handlePushPreset(
-                  'warning',
-                  'temporary',
-                  3000,
-                  'triangle-alert',
-                  'Telemetry latency spike: 142ms > 80ms threshold',
-                  [
-                    { key: 'inspect', label: 'Inspect', icon: 'rotate-ccw', format: 'icon-text', color: 'amber' },
-                  ]
-                )
-              }
-              className={`py-2 px-3 rounded-xl border text-xs text-left font-medium transition-all cursor-pointer flex items-center justify-between ${
-                isLight
-                  ? 'bg-neutral-50 hover:bg-neutral-100 border-neutral-200 text-neutral-800'
-                  : 'bg-neutral-850 hover:bg-neutral-800 border-neutral-750 text-neutral-200'
-              }`}
-            >
-              <span>3sec Temporary alert notification (Warning 3s)</span>
-              <span className="text-[10px] text-amber-500 font-bold">3000ms</span>
-            </button>
-
-            {/* Preset 3: 5s Info */}
-            <button
-              type="button"
-              onClick={() =>
-                handlePushPreset(
-                  'info',
-                  'temporary',
-                  5000,
-                  'info',
-                  'WASM game state synced with WebSocket gateway'
-                )
-              }
-              className={`py-2 px-3 rounded-xl border text-xs text-left font-medium transition-all cursor-pointer flex items-center justify-between ${
-                isLight
-                  ? 'bg-neutral-50 hover:bg-neutral-100 border-neutral-200 text-neutral-800'
-                  : 'bg-neutral-850 hover:bg-neutral-800 border-neutral-750 text-neutral-200'
-              }`}
-            >
-              <span>5sec Temporary info notification (Info 5s)</span>
-              <span className="text-[10px] text-sky-500 font-bold">5000ms</span>
-            </button>
-
-            {/* Preset 4: Persistent Error */}
-            <button
-              type="button"
-              onClick={() =>
-                handlePushPreset(
-                  'error',
-                  'persistent',
-                  0,
-                  'octagon-alert',
-                  'Critical error: Failed to initialize WebGPU context',
-                  [
-                    { key: 'retry', label: 'Retry', icon: 'rotate-ccw', format: 'icon-text', color: 'neutral' },
-                  ]
-                )
-              }
-              className={`py-2 px-3 rounded-xl border text-xs text-left font-medium transition-all cursor-pointer flex items-center justify-between ${
-                isLight
-                  ? 'bg-neutral-50 hover:bg-neutral-100 border-neutral-200 text-neutral-800'
-                  : 'bg-neutral-850 hover:bg-neutral-800 border-neutral-750 text-neutral-200'
-              }`}
-            >
-              <span>Persistent Error Notification (Dark collapse button on far right)</span>
-              <span className="text-[10px] text-red-500 font-bold">persistent</span>
-            </button>
-
-            {/* Preset 5: Batch Stack Test */}
             <button
               type="button"
               onClick={handlePushBatch}
@@ -216,7 +206,6 @@ export const QuickNotificationPresetsPanel: React.FC<QuickNotificationPresetsPan
               <span>[New]Background Task / Lazy Loading Simulation and priority collision</span>
             </div>
 
-            {/* Simulation 1: Lazy Loading Pipeline */}
             <button
               type="button"
               onClick={handleRunLazyLoadingSimulation}
@@ -238,20 +227,11 @@ export const QuickNotificationPresetsPanel: React.FC<QuickNotificationPresetsPan
               <span className="text-[10px] text-amber-500 font-bold shrink-0">5-Step Stream</span>
             </button>
 
-            {/* Simulation 2: Priority Preemption & Restore */}
-            <button
-              type="button"
-              onClick={handleRunPriorityPreemptionTest}
-              className={`py-2 px-3 rounded-xl border text-xs text-left font-medium transition-all cursor-pointer flex items-center justify-between ${
-                isLight
-                  ? 'bg-neutral-50 hover:bg-neutral-100 border-neutral-200 text-neutral-800'
-                  : 'bg-neutral-850 hover:bg-neutral-800 border-neutral-750 text-neutral-200'
-              }`}
-            >
+            <button type="button" onClick={handleRunPriorityPreemptionTest} className={presetRowClass}>
               <div className="flex items-center gap-2">
                 <Clock className="h-3.5 w-3.5 text-sky-500 shrink-0" />
                 <div className="flex flex-col">
-                  <span className="font-bold">Priority collision test (Preempt & Auto-Restore)</span>
+                  <span className="font-bold">Priority collision test (Preempt &amp; Auto-Restore)</span>
                   <span className="text-[10px] text-neutral-500 dark:text-neutral-400 font-normal">
                     Background streaming download → Immediate high-priority warning overlay → Warning collapses and automatically resumes background download
                   </span>
@@ -260,16 +240,7 @@ export const QuickNotificationPresetsPanel: React.FC<QuickNotificationPresetsPan
               <span className="text-[10px] text-sky-500 font-bold shrink-0">Collision Recovery</span>
             </button>
 
-            {/* Simulation 3: Multi-task Conflict */}
-            <button
-              type="button"
-              onClick={handleRunMultiTaskTest}
-              className={`py-2 px-3 rounded-xl border text-xs text-left font-medium transition-all cursor-pointer flex items-center justify-between ${
-                isLight
-                  ? 'bg-neutral-50 hover:bg-neutral-100 border-neutral-200 text-neutral-800'
-                  : 'bg-neutral-850 hover:bg-neutral-800 border-neutral-750 text-neutral-200'
-              }`}
-            >
+            <button type="button" onClick={handleRunMultiTaskTest} className={presetRowClass}>
               <div className="flex items-center gap-2">
                 <Layers className="h-3.5 w-3.5 text-purple-500 shrink-0" />
                 <div className="flex flex-col">
@@ -282,7 +253,6 @@ export const QuickNotificationPresetsPanel: React.FC<QuickNotificationPresetsPan
               <span className="text-[10px] text-purple-500 font-bold shrink-0">Multi-tasking</span>
             </button>
 
-            {/* Simulation 4: Remote dismiss / complete */}
             {activeOngoingTask && (
               <div className="flex items-center gap-2 pt-1">
                 <button
@@ -311,7 +281,6 @@ export const QuickNotificationPresetsPanel: React.FC<QuickNotificationPresetsPan
           </div>
         </div>
 
-        {/* Architectural Notes Box */}
         <div
           className={`p-5 rounded-2xl border flex flex-col gap-3 text-xs leading-relaxed ${
             isLight
@@ -324,7 +293,7 @@ export const QuickNotificationPresetsPanel: React.FC<QuickNotificationPresetsPan
             <span>Ongoing background task notification (Ongoing / Background Task Notification)</span>
           </div>
           <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
-            Designed for Lazy Loading, Non-essential asynchronous resource loading or shader compilation. User cannot manually close (No ignore or collapse button, Does not pollute unread stack and count red dots) ; Lowest Priority, Smoothly yield and occlude upon any user notification, Millisecond-level restoration after user notification is resolved; Supports silent progress updates and remote-triggered graceful exit. 
+            Designed for Lazy Loading, Non-essential asynchronous resource loading or shader compilation. User cannot manually close (No ignore or collapse button, Does not pollute unread stack and count red dots) ; Lowest Priority, Smoothly yield and occlude upon any user notification, Millisecond-level restoration after user notification is resolved; Supports silent progress updates and remote-triggered graceful exit.
           </p>
 
           <div className="font-bold flex items-center gap-1.5 text-neutral-900 dark:text-neutral-100 pt-1 border-t border-neutral-200/60 dark:border-neutral-800/60">
@@ -335,7 +304,7 @@ export const QuickNotificationPresetsPanel: React.FC<QuickNotificationPresetsPan
             Collapse and Ignore Use pure transparent background (
             <strong className="text-neutral-900 dark:text-neutral-100">bg-transparent</strong>)
             No solid background. Collapse Use deep black for core guided actions/Pure white high-contrast icon, Right Aligned; Ignore
-            Use lightweight low-contrast light gray, Reduce accidental discard probability, Fit Apple HIG Visual weight guidance logic. 
+            Use lightweight low-contrast light gray, Reduce accidental discard probability, Fit Apple HIG Visual weight guidance logic.
           </p>
 
           <div className="font-bold flex items-center gap-1.5 text-neutral-900 dark:text-neutral-100 pt-1 border-t border-neutral-200/60 dark:border-neutral-800/60">
@@ -343,8 +312,8 @@ export const QuickNotificationPresetsPanel: React.FC<QuickNotificationPresetsPan
             <span>Reject Icon and business color palette system</span>
           </div>
           <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
-            Reject/Deselect action deprecated to avoid confusion"Off"Cross Mark (X), Use thumbs down (Thumbs Down)
-            Or Forbidden Icon; System Green, Red, Amber, Neutral Monochrome, Sky Blue and Purple 6 Selectable Color Palettes. 
+            Reject/Deselect action deprecated to avoid confusion&quot;Off&quot;Cross Mark (X), Use thumbs down (Thumbs Down)
+            Or Forbidden Icon; System Green, Red, Amber, Neutral Monochrome, Sky Blue and Purple 6 Selectable Color Palettes.
           </p>
 
           <div className="font-bold flex items-center gap-1.5 text-neutral-900 dark:text-neutral-100 pt-1 border-t border-neutral-200/60 dark:border-neutral-800/60">
@@ -352,7 +321,7 @@ export const QuickNotificationPresetsPanel: React.FC<QuickNotificationPresetsPan
             <span>Stack horizontal drawer expansion animation with zero scrollbars</span>
           </div>
           <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
-            When the unread stack expands, notification containers slide out from right to left, Remove downward floating animation; Hide scrollbars during transitions and expand shadow boundaries, Prevent right shadow clipping. 
+            When the unread stack expands, notification containers slide out from right to left, Remove downward floating animation; Hide scrollbars during transitions and expand shadow boundaries, Prevent right shadow clipping.
           </p>
         </div>
       </div>

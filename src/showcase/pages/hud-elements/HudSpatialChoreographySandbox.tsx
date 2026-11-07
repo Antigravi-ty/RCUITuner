@@ -19,268 +19,127 @@ import { useHudSpatialChoreographySandboxState } from './useHudSpatialChoreograp
 
 export type { ScorePresetKey };
 
+const ALL_SLOTS = [1, 2, 3, 4, 5, 6] as const;
+const FLIP_SIM_ORDER: FlipSimMode[] = [
+  'auto-drain',
+  'grounded',
+  'multi-flip',
+  'unlimited',
+  'expired',
+];
+const SCORE_PRESET_MAP: Record<ScorePresetKey, [number, number, 2 | 3]> = {
+  '1digit': [2, 2, 2],
+  '2digit': [12, 8, 2],
+  '3digit': [104, 99, 3],
+};
+
 export const HudSpatialChoreographySandbox: React.FC<{ isLight?: boolean }> = React.memo(
   ({ isLight = true }) => {
-    const {
-      channelRef,
-      viewMode,
-      setViewMode,
-      activeSignal,
-      setActiveSignal,
-      bottomHudRetracted,
-      setBottomHudRetracted,
-      instantCockpitTransition,
-      setInstantCockpitTransition,
-      myTeamSide,
-      setMyTeamSide,
-      slotExists,
-      setSlotExists,
-      replaySkipReady,
-      setReplaySkipReady,
-      opponentDemoCompact,
-      setOpponentDemoCompact,
-      persistentDemo,
-      setPersistentDemo,
-      persistentDemoRef,
-      demoIndicatorConfig,
-      setDemoIndicatorConfig,
-      skipIndicatorConfig,
-      setSkipIndicatorConfig,
-      focusedSlot,
-      setFocusedSlot,
-      scorePreset,
-      setScorePreset,
-      overtimeChinOpen,
-      setOvertimeChinOpen,
-      bestOf,
-      setBestOf,
-      leftWins,
-      setLeftWins,
-      rightWins,
-      setRightWins,
-      hudThemeLight,
-      setHudThemeLight,
-      layoutStrategy,
-      setLayoutStrategy,
-      jumpPlacement,
-      setJumpPlacement,
-      flipSimMode,
-      setFlipSimMode,
-      flipSimModeRef,
-      showTelemetryTopLeft,
-      setShowTelemetryTopLeft,
-      showBallCam,
-      setShowBallCam,
-      selfDemoActive,
-      setSelfDemoActive,
-      sandboxSectionRef,
-      selfDemoPillTextRef,
-      demoEndTimestampsRef,
-    } = useHudSpatialChoreographySandboxState(isLight);
-
-    const leftTeamColor = myTeamSide === 'blue' ? '#2563EB' : '#EA580C';
-    const leftBarColor = myTeamSide === 'blue' ? '#3B82F6' : '#F97316';
-    const rightTeamColor = myTeamSide === 'blue' ? '#EA580C' : '#2563EB';
-    const rightBarColor = myTeamSide === 'blue' ? '#F97316' : '#3B82F6';
+    const s = useHudSpatialChoreographySandboxState(isLight);
+    const ch = s.channelRef.current;
+    const isBlue = s.myTeamSide === 'blue';
+    const leftTeamColor = isBlue ? '#2563EB' : '#EA580C';
+    const leftBarColor = isBlue ? '#3B82F6' : '#F97316';
+    const rightTeamColor = isBlue ? '#EA580C' : '#2563EB';
+    const rightBarColor = isBlue ? '#F97316' : '#3B82F6';
+    const getPovBarColor = (slot: number | null) =>
+      slot && slot >= 4 ? rightBarColor : leftBarColor;
 
     const resetAllReplaySkipReady = () => {
-      const emptySkip: Record<1 | 2 | 3 | 4 | 5 | 6, boolean> = {
-        1: false,
-        2: false,
-        3: false,
-        4: false,
-        5: false,
-        6: false,
-      };
-      setReplaySkipReady(emptySkip);
-      ([1, 2, 3, 4, 5, 6] as const).forEach((k) => {
-        channelRef.current.updatePlayerSlot(k, { replaySkipReady: false });
+      s.setReplaySkipReady({ 1: false, 2: false, 3: false, 4: false, 5: false, 6: false });
+      ALL_SLOTS.forEach((k) => ch.updatePlayerSlot(k, { replaySkipReady: false }));
+    };
+
+    const clearDemo = (k: 1 | 2 | 3 | 4 | 5 | 6) => {
+      delete s.demoEndTimestampsRef.current[k];
+      ch.updatePlayerSlot(k, {
+        isDemolished: false,
+        demoRespawnRemainingSec: 0,
+        demolishedAtMs: 0,
+        boostAmount: 33,
       });
+      if (k === 1) {
+        s.setSelfDemoActive(false);
+        ch.setRespawnTimer({ remainingSeconds: 0, totalSeconds: 3.0, active: false });
+      }
     };
 
     const handleDispatchSignal = (signal: MatchHudChoreographySignal) => {
-      setActiveSignal(signal);
-      setInstantCockpitTransition(false);
-      if (signal === 'goal-replay-will-start') {
-        setBottomHudRetracted(true);
-        channelRef.current.setReplayFooter({ visible: false });
+      s.setActiveSignal(signal);
+      s.setInstantCockpitTransition(false);
+      if (signal === 'goal-replay-will-start' || signal === 'goal-replay-will-end') {
+        s.setBottomHudRetracted(true);
+        ch.setReplayFooter({ visible: false });
       } else if (signal === 'goal-replay-started') {
-        setBottomHudRetracted(true);
-        setViewMode('goal-replay');
-        channelRef.current.setRoster({ viewMode: 'goal-replay' });
-        channelRef.current.setReplayFooter({
-          visible: true,
-          teamAccentColor: focusedSlot && focusedSlot >= 4 ? rightBarColor : leftBarColor,
-        });
-      } else if (signal === 'goal-replay-will-end') {
-        setBottomHudRetracted(true);
-        channelRef.current.setReplayFooter({ visible: false });
+        s.setBottomHudRetracted(true);
+        s.setViewMode('goal-replay');
+        ch.setRoster({ viewMode: 'goal-replay' });
+        ch.setReplayFooter({ visible: true, teamAccentColor: getPovBarColor(s.focusedSlot) });
       } else if (signal === 'kickoff-will-start') {
-        setBottomHudRetracted(false);
-        setViewMode('player-live');
-        if (skipIndicatorConfig.autoResetOnKickoff !== false) {
-          resetAllReplaySkipReady();
-        }
-        if (focusedSlot === null) {
-          setFocusedSlot(1);
-          channelRef.current.setRoster({ viewMode: 'player-live', focusedSlotKey: 1 });
-        } else {
-          channelRef.current.setRoster({ viewMode: 'player-live' });
-        }
-        channelRef.current.setReplayFooter({ visible: false });
+        s.setBottomHudRetracted(false);
+        s.setViewMode('player-live');
+        if (s.skipIndicatorConfig.autoResetOnKickoff !== false) resetAllReplaySkipReady();
+        const focusedSlotKey = s.focusedSlot ?? 1;
+        if (s.focusedSlot === null) s.setFocusedSlot(1);
+        ch.setRoster({ viewMode: 'player-live', focusedSlotKey });
+        ch.setReplayFooter({ visible: false });
       }
     };
 
     const handleModeChange = (mode: HudRosterViewMode) => {
-      setInstantCockpitTransition(false);
-      setViewMode(mode);
-      channelRef.current.setRoster({ viewMode: mode });
-      if (mode === 'goal-replay') {
-        setActiveSignal('goal-replay-started');
-        setBottomHudRetracted(true);
-        channelRef.current.setReplayFooter({
-          visible: true,
-          teamAccentColor: focusedSlot && focusedSlot >= 4 ? rightBarColor : leftBarColor,
-        });
-      } else {
-        setActiveSignal('kickoff-will-start');
-        setBottomHudRetracted(false);
-        if (mode === 'player-live' && skipIndicatorConfig.autoResetOnKickoff !== false) {
-          resetAllReplaySkipReady();
-        }
-        channelRef.current.setReplayFooter({ visible: false });
+      s.setInstantCockpitTransition(false);
+      s.setViewMode(mode);
+      ch.setRoster({ viewMode: mode });
+      const isGoal = mode === 'goal-replay';
+      s.setActiveSignal(isGoal ? 'goal-replay-started' : 'kickoff-will-start');
+      s.setBottomHudRetracted(isGoal);
+      if (!isGoal && mode === 'player-live' && s.skipIndicatorConfig.autoResetOnKickoff !== false) {
+        resetAllReplaySkipReady();
       }
+      ch.setReplayFooter(
+        isGoal ? { visible: true, teamAccentColor: getPovBarColor(s.focusedSlot) } : { visible: false }
+      );
     };
 
     const handleSelectPov = (slotKey: 1 | 2 | 3 | 4 | 5 | 6 | null) => {
-      const isTransitioningNullInSpec =
-        viewMode === 'spectator' && (slotKey === null || focusedSlot === null);
-      setInstantCockpitTransition(isTransitioningNullInSpec);
-      setFocusedSlot(slotKey);
-      channelRef.current.setRoster({ focusedSlotKey: slotKey });
-      channelRef.current.setReplayFooter({
-        teamAccentColor: slotKey && slotKey >= 4 ? rightBarColor : leftBarColor,
-      });
-    };
-
-    const handleToggleTeamSide = () => {
-      setMyTeamSide((prev) => {
-        const next = prev === 'blue' ? 'orange' : 'blue';
-        const nextLeftBar = next === 'blue' ? '#3B82F6' : '#F97316';
-        const nextRightBar = next === 'blue' ? '#F97316' : '#3B82F6';
-        channelRef.current.setReplayFooter({
-          teamAccentColor: focusedSlot && focusedSlot >= 4 ? nextRightBar : nextLeftBar,
-        });
-        return next;
-      });
-    };
-
-    const handleToggleSlotExists = (slotKey: 1 | 2 | 3 | 4 | 5 | 6) => {
-      setSlotExists((prev) => {
-        const nextVal = !prev[slotKey];
-        const nextMap = { ...prev, [slotKey]: nextVal };
-        channelRef.current.updatePlayerSlot(slotKey, { exists: nextVal });
-        return nextMap;
-      });
-    };
-
-    const handleToggleReplaySkipReady = (slotKey: 1 | 2 | 3 | 4 | 5 | 6) => {
-      setReplaySkipReady((prev) => {
-        const nextVal = !prev[slotKey];
-        const nextMap = { ...prev, [slotKey]: nextVal };
-        channelRef.current.updatePlayerSlot(slotKey, { replaySkipReady: nextVal });
-        return nextMap;
-      });
-    };
-
-    const handleApplyTeamSizePreset = (leftCount: 1 | 2 | 3, rightCount: 1 | 2 | 3) => {
-      const nextMap: Record<1 | 2 | 3 | 4 | 5 | 6, boolean> = {
-        1: leftCount >= 1,
-        2: leftCount >= 2,
-        3: leftCount >= 3,
-        4: rightCount >= 1,
-        5: rightCount >= 2,
-        6: rightCount >= 3,
-      };
-      setSlotExists(nextMap);
-      ([1, 2, 3, 4, 5, 6] as const).forEach((k) => {
-        channelRef.current.updatePlayerSlot(k, { exists: nextMap[k] });
-      });
-    };
-
-    const handleToggleOpponentDemoCompact = () => {
-      setOpponentDemoCompact((prev) => {
-        const next = !prev;
-        channelRef.current.setRoster({ opponentDemoCompact: next });
-        return next;
-      });
-    };
-
-    const handleUpdateDemoIndicatorConfig = (patch: Partial<EdgeDemoIndicatorConfig>) => {
-      setDemoIndicatorConfig((prev) => {
-        const next = { ...prev, ...patch };
-        channelRef.current.setRoster({ demoIndicatorConfig: next });
-        return next;
-      });
-    };
-
-    const handleUpdateSkipIndicatorConfig = (patch: Partial<EdgeSkipIndicatorConfig>) => {
-      setSkipIndicatorConfig((prev) => {
-        const next = { ...prev, ...patch };
-        channelRef.current.setRoster({ skipIndicatorConfig: next });
-        return next;
-      });
+      s.setInstantCockpitTransition(
+        s.viewMode === 'spectator' && (slotKey === null || s.focusedSlot === null)
+      );
+      s.setFocusedSlot(slotKey);
+      ch.setRoster({ focusedSlotKey: slotKey });
+      ch.setReplayFooter({ teamAccentColor: getPovBarColor(slotKey) });
     };
 
     const handleTriggerDemo = (slotKey: 1 | 2 | 3 | 4 | 5 | 6) => {
       const now = performance.now();
-      const wasAlreadyDemo = Boolean(demoEndTimestampsRef.current[slotKey]);
-      if (persistentDemoRef.current && wasAlreadyDemo) {
-        delete demoEndTimestampsRef.current[slotKey];
-        channelRef.current.updatePlayerSlot(slotKey, {
-          isDemolished: false,
-          demoRespawnRemainingSec: 0,
-          demolishedAtMs: 0,
-          boostAmount: 33,
-        });
-        if (slotKey === 1) {
-          setSelfDemoActive(false);
-          channelRef.current.setRespawnTimer({
-            remainingSeconds: 0,
-            totalSeconds: 3.0,
-            active: false,
-          });
-        }
+      const wasAlreadyDemo = Boolean(s.demoEndTimestampsRef.current[slotKey]);
+      if (s.persistentDemoRef.current && wasAlreadyDemo) {
+        clearDemo(slotKey);
         return;
       }
-      demoEndTimestampsRef.current[slotKey] = now + 3000;
+      s.demoEndTimestampsRef.current[slotKey] = now + 3000;
       if (slotKey === 1) {
-        setSelfDemoActive(true);
-        channelRef.current.setRespawnTimer({
-          remainingSeconds: 3.0,
-          totalSeconds: 3.0,
-          active: true,
-        });
+        s.setSelfDemoActive(true);
+        ch.setRespawnTimer({ remainingSeconds: 3.0, totalSeconds: 3.0, active: true });
       }
-      channelRef.current.updatePlayerSlot(slotKey, {
+      ch.updatePlayerSlot(slotKey, {
         isDemolished: true,
-        demoRespawnRemainingSec: persistentDemoRef.current ? 1.8 : 3.0,
+        demoRespawnRemainingSec: s.persistentDemoRef.current ? 1.8 : 3.0,
         ...(wasAlreadyDemo ? {} : { demolishedAtMs: now }),
       });
     };
 
     const handleTogglePersistentDemo = () => {
-      setPersistentDemo((prev) => {
+      s.setPersistentDemo((prev) => {
         const next = !prev;
-        persistentDemoRef.current = next;
+        s.persistentDemoRef.current = next;
         const now = performance.now();
         if (next) {
-          const activeKeys = Object.keys(demoEndTimestampsRef.current);
-          if (activeKeys.length === 0) {
+          if (Object.keys(s.demoEndTimestampsRef.current).length === 0) {
             ([2, 4] as const).forEach((k, idx) => {
-              if (slotExists[k]) {
-                demoEndTimestampsRef.current[k] = now + 3000;
-                channelRef.current.updatePlayerSlot(k, {
+              if (s.slotExists[k]) {
+                s.demoEndTimestampsRef.current[k] = now + 3000;
+                ch.updatePlayerSlot(k, {
                   isDemolished: true,
                   demoRespawnRemainingSec: 1.8,
                   demolishedAtMs: now + idx * 10,
@@ -289,211 +148,197 @@ export const HudSpatialChoreographySandbox: React.FC<{ isLight?: boolean }> = Re
             });
           }
         } else {
-          for (const keyStr of Object.keys(demoEndTimestampsRef.current)) {
-            const k = Number(keyStr) as 1 | 2 | 3 | 4 | 5 | 6;
-            delete demoEndTimestampsRef.current[k];
-            channelRef.current.updatePlayerSlot(k, {
-              isDemolished: false,
-              demoRespawnRemainingSec: 0,
-              demolishedAtMs: 0,
-              boostAmount: 33,
-            });
-          }
-          setSelfDemoActive(false);
-          channelRef.current.setRespawnTimer({
-            remainingSeconds: 0,
-            totalSeconds: 3.0,
-            active: false,
-          });
+          Object.keys(s.demoEndTimestampsRef.current).forEach((k) =>
+            clearDemo(Number(k) as 1 | 2 | 3 | 4 | 5 | 6)
+          );
         }
         return next;
       });
     };
 
-    const handleScorePresetChange = (preset: ScorePresetKey) => {
-      setScorePreset(preset);
-      if (preset === '1digit') {
-        channelRef.current.setScoreboard({ leftScore: 2, rightScore: 2, scoreDigits: 2 });
-      } else if (preset === '2digit') {
-        channelRef.current.setScoreboard({ leftScore: 12, rightScore: 8, scoreDigits: 2 });
-      } else {
-        channelRef.current.setScoreboard({ leftScore: 104, rightScore: 99, scoreDigits: 3 });
-      }
-    };
-
-    const handleTriggerOvertimeKickoff = () => {
-      setOvertimeChinOpen(true);
-      channelRef.current.setScoreboard({
-        seconds: 0,
-        isOvertime: true,
-        overtimeChinOpen: true,
-        overtimeChinText: 'OVERTIME',
-      });
-    };
-
-    const handleToggleOvertimeChin = () => {
-      const next = !overtimeChinOpen;
-      setOvertimeChinOpen(next);
-      channelRef.current.setScoreboard({ overtimeChinOpen: next });
-    };
-
-    const handleResetRegulation = () => {
-      setOvertimeChinOpen(false);
-      channelRef.current.setScoreboard({
-        seconds: 164,
-        isOvertime: false,
-        overtimeChinOpen: false,
-      });
-    };
-
-    const handleBestOfChange = (nextBo: 0 | 3 | 5 | 7) => {
-      setBestOf(nextBo);
-      const maxWins = nextBo > 0 ? Math.ceil(nextBo / 2) : 0;
-      const clampedL = Math.min(leftWins, maxWins);
-      const clampedR = Math.min(rightWins, maxWins);
-      setLeftWins(clampedL);
-      setRightWins(clampedR);
-      channelRef.current.setScoreboard({
-        bestOf: nextBo,
-        leftSeriesWins: clampedL,
-        rightSeriesWins: clampedR,
-      });
-    };
-
-    const handleAddSeriesWin = (team: 'left' | 'right') => {
-      const winsNeeded = bestOf > 0 ? Math.ceil(bestOf / 2) : 3;
-      if (team === 'left') {
-        const nextL = (leftWins + 1) % (winsNeeded + 1);
-        setLeftWins(nextL);
-        channelRef.current.setScoreboard({ leftSeriesWins: nextL });
-      } else {
-        const nextR = (rightWins + 1) % (winsNeeded + 1);
-        setRightWins(nextR);
-        channelRef.current.setScoreboard({ rightSeriesWins: nextR });
-      }
-    };
-
     const handleFlipSimModeChange = (nextMode: FlipSimMode) => {
-      setFlipSimMode(nextMode);
-      flipSimModeRef.current = nextMode;
-      if (nextMode === 'grounded') {
-        channelRef.current.setFlip({
-          hasFlip: true,
-          status: 'grounded',
-          remainingSeconds: FLIP_WINDOW_SECONDS,
-          maxSeconds: FLIP_WINDOW_SECONDS,
-          flipsRemaining: 1,
-        });
-      } else if (nextMode === 'multi-flip') {
-        channelRef.current.setFlip({
-          hasFlip: true,
-          status: 'grounded',
-          remainingSeconds: FLIP_WINDOW_SECONDS,
-          maxSeconds: FLIP_WINDOW_SECONDS,
-          flipsRemaining: 2,
-        });
-      } else if (nextMode === 'unlimited') {
-        channelRef.current.setFlip({
-          hasFlip: true,
-          status: 'unlimited',
-          remainingSeconds: FLIP_WINDOW_SECONDS,
-          maxSeconds: FLIP_WINDOW_SECONDS,
-          flipsRemaining: 1,
-        });
-      } else if (nextMode === 'expired') {
-        channelRef.current.setFlip({
-          hasFlip: false,
-          status: 'expired',
-          remainingSeconds: 0,
-          maxSeconds: FLIP_WINDOW_SECONDS,
-          flipsRemaining: 0,
-        });
+      s.setFlipSimMode(nextMode);
+      s.flipSimModeRef.current = nextMode;
+      const maxSeconds = FLIP_WINDOW_SECONDS;
+      if (nextMode === 'auto-drain') {
+        ch.setFlip({ flipsRemaining: 1 });
       } else {
-        channelRef.current.setFlip({ flipsRemaining: 1 });
+        const isExp = nextMode === 'expired';
+        ch.setFlip({
+          maxSeconds,
+          hasFlip: !isExp,
+          status: nextMode === 'multi-flip' ? 'grounded' : nextMode,
+          remainingSeconds: isExp ? 0 : maxSeconds,
+          flipsRemaining: isExp ? 0 : nextMode === 'multi-flip' ? 2 : 1,
+        });
       }
     };
 
-    const handleCycleFlipSimMode = () => {
-      const order: FlipSimMode[] = ['auto-drain', 'grounded', 'multi-flip', 'unlimited', 'expired'];
-      const next = order[(order.indexOf(flipSimMode) + 1) % order.length];
-      handleFlipSimModeChange(next);
-    };
-
-    const winsNeededForBo = bestOf > 0 ? Math.ceil(bestOf / 2) : 0;
-    const leftTopBandVisible = showTelemetryTopLeft;
-    const rightTopBandVisible =
-      layoutStrategy === 'collapse-symmetric' ? showTelemetryTopLeft : false;
-    const topBandSlotMode: HudSlotMode = layoutStrategy === 'reserve' ? 'reserve' : 'collapse';
-    const isSpectatorFreeCam = viewMode === 'spectator' && focusedSlot === null;
-    const isCockpitVisible = !bottomHudRetracted && !isSpectatorFreeCam;
+    const winsNeededForBo = s.bestOf > 0 ? Math.ceil(s.bestOf / 2) : 0;
+    const topBandSlotMode: HudSlotMode = s.layoutStrategy === 'reserve' ? 'reserve' : 'collapse';
+    const isCockpitVisible =
+      !s.bottomHudRetracted && !(s.viewMode === 'spectator' && s.focusedSlot === null);
 
     return (
       <HudChoreographySandboxProvider
         value={{
           isLight,
-          hudThemeLight,
-          setHudThemeLight,
-          scorePreset,
-          handleScorePresetChange,
-          overtimeChinOpen,
-          handleTriggerOvertimeKickoff,
-          handleToggleOvertimeChin,
-          handleResetRegulation,
-          bestOf,
-          handleBestOfChange,
-          leftWins,
-          rightWins,
+          hudThemeLight: s.hudThemeLight,
+          setHudThemeLight: s.setHudThemeLight,
+          scorePreset: s.scorePreset,
+          handleScorePresetChange: (preset) => {
+            s.setScorePreset(preset);
+            const [leftScore, rightScore, scoreDigits] = SCORE_PRESET_MAP[preset];
+            ch.setScoreboard({ leftScore, rightScore, scoreDigits });
+          },
+          overtimeChinOpen: s.overtimeChinOpen,
+          handleTriggerOvertimeKickoff: () => {
+            s.setOvertimeChinOpen(true);
+            ch.setScoreboard({
+              seconds: 0,
+              isOvertime: true,
+              overtimeChinOpen: true,
+              overtimeChinText: 'OVERTIME',
+            });
+          },
+          handleToggleOvertimeChin: () => {
+            const next = !s.overtimeChinOpen;
+            s.setOvertimeChinOpen(next);
+            ch.setScoreboard({ overtimeChinOpen: next });
+          },
+          handleResetRegulation: () => {
+            s.setOvertimeChinOpen(false);
+            ch.setScoreboard({ seconds: 164, isOvertime: false, overtimeChinOpen: false });
+          },
+          bestOf: s.bestOf,
+          handleBestOfChange: (nextBo) => {
+            s.setBestOf(nextBo);
+            const maxWins = nextBo > 0 ? Math.ceil(nextBo / 2) : 0;
+            const clampedL = Math.min(s.leftWins, maxWins);
+            const clampedR = Math.min(s.rightWins, maxWins);
+            s.setLeftWins(clampedL);
+            s.setRightWins(clampedR);
+            ch.setScoreboard({ bestOf: nextBo, leftSeriesWins: clampedL, rightSeriesWins: clampedR });
+          },
+          leftWins: s.leftWins,
+          rightWins: s.rightWins,
           winsNeededForBo,
-          handleAddSeriesWin,
-          viewMode,
+          handleAddSeriesWin: (team) => {
+            const winsNeeded = s.bestOf > 0 ? Math.ceil(s.bestOf / 2) : 3;
+            if (team === 'left') {
+              const nextL = (s.leftWins + 1) % (winsNeeded + 1);
+              s.setLeftWins(nextL);
+              ch.setScoreboard({ leftSeriesWins: nextL });
+            } else {
+              const nextR = (s.rightWins + 1) % (winsNeeded + 1);
+              s.setRightWins(nextR);
+              ch.setScoreboard({ rightSeriesWins: nextR });
+            }
+          },
+          viewMode: s.viewMode,
           handleModeChange,
-          activeSignal,
+          activeSignal: s.activeSignal,
           handleDispatchSignal,
-          myTeamSide,
-          handleToggleTeamSide,
-          slotExists,
-          handleToggleSlotExists,
-          replaySkipReady,
-          handleToggleReplaySkipReady,
-          skipIndicatorConfig,
-          onUpdateSkipIndicatorConfig: handleUpdateSkipIndicatorConfig,
-          handleApplyTeamSizePreset,
-          opponentDemoCompact,
-          handleToggleOpponentDemoCompact,
-          persistentDemo,
+          myTeamSide: s.myTeamSide,
+          handleToggleTeamSide: () => {
+            s.setMyTeamSide((prev) => {
+              const next = prev === 'blue' ? 'orange' : 'blue';
+              const nextL = next === 'blue' ? '#3B82F6' : '#F97316';
+              const nextR = next === 'blue' ? '#F97316' : '#3B82F6';
+              ch.setReplayFooter({
+                teamAccentColor: s.focusedSlot && s.focusedSlot >= 4 ? nextR : nextL,
+              });
+              return next;
+            });
+          },
+          slotExists: s.slotExists,
+          handleToggleSlotExists: (slotKey) => {
+            s.setSlotExists((prev) => {
+              const nextVal = !prev[slotKey];
+              ch.updatePlayerSlot(slotKey, { exists: nextVal });
+              return { ...prev, [slotKey]: nextVal };
+            });
+          },
+          replaySkipReady: s.replaySkipReady,
+          handleToggleReplaySkipReady: (slotKey) => {
+            s.setReplaySkipReady((prev) => {
+              const nextVal = !prev[slotKey];
+              ch.updatePlayerSlot(slotKey, { replaySkipReady: nextVal });
+              return { ...prev, [slotKey]: nextVal };
+            });
+          },
+          skipIndicatorConfig: s.skipIndicatorConfig,
+          onUpdateSkipIndicatorConfig: (patch: Partial<EdgeSkipIndicatorConfig>) => {
+            s.setSkipIndicatorConfig((prev) => {
+              const next = { ...prev, ...patch };
+              ch.setRoster({ skipIndicatorConfig: next });
+              return next;
+            });
+          },
+          handleApplyTeamSizePreset: (leftCount, rightCount) => {
+            const nextMap: Record<1 | 2 | 3 | 4 | 5 | 6, boolean> = {
+              1: leftCount >= 1,
+              2: leftCount >= 2,
+              3: leftCount >= 3,
+              4: rightCount >= 1,
+              5: rightCount >= 2,
+              6: rightCount >= 3,
+            };
+            s.setSlotExists(nextMap);
+            ALL_SLOTS.forEach((k) => ch.updatePlayerSlot(k, { exists: nextMap[k] }));
+          },
+          opponentDemoCompact: s.opponentDemoCompact,
+          handleToggleOpponentDemoCompact: () => {
+            s.setOpponentDemoCompact((prev) => {
+              const next = !prev;
+              ch.setRoster({ opponentDemoCompact: next });
+              return next;
+            });
+          },
+          persistentDemo: s.persistentDemo,
           onTogglePersistentDemo: handleTogglePersistentDemo,
-          demoIndicatorConfig,
-          onUpdateDemoIndicatorConfig: handleUpdateDemoIndicatorConfig,
-          focusedSlot,
+          demoIndicatorConfig: s.demoIndicatorConfig,
+          onUpdateDemoIndicatorConfig: (patch: Partial<EdgeDemoIndicatorConfig>) => {
+            s.setDemoIndicatorConfig((prev) => {
+              const next = { ...prev, ...patch };
+              ch.setRoster({ demoIndicatorConfig: next });
+              return next;
+            });
+          },
+          focusedSlot: s.focusedSlot,
           handleSelectPov,
           handleTriggerDemo,
-          layoutStrategy,
-          setLayoutStrategy,
-          showTelemetryTopLeft,
-          setShowTelemetryTopLeft,
-          flipSimMode,
+          layoutStrategy: s.layoutStrategy,
+          setLayoutStrategy: s.setLayoutStrategy,
+          showTelemetryTopLeft: s.showTelemetryTopLeft,
+          setShowTelemetryTopLeft: s.setShowTelemetryTopLeft,
+          flipSimMode: s.flipSimMode,
           onFlipSimModeChange: handleFlipSimModeChange,
-          handleCycleFlipSimMode,
-          jumpPlacement,
-          setJumpPlacement,
-          showBallCam,
-          setShowBallCam,
-          leftTopBandVisible,
-          rightTopBandVisible,
+          handleCycleFlipSimMode: () => {
+            handleFlipSimModeChange(
+              FLIP_SIM_ORDER[(FLIP_SIM_ORDER.indexOf(s.flipSimMode) + 1) % FLIP_SIM_ORDER.length]
+            );
+          },
+          jumpPlacement: s.jumpPlacement,
+          setJumpPlacement: s.setJumpPlacement,
+          showBallCam: s.showBallCam,
+          setShowBallCam: s.setShowBallCam,
+          leftTopBandVisible: s.showTelemetryTopLeft,
+          rightTopBandVisible:
+            s.layoutStrategy === 'collapse-symmetric' ? s.showTelemetryTopLeft : false,
           topBandSlotMode,
           leftTeamColor,
           leftBarColor,
           rightTeamColor,
           rightBarColor,
-          selfDemoActive,
-          selfDemoPillTextRef,
+          selfDemoActive: s.selfDemoActive,
+          selfDemoPillTextRef: s.selfDemoPillTextRef,
           isCockpitVisible,
-          instantCockpitTransition,
-          channel: channelRef.current,
+          instantCockpitTransition: s.instantCockpitTransition,
+          channel: ch,
         }}
       >
-        <section ref={sandboxSectionRef} className="flex flex-col gap-5">
-          {/* Section Header */}
+        <section ref={s.sandboxSectionRef} className="flex flex-col gap-5">
           <div className="flex items-center justify-between border-b pb-2.5 border-neutral-200 dark:border-neutral-800 flex-wrap gap-2">
             <div className="flex items-center gap-2 flex-wrap">
               <div className="h-6 w-6 rounded-md bg-blue-500/15 text-blue-500 flex items-center justify-center font-bold text-xs font-mono">
@@ -511,9 +356,7 @@ export const HudSpatialChoreographySandbox: React.FC<{ isLight?: boolean }> = Re
               </Badge>
             </div>
           </div>
-          {/* Interactive Control Deck */}
           <HudChoreographyControlDeck isLight={isLight} />
-          {/* FULL-VIEWPORT 16:9 HUD SPATIAL STAGE */}
           <HudSpatialChoreographyStageCanvas />
         </section>
       </HudChoreographySandboxProvider>
