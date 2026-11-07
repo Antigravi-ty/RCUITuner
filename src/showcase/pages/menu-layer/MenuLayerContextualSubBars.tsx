@@ -9,6 +9,7 @@ import {
   DEV_SETTINGS_QUICK_TABS,
   GARAGE_QUICK_TABS,
 } from './menuLayerRouteConfig';
+import { ONLINE_ROOM_MEMBER_SLOT_OPTIONS } from './menuLayerOnlineRoomSteps';
 import { useMenuLayerSandbox } from './MenuLayerSandboxContext';
 
 export interface MenuLayerContextualSubBarProps {
@@ -92,10 +93,13 @@ export const MenuLayerL2ContextualSubBars: React.FC<MenuLayerContextualSubBarPro
     setSettingsTab,
     garageTab,
     setGarageTab,
+    layer3StepOverride,
+    setLayer3StepOverride,
     showToast,
     onNavigateToPlayCards,
   } = useMenuLayerSandbox();
   const { variant: playCardVariant, setVariant: setPlayCardVariant } = usePlayCardStyleStore();
+  const activeMemberSlots = layer3StepOverride?.memberSlots ?? 3;
 
   return (
     <>
@@ -193,35 +197,64 @@ export const MenuLayerL2ContextualSubBars: React.FC<MenuLayerContextualSubBarPro
 
       {currentRoute === 'manage-room' && (
         <div className="w-full pt-2 flex flex-col gap-1.5 border-t border-neutral-100 dark:border-neutral-800/60 mt-1">
-          <div className="flex items-center justify-between text-[11px] text-neutral-500 dark:text-neutral-400 font-mono">
-            <span>Online Room Control 6 State Context Synchronization (Match Lobby / During Match / Online Warmup · Host & Client):</span>
+          <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-neutral-500 dark:text-neutral-400 font-mono">
+            <span>Online Room Control · 6 Contexts &amp; Member Slot Density (1 vs 3 Slots):</span>
             <span className="text-amber-500 font-semibold">
-              current: {resolveOnlineSessionContextId(layer1ContextMode).toUpperCase()}
+              context={resolveOnlineSessionContextId(layer1ContextMode).toUpperCase()} · slots={activeMemberSlots}
             </span>
           </div>
-          <div className="flex flex-wrap items-center gap-1.5">
-            {ONLINE_SESSION_CONTEXT_SPECS.map((spec) => {
-              const active = resolveOnlineSessionContextId(layer1ContextMode) === spec.id;
-              return (
-                <button
-                  key={spec.id}
-                  type="button"
-                  onClick={() => {
-                    setLayer1ContextMode(spec.id);
-                    showToast(`Room control panel switched to: ${spec.shortLabel} (${spec.role.toUpperCase()})`);
-                  }}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-mono border cursor-pointer transition-all ${
-                    active
-                      ? 'bg-amber-500 text-white border-amber-500 font-bold shadow-2xs'
-                      : isLight
-                      ? 'bg-neutral-50 hover:bg-neutral-100 border-neutral-200 text-neutral-700'
-                      : 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-neutral-300'
-                  }`}
-                >
-                  {spec.shortLabel}
-                </button>
-              );
-            })}
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-1.5">
+              {ONLINE_SESSION_CONTEXT_SPECS.map((spec) => {
+                const active = resolveOnlineSessionContextId(layer1ContextMode) === spec.id;
+                return (
+                  <button
+                    key={spec.id}
+                    type="button"
+                    onClick={() => {
+                      setLayer1ContextMode(spec.id);
+                      showToast(`Room control panel switched to: ${spec.shortLabel} (${spec.role.toUpperCase()})`);
+                    }}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-mono border cursor-pointer transition-all ${
+                      active
+                        ? 'bg-amber-500 text-white border-amber-500 font-bold shadow-2xs'
+                        : isLight
+                        ? 'bg-neutral-50 hover:bg-neutral-100 border-neutral-200 text-neutral-700'
+                        : 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-neutral-300'
+                    }`}
+                  >
+                    {spec.shortLabel}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="flex items-center gap-1.5">
+              {ONLINE_ROOM_MEMBER_SLOT_OPTIONS.map((slotOpt) => {
+                const active = activeMemberSlots === slotOpt.slots;
+                return (
+                  <button
+                    key={slotOpt.suffix}
+                    type="button"
+                    onClick={() => {
+                      setLayer3StepOverride({
+                        ...layer3StepOverride,
+                        memberSlots: slotOpt.slots,
+                      });
+                      showToast(`Room member slots switched to: ${slotOpt.shortLabel}`);
+                    }}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-mono border cursor-pointer transition-all ${
+                      active
+                        ? 'bg-emerald-500 text-white border-emerald-500 font-bold shadow-2xs'
+                        : isLight
+                        ? 'bg-neutral-50 hover:bg-neutral-100 border-neutral-200 text-neutral-700'
+                        : 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-neutral-300'
+                    }`}
+                  >
+                    {slotOpt.badgeLabel}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}

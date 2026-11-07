@@ -21,6 +21,7 @@ export interface Layer3StepOverrideState {
   progressStatus?: Layer3StepProgressStatus;
   currentStep?: number;
   defaultEditingConfig?: boolean;
+  memberSlots?: 1 | 3;
 }
 
 export interface MenuLayerSandboxContextValue {

@@ -2,13 +2,23 @@ import {
   LAYER1_CONTEXT_VARIATIONS,
   type Layer1MenuContextMode,
 } from '../../../ui-core/recipes/layer1MenuContextSpecs';
-import type { OnlineSessionContextId } from '../../../ui-core/recipes/Layer2ManageRoomRecipe';
+import type {
+  OnlineRoomControlStateOverride,
+  OnlineSessionContextId,
+} from '../../../ui-core/recipes/Layer2ManageRoomRecipe';
 import type { CreationProgressStatus } from '../../../ui-core/recipes/online/OnlineRoomCreationProgress';
 import type { HostMatchConfig } from '../../../ui-core/recipes/online/OnlineRoomConfigSummaryCard';
 import type { JoinRoomConfig } from '../../../ui-core/recipes/Layer3JoinRoomRecipe';
 import type { HostTrainingGhostMode } from '../../../ui-core/recipes/Layer3HostTrainingRecipe';
 import type { GarageTabId } from '../../../ui-core/recipes/Layer2GarageRecipe';
 import type { SettingsTabId } from '../../../ui-core/recipes/Layer2SettingsRecipe';
+import {
+  HOST_MATCH_PROGRESS_STEPS,
+  HOST_TRAINING_PROGRESS_STEPS,
+  JOIN_ROOM_PROGRESS_STEPS,
+  ROOM_CONTROL_CONTEXT_STEPS,
+  resolveManageRoomRosterOverride,
+} from '../menu-layer/menuLayerOnlineRoomSteps';
 
 export interface RecipeStateSnapshotSpec<TProps> {
   id: string;
@@ -131,207 +141,88 @@ export const LAYER2_SETTINGS_STATES: RecipeStateSnapshotSpec<{
   },
 ];
 
-export const LAYER2_MANAGE_ROOM_STATES: RecipeStateSnapshotSpec<{
-  sessionContext: OnlineSessionContextId;
-}>[] = [
-  {
-    id: 'match-lobby-host',
-    label: 'Match Lobby (Host)',
-    description: 'Pre-match lobby managed by the room host with team slots, bot fill controls, and Start Match CTA.',
-    componentName: 'Layer2ManageRoomRecipe',
-    sourceFile: 'recipes/Layer2ManageRoomRecipe.tsx',
-    subViewFile: 'recipes/online/MatchLobbyRoomRecipe.tsx',
-    props: { sessionContext: 'match-lobby-host' },
+export const LAYER2_MANAGE_ROOM_STATES: RecipeStateSnapshotSpec<
+  OnlineRoomControlStateOverride & {
+    sessionContext: OnlineSessionContextId;
+    memberSlots: 1 | 3;
+  }
+>[] = ROOM_CONTROL_CONTEXT_STEPS.map((rc) => ({
+  id: rc.id,
+  label: rc.label,
+  description: rc.description,
+  componentName: 'Layer2ManageRoomRecipe',
+  sourceFile: 'recipes/Layer2ManageRoomRecipe.tsx',
+  subViewFile: rc.ctx.startsWith('match-lobby-')
+    ? 'recipes/online/MatchLobbyRoomRecipe.tsx'
+    : rc.ctx.startsWith('online-match-')
+    ? 'recipes/online/DuringMatchRoomRecipe.tsx'
+    : 'recipes/online/OnlineWarmupRoomRecipe.tsx',
+  props: {
+    ...resolveManageRoomRosterOverride(rc.ctx, rc.memberSlots),
+    sessionContext: rc.ctx,
+    memberSlots: rc.memberSlots,
   },
-  {
-    id: 'match-lobby-client',
-    label: 'Match Lobby (Client)',
-    description: 'Pre-match lobby viewed by a connected peer with team selection and daisy-chain spectating status.',
-    componentName: 'Layer2ManageRoomRecipe',
-    sourceFile: 'recipes/Layer2ManageRoomRecipe.tsx',
-    subViewFile: 'recipes/online/MatchLobbyRoomRecipe.tsx',
-    props: { sessionContext: 'match-lobby-client' },
-  },
-  {
-    id: 'online-match-host',
-    label: 'During Match (Host)',
-    description: 'Live match room control for the host with pause toggle, spectator routing diagnostics, and server shutdown.',
-    componentName: 'Layer2ManageRoomRecipe',
-    sourceFile: 'recipes/Layer2ManageRoomRecipe.tsx',
-    subViewFile: 'recipes/online/DuringMatchRoomRecipe.tsx',
-    props: { sessionContext: 'online-match-host' },
-  },
-  {
-    id: 'online-match-client',
-    label: 'During Match (Client)',
-    description: 'Live match room info for a connected client with pause request, relay status, and leave room action.',
-    componentName: 'Layer2ManageRoomRecipe',
-    sourceFile: 'recipes/Layer2ManageRoomRecipe.tsx',
-    subViewFile: 'recipes/online/DuringMatchRoomRecipe.tsx',
-    props: { sessionContext: 'online-match-client' },
-  },
-  {
-    id: 'online-warmup-host',
-    label: 'Online Warmup (Host)',
-    description: 'Teamless warmup session control for the host with up to 6 active players and advanced management.',
-    componentName: 'Layer2ManageRoomRecipe',
-    sourceFile: 'recipes/Layer2ManageRoomRecipe.tsx',
-    subViewFile: 'recipes/online/OnlineWarmupRoomRecipe.tsx',
-    props: { sessionContext: 'online-warmup-host' },
-  },
-  {
-    id: 'online-warmup-client',
-    label: 'Online Warmup (Client)',
-    description: 'Teamless warmup session info for a peer with client-side Ghost Mode toggle and leave room action.',
-    componentName: 'Layer2ManageRoomRecipe',
-    sourceFile: 'recipes/Layer2ManageRoomRecipe.tsx',
-    subViewFile: 'recipes/online/OnlineWarmupRoomRecipe.tsx',
-    props: { sessionContext: 'online-warmup-client' },
-  },
-];
+}));
 
 export const LAYER3_JOIN_ROOM_STATES: RecipeStateSnapshotSpec<{
   config?: Partial<JoinRoomConfig>;
   progressStatus: CreationProgressStatus;
   currentStep: number;
-}>[] = [
-  {
-    id: 'idle',
-    label: 'Idle Form',
-    description: 'Initial join room form prior to initiating peer signaling handshake.',
-    componentName: 'Layer3JoinRoomRecipe',
-    sourceFile: 'recipes/Layer3JoinRoomRecipe.tsx',
-    props: { progressStatus: 'idle', currentStep: 1 },
+}>[] = JOIN_ROOM_PROGRESS_STEPS.map((jr) => ({
+  id: jr.suffix,
+  label: jr.label,
+  description: jr.description,
+  componentName: 'Layer3JoinRoomRecipe',
+  sourceFile: 'recipes/Layer3JoinRoomRecipe.tsx',
+  subViewFile:
+    jr.status === 'idle'
+      ? undefined
+      : 'recipes/online/OnlineRoomCreationProgress.tsx',
+  props: {
+    progressStatus: jr.status,
+    currentStep: jr.step,
   },
-  {
-    id: 'running-step-2',
-    label: 'Step 2/5 · Signaling Handshake',
-    description: 'Connecting to WebSocket signaling relay (wss://relay.carball.dev).',
-    componentName: 'Layer3JoinRoomRecipe',
-    sourceFile: 'recipes/Layer3JoinRoomRecipe.tsx',
-    subViewFile: 'recipes/online/OnlineRoomCreationProgress.tsx',
-    props: { progressStatus: 'running', currentStep: 2 },
-  },
-  {
-    id: 'running-step-4',
-    label: 'Step 4/5 · ICE & DataChannel',
-    description: 'Negotiating WebRTC SDP offers and probing STUN/TURN candidates.',
-    componentName: 'Layer3JoinRoomRecipe',
-    sourceFile: 'recipes/Layer3JoinRoomRecipe.tsx',
-    subViewFile: 'recipes/online/OnlineRoomCreationProgress.tsx',
-    props: { progressStatus: 'running', currentStep: 4 },
-  },
-  {
-    id: 'completed',
-    label: 'Step 5/5 · Connected',
-    description: 'Arena snapshot synchronized and ready to enter peer lobby.',
-    componentName: 'Layer3JoinRoomRecipe',
-    sourceFile: 'recipes/Layer3JoinRoomRecipe.tsx',
-    subViewFile: 'recipes/online/OnlineRoomCreationProgress.tsx',
-    props: { progressStatus: 'completed', currentStep: 5 },
-  },
-  {
-    id: 'error-step-3',
-    label: 'Step 3/5 · Error (Room Not Found)',
-    description: 'Room lookup failed or access key was rejected during step 3.',
-    componentName: 'Layer3JoinRoomRecipe',
-    sourceFile: 'recipes/Layer3JoinRoomRecipe.tsx',
-    subViewFile: 'recipes/online/OnlineRoomCreationProgress.tsx',
-    props: { progressStatus: 'error', currentStep: 3 },
-  },
-];
+}));
 
 export const LAYER3_HOST_MATCH_STATES: RecipeStateSnapshotSpec<{
   config?: Partial<HostMatchConfig>;
   defaultEditingConfig?: boolean;
   progressStatus: CreationProgressStatus;
   currentStep: number;
-}>[] = [
-  {
-    id: 'idle-collapsed',
-    label: 'Idle (Summary Collapsed)',
-    description: 'Default compact host match form showing 3-column configuration summary.',
-    componentName: 'Layer3HostMatchRecipe',
-    sourceFile: 'recipes/Layer3HostMatchRecipe.tsx',
-    subViewFile: 'recipes/online/OnlineRoomConfigSummaryCard.tsx',
-    props: { defaultEditingConfig: false, progressStatus: 'idle', currentStep: 1 },
+}>[] = HOST_MATCH_PROGRESS_STEPS.map((hm) => ({
+  id: hm.suffix,
+  label: hm.label,
+  description: hm.description,
+  componentName: 'Layer3HostMatchRecipe',
+  sourceFile: 'recipes/Layer3HostMatchRecipe.tsx',
+  subViewFile:
+    hm.status === 'idle'
+      ? 'recipes/online/OnlineRoomConfigSummaryCard.tsx'
+      : 'recipes/online/OnlineRoomCreationProgress.tsx',
+  props: {
+    defaultEditingConfig: Boolean(hm.editing),
+    progressStatus: hm.status,
+    currentStep: hm.step,
   },
-  {
-    id: 'idle-expanded',
-    label: 'Idle (Configuration Expanded)',
-    description: 'Expanded disclosure box showing Team Format, Bot Fill Policy, Match Duration, and Advanced Settings.',
-    componentName: 'Layer3HostMatchRecipe',
-    sourceFile: 'recipes/Layer3HostMatchRecipe.tsx',
-    subViewFile: 'recipes/online/OnlineRoomConfigSummaryCard.tsx',
-    props: { defaultEditingConfig: true, progressStatus: 'idle', currentStep: 1 },
-  },
-  {
-    id: 'running-step-3',
-    label: 'Step 3/5 · Registering Room Code',
-    description: 'Binding room access code and key on the peer discovery relay.',
-    componentName: 'Layer3HostMatchRecipe',
-    sourceFile: 'recipes/Layer3HostMatchRecipe.tsx',
-    subViewFile: 'recipes/online/OnlineRoomCreationProgress.tsx',
-    props: { defaultEditingConfig: false, progressStatus: 'running', currentStep: 3 },
-  },
-  {
-    id: 'completed',
-    label: 'Step 5/5 · Room Created',
-    description: 'Local 120Hz authority initialized and match lobby spawned.',
-    componentName: 'Layer3HostMatchRecipe',
-    sourceFile: 'recipes/Layer3HostMatchRecipe.tsx',
-    subViewFile: 'recipes/online/OnlineRoomCreationProgress.tsx',
-    props: { defaultEditingConfig: false, progressStatus: 'completed', currentStep: 5 },
-  },
-  {
-    id: 'error-step-3',
-    label: 'Step 3/5 · Error (Code Conflict)',
-    description: 'Room code conflict or relay rejection encountered during registration.',
-    componentName: 'Layer3HostMatchRecipe',
-    sourceFile: 'recipes/Layer3HostMatchRecipe.tsx',
-    subViewFile: 'recipes/online/OnlineRoomCreationProgress.tsx',
-    props: { defaultEditingConfig: false, progressStatus: 'error', currentStep: 3 },
-  },
-];
+}));
 
 export const LAYER3_HOST_TRAINING_STATES: RecipeStateSnapshotSpec<{
   defaultGhostMode?: HostTrainingGhostMode;
   progressStatus: CreationProgressStatus;
   currentStep: number;
-}>[] = [
-  {
-    id: 'idle',
-    label: 'Idle Form',
-    description: 'Default host training setup with identity fields and Ghost Mode policy.',
-    componentName: 'Layer3HostTrainingRecipe',
-    sourceFile: 'recipes/Layer3HostTrainingRecipe.tsx',
-    props: { defaultGhostMode: 'automatically-enable', progressStatus: 'idle', currentStep: 1 },
+}>[] = HOST_TRAINING_PROGRESS_STEPS.map((ht) => ({
+  id: ht.suffix,
+  label: ht.label,
+  description: ht.description,
+  componentName: 'Layer3HostTrainingRecipe',
+  sourceFile: 'recipes/Layer3HostTrainingRecipe.tsx',
+  subViewFile:
+    ht.status === 'idle'
+      ? undefined
+      : 'recipes/online/OnlineRoomCreationProgress.tsx',
+  props: {
+    defaultGhostMode: ht.status === 'completed' ? 'manual' : 'automatically-enable',
+    progressStatus: ht.status,
+    currentStep: ht.step,
   },
-  {
-    id: 'running-step-3',
-    label: 'Step 3/5 · Registering Training Room',
-    description: 'Registering shared training session code on signaling relay.',
-    componentName: 'Layer3HostTrainingRecipe',
-    sourceFile: 'recipes/Layer3HostTrainingRecipe.tsx',
-    subViewFile: 'recipes/online/OnlineRoomCreationProgress.tsx',
-    props: { defaultGhostMode: 'automatically-enable', progressStatus: 'running', currentStep: 3 },
-  },
-  {
-    id: 'completed',
-    label: 'Step 5/5 · Training Room Ready',
-    description: 'Shared training session initialized and ready for peers.',
-    componentName: 'Layer3HostTrainingRecipe',
-    sourceFile: 'recipes/Layer3HostTrainingRecipe.tsx',
-    subViewFile: 'recipes/online/OnlineRoomCreationProgress.tsx',
-    props: { defaultGhostMode: 'manual', progressStatus: 'completed', currentStep: 5 },
-  },
-  {
-    id: 'error-step-3',
-    label: 'Step 3/5 · Error (Signaling Rejected)',
-    description: 'Simulated signaling or registration failure on step 3.',
-    componentName: 'Layer3HostTrainingRecipe',
-    sourceFile: 'recipes/Layer3HostTrainingRecipe.tsx',
-    subViewFile: 'recipes/online/OnlineRoomCreationProgress.tsx',
-    props: { defaultGhostMode: 'automatically-enable', progressStatus: 'error', currentStep: 3 },
-  },
-];
+}));

@@ -229,6 +229,7 @@ export interface LinearPlaylistStep {
   progressStatus?: Layer3StepProgressStatus;
   currentStep?: number;
   defaultEditingConfig?: boolean;
+  memberSlots?: 1 | 3;
   layer: 0 | 1 | 2 | 3 | 4;
   label: string;
   breadcrumb: string;

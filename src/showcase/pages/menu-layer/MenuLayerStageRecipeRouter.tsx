@@ -28,6 +28,7 @@ import {
   type Layer3StepOverrideState,
 } from './MenuLayerSandboxContext';
 import { MenuLayerSecondaryRecipeRoutes } from './MenuLayerSecondaryRecipeRoutes';
+import { resolveManageRoomRosterOverride } from './menuLayerOnlineRoomSteps';
 
 export type { Layer3StepOverrideState };
 
@@ -196,6 +197,10 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
               developerMode: visibilityTier === 'developer',
             },
             onlineRoomStore: {
+              ...resolveManageRoomRosterOverride(
+                resolveOnlineSessionContextId(layer1ContextMode),
+                layer3StepOverride?.memberSlots ?? 3
+              ),
               sessionContext: resolveOnlineSessionContextId(layer1ContextMode),
               onSessionContextChange: (ctx: string) => {
                 onChangeLayer1ContextMode?.(ctx as Layer1MenuContextMode);

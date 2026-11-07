@@ -13,54 +13,13 @@ import {
   type MenuVisibilityTier,
 } from './menuLayerRouteConfig';
 
-const ROOM_CONTROL_CONTEXT_STEPS: Array<{ ctx: Layer1MenuContextMode; label: string }> = [
-  { ctx: 'match-lobby-host', label: 'Match Lobby (Host)' },
-  { ctx: 'match-lobby-client', label: 'Match Lobby (Client)' },
-  { ctx: 'online-match-host', label: 'During Match (Host)' },
-  { ctx: 'online-match-client', label: 'During Match (Client)' },
-  { ctx: 'online-warmup-host', label: 'Online Warmup (Host)' },
-  { ctx: 'online-warmup-client', label: 'Online Warmup (Client)' },
-];
-
-const HOST_MATCH_PROGRESS_STEPS: Array<{
-  suffix: string;
-  status: Layer3StepProgressStatus;
-  step: number;
-  editing?: boolean;
-  label: string;
-}> = [
-  { suffix: 'idle', status: 'idle', step: 1, editing: false, label: 'Idle (Summary Card)' },
-  { suffix: 'editing', status: 'idle', step: 1, editing: true, label: 'Editing Rules Expanded' },
-  { suffix: 'step-1', status: 'running', step: 1, editing: false, label: 'Step 1/5 Validating Loadout' },
-  { suffix: 'step-3', status: 'running', step: 3, editing: false, label: 'Step 3/5 Signaling Offer' },
-  { suffix: 'error-3', status: 'error', step: 3, editing: false, label: 'Error at Step 3/5 (Timeout)' },
-  { suffix: 'completed', status: 'completed', step: 5, editing: false, label: 'Completed Step 5/5 Ready' },
-];
-
-const HOST_TRAINING_PROGRESS_STEPS: Array<{
-  suffix: string;
-  status: Layer3StepProgressStatus;
-  step: number;
-  label: string;
-}> = [
-  { suffix: 'idle', status: 'idle', step: 1, label: 'Idle (Default Setup)' },
-  { suffix: 'step-3', status: 'running', step: 3, label: 'Step 3/5 Signaling Offer' },
-  { suffix: 'error-3', status: 'error', step: 3, label: 'Error at Step 3/5 (Timeout)' },
-  { suffix: 'completed', status: 'completed', step: 5, label: 'Completed Step 5/5 Ready' },
-];
-
-const JOIN_ROOM_PROGRESS_STEPS: Array<{
-  suffix: string;
-  status: Layer3StepProgressStatus;
-  step: number;
-  label: string;
-}> = [
-  { suffix: 'idle', status: 'idle', step: 1, label: 'Idle (Enter Room Code)' },
-  { suffix: 'step-2', status: 'running', step: 2, label: 'Step 2/5 Querying Signaling' },
-  { suffix: 'step-4', status: 'running', step: 4, label: 'Step 4/5 ICE Handshake' },
-  { suffix: 'error-3', status: 'error', step: 3, label: 'Error at Step 3/5 (Peer Unreachable)' },
-  { suffix: 'completed', status: 'completed', step: 5, label: 'Completed Step 5/5 Joined' },
-];
+import {
+  HOST_MATCH_PLAYLIST_STEPS,
+  HOST_TRAINING_PLAYLIST_STEPS,
+  JOIN_ROOM_PLAYLIST_STEPS,
+  MANAGE_ROOM_PLAYLIST_STEPS,
+  matchesOnlineRoomPlaylistStep,
+} from './menuLayerOnlineRoomSteps';
 
 /**
  * Complete Linear Playlist of all User-Only vs Developer-Only pages/variations/tabs/states
@@ -81,26 +40,11 @@ export const USER_LINEAR_PLAYLIST: LinearPlaylistStep[] = [
     id: `user-l2-settings-${t.id}`, tier: 'user' as const, route: 'settings' as const, subtab: t.id,
     layer: 2 as const, label: `L2 Settings · ${t.label} Tab`, breadcrumb: `Layer 1 → Settings → ${t.label}`,
   })),
-  ...ROOM_CONTROL_CONTEXT_STEPS.map((rc) => ({
-    id: `user-l2-room-host-${rc.ctx}`, tier: 'user' as const, route: 'manage-room' as const, contextMode: rc.ctx,
-    layer: 2 as const, label: `L2 Room Control · ${rc.label}`, breadcrumb: `Layer 1 → Room Control → ${rc.label}`,
-  })),
-  ...HOST_MATCH_PROGRESS_STEPS.map((hm) => ({
-    id: `user-l3-host-match-${hm.suffix}`, tier: 'user' as const, route: 'host-match' as const,
-    progressStatus: hm.status, currentStep: hm.step, defaultEditingConfig: hm.editing,
-    layer: 3 as const, label: `L3 Host Match · ${hm.label}`, breadcrumb: `Play → Host Match → ${hm.label}`,
-  })),
-  ...HOST_TRAINING_PROGRESS_STEPS.map((ht) => ({
-    id: `user-l3-host-training-${ht.suffix}`, tier: 'user' as const, route: 'host-training' as const,
-    progressStatus: ht.status, currentStep: ht.step,
-    layer: 3 as const, label: `L3 Host Training · ${ht.label}`, breadcrumb: `Play → Host Training → ${ht.label}`,
-  })),
+  ...MANAGE_ROOM_PLAYLIST_STEPS,
+  ...HOST_MATCH_PLAYLIST_STEPS,
+  ...HOST_TRAINING_PLAYLIST_STEPS,
   { id: 'user-l3-custom-play', tier: 'user', route: 'custom-play', layer: 3, label: 'L3 Custom Mode (In Development)', breadcrumb: 'Play → Custom' },
-  ...JOIN_ROOM_PROGRESS_STEPS.map((jr) => ({
-    id: `user-l3-join-room-${jr.suffix}`, tier: 'user' as const, route: 'join-room' as const,
-    progressStatus: jr.status, currentStep: jr.step,
-    layer: 3 as const, label: `L3 Join Room · ${jr.label}`, breadcrumb: `Play → Join Room → ${jr.label}`,
-  })),
+  ...JOIN_ROOM_PLAYLIST_STEPS,
   { id: 'user-l3-exhibition', tier: 'user', route: 'exhibition', layer: 3, label: 'L3 Exhibition Bot Setup', breadcrumb: 'Play → Exhibition Setup' },
   { id: 'user-l3-self-training', tier: 'user', route: 'self-training', layer: 3, label: 'L3 Self-Training Hub', breadcrumb: 'Play → Self-Training' },
   { id: 'user-l3-kickoff', tier: 'user', route: 'kickoff-training', layer: 3, label: 'L3 Kickoff Training Setup', breadcrumb: 'Self-Training → Kickoff Training' },
@@ -181,7 +125,10 @@ export function findPlaylistStepIndex(
       (currentRoute === 'main-menu' || currentRoute === 'manage-room') &&
       step.contextMode
     ) {
-      return step.contextMode === normalizedLayer1Ctx;
+      return (
+        step.contextMode === normalizedLayer1Ctx &&
+        matchesOnlineRoomPlaylistStep(step, currentRoute, normalizedLayer1Ctx, layer3Override)
+      );
     }
     if (currentRoute === 'settings' && step.subtab) {
       return step.subtab === settingsTab;
@@ -195,14 +142,8 @@ export function findPlaylistStepIndex(
         currentRoute === 'join-room') &&
       step.progressStatus
     ) {
-      const targetStatus = layer3Override?.progressStatus ?? 'idle';
-      const targetStep = layer3Override?.currentStep ?? 1;
-      const targetEdit = Boolean(layer3Override?.defaultEditingConfig);
-      if (step.progressStatus !== targetStatus) return false;
-      if ((step.currentStep ?? 1) !== targetStep) return false;
       if (
-        currentRoute === 'host-match' &&
-        Boolean(step.defaultEditingConfig) !== targetEdit
+        !matchesOnlineRoomPlaylistStep(step, currentRoute, normalizedLayer1Ctx, layer3Override)
       ) {
         return false;
       }

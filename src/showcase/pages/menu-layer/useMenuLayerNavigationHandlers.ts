@@ -86,7 +86,7 @@ export function useMenuLayerNavigationHandlers({
     'stepPhase'
   );
   const [layer3StepOverride, setLayer3StepOverride] = useState<Layer3StepOverrideState>(
-    { progressStatus: 'idle', currentStep: 1, defaultEditingConfig: false },
+    { progressStatus: 'idle', currentStep: 1, defaultEditingConfig: false, memberSlots: 3 },
     'layer3StepOverride'
   );
 
@@ -252,6 +252,7 @@ export function useMenuLayerNavigationHandlers({
       progressStatus: step.progressStatus ?? 'idle',
       currentStep: step.currentStep ?? 1,
       defaultEditingConfig: Boolean(step.defaultEditingConfig),
+      memberSlots: step.memberSlots ?? layer3StepOverride.memberSlots ?? 3,
     });
     handleSelectRoute(step.route);
     showToast(`[${nextIdx + 1}/${activePlaylist.length}] ${step.label}`);
