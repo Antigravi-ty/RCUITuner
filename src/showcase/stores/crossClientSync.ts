@@ -323,8 +323,7 @@ export const crossClientSync = {
   },
   resetAll: (options?: { scopePrefix?: string; preserveKeys?: string[] }): void => {
     const scopePrefix = options?.scopePrefix;
-    const preserveKeys = options?.preserveKeys ?? ['app:activeTab'];
-    applyResetInternal(scopePrefix, preserveKeys);
+    applyResetInternal(scopePrefix, options?.preserveKeys ?? ['app:activeTab']);
     if (!bus.status.paused) {
       sendSyncTransportEvent(bus.bc, 'rc-ui-tuner:sync-reset', {
         senderId: bus.clientId,
@@ -336,9 +335,20 @@ export const crossClientSync = {
   exportParameters: (options?: {
     scopePrefix?: string;
     includeDomControls?: boolean;
-  }): ExportedLayerParameters => {
-    const activeTab = String(bus.mirror.get('app:activeTab') ?? 'overview');
-    return buildExportedLayerParameters(bus.mirror.entries(), activeTab, options);
+  }): ExportedLayerParameters =>
+    buildExportedLayerParameters(
+      bus.mirror.entries(),
+      String(bus.mirror.get('app:activeTab') ?? 'overview'),
+      options
+    ),
+  getDiffEntries: (): Array<{ key: string; defaultValue: unknown; currentValue: unknown }> => {
+    const out: Array<{ key: string; defaultValue: unknown; currentValue: unknown }> = [];
+    for (const [key, currentValue] of bus.mirror.entries()) {
+      if (!bus.defaults.has(key)) continue;
+      const defaultValue = bus.defaults.get(key);
+      if (!Object.is(currentValue, defaultValue)) out.push({ key, defaultValue, currentValue });
+    }
+    return out;
   },
   isApplyingRemote: (): boolean => bus.applyingRemoteCount > 0,
   getStatus: (): CrossClientSyncStatus => bus.status,
