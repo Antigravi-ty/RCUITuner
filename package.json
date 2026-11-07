@@ -5,11 +5,13 @@
   "description": "Standardized Agent-Friendly UI Component Reference & Storybook for Web and Game Applications",
   "type": "module",
   "scripts": {
+    "preinstall": "npx only-allow pnpm",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "radar": "node scripts/radar.mjs"
+    "radar": "node scripts/radar.mjs",
+    "check": "pnpm run radar && pnpm run typecheck"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.23",
