@@ -23,9 +23,15 @@ const make6ARecipeTarget = (
 });
 
 export const DEEP_ROUTE_TO_6A_RECIPE_TARGET: Partial<Record<ActiveMenuRoute, InspectorJumpTarget>> = {
+  'acoustics-equalizer': make6ARecipeTarget(
+    '6A.7',
+    'Layer3AcousticsEqualizerRecipe',
+    '6A.7 Audio equalizer panel tuning',
+    'recipe-6a-7-audio'
+  ),
   'audio-eq': make6ARecipeTarget(
     '6A.7',
-    'Layer3AudioEqRecipe',
+    'Layer3AcousticsEqualizerRecipe',
     '6A.7 Audio equalizer panel tuning',
     'recipe-6a-7-audio'
   ),

@@ -7,6 +7,7 @@ import {
   GARAGE_QUICK_TABS,
   MENU_SANDBOX_JUMP_ITEMS,
   USER_SETTINGS_QUICK_TABS,
+  normalizeMenuRoute,
   type ActiveMenuRoute,
   type Layer3StepProgressStatus,
   type LinearPlaylistStep,
@@ -123,12 +124,18 @@ export const DEV_LINEAR_PLAYLIST: LinearPlaylistStep[] = [
   })),
   { id: 'dev-l3-isolation', tier: 'developer', route: 'dev-sandboxes', layer: 3, label: 'L3 Sandboxes & Isolation Lab (6 Tabs)', breadcrumb: 'Developer → Sandboxes & Isolation Labs' },
   { id: 'dev-l3-multibots', tier: 'developer', route: 'exp-multi-bots', layer: 3, label: 'L3 Experimental Multi-Bots (3v3)', breadcrumb: 'Developer → Experimental Multi-Bots' },
+  { id: 'dev-l3-botpack-9700488', tier: 'developer', route: 'exp-botpack-9700488', layer: 3, label: 'L3 BotPack_9700488 Showcase (8 Models)', breadcrumb: 'Developer → Sandboxes → BotPack #9700488' },
   { id: 'dev-l3-active-tuners', tier: 'developer', route: 'dev-active-tuners', layer: 3, label: 'L3 Active Tuners & Phase Matrix', breadcrumb: 'Developer → Active Tuners' },
   { id: 'dev-l3-calibrated-presets', tier: 'developer', route: 'dev-calibrated-presets', layer: 3, label: 'L3 Calibrated Presets & Tuners', breadcrumb: 'Developer → Calibrated Presets' },
+  { id: 'dev-l3-self-test', tier: 'developer', route: 'dev-self-test', layer: 3, label: 'L3 Self Test Suites & Harnesses', breadcrumb: 'Developer → Self Test' },
+  { id: 'dev-l3-remote-profile', tier: 'developer', route: 'dev-remote-profile', layer: 3, label: 'L3 Remote Profile & Account Management', breadcrumb: 'Developer → Remote Profile Management' },
+  { id: 'dev-l3-quick-actions', tier: 'developer', route: 'dev-quick-actions', layer: 3, label: 'L3 Quick Actions & Match Toggles', breadcrumb: 'Developer → Quick Actions' },
   { id: 'dev-l3-under-dev', tier: 'developer', route: 'dev-under-development', layer: 3, label: 'L3 Under Development', breadcrumb: 'Developer → Under Development' },
-  { id: 'dev-l3-audio-eq', tier: 'developer', route: 'audio-eq', layer: 3, label: 'L3 Acoustics & Parametric EQ', breadcrumb: 'Developer → Acoustics & EQ' },
+  { id: 'dev-l3-audio-eq', tier: 'developer', route: 'acoustics-equalizer', layer: 3, label: 'L3 Acoustics & Parametric EQ', breadcrumb: 'Developer → Acoustics & EQ' },
   { id: 'dev-l4-adv-audio', tier: 'developer', route: 'advanced-audio', layer: 4, label: 'L4 Advanced Audio Synthesis Pool', breadcrumb: 'Developer → Active Tuners → Advanced Audio' },
   { id: 'dev-l4-event-trigger-rules', tier: 'developer', route: 'event-trigger-rules', layer: 4, label: 'L4 Event & Trigger Rules Engine', breadcrumb: 'Developer → Active Tuners → Event & Trigger Rules' },
+  { id: 'dev-l4-signaling-lab', tier: 'developer', route: 'dev-signaling-lab', layer: 4, label: 'L4 4-Server Signaling & Dual Bridge Lab', breadcrumb: 'Developer → Self Test → 4-Server Signaling Lab' },
+  { id: 'dev-l4-tem-pack-converter', tier: 'developer', route: 'dev-tem-pack-converter', layer: 4, label: 'L4 Dev .tem Pack Converter', breadcrumb: 'Developer → Sandboxes → Dev .tem Pack Converter' },
 ];
 
 const DIRECT_STORE_ONLY_ROUTES = new Set<ActiveMenuRoute>([
@@ -145,9 +152,10 @@ export function resolveRouteAuditInfo(
   sourceFile: string;
   tunerStatus: 'dedicated-tuner' | 'direct-store';
 } {
+  const canonicalRoute = normalizeMenuRoute(route) ?? route;
   const jumpEntry =
-    MENU_SANDBOX_JUMP_ITEMS.find((j) => j.route === route && j.tier === tier) ||
-    MENU_SANDBOX_JUMP_ITEMS.find((j) => j.route === route);
+    MENU_SANDBOX_JUMP_ITEMS.find((j) => j.route === canonicalRoute && j.tier === tier) ||
+    MENU_SANDBOX_JUMP_ITEMS.find((j) => j.route === canonicalRoute);
   const referenceCode = jumpEntry?.code || '7A';
   const rawComp = (jumpEntry?.componentName || 'Layer1MainMenuRecipe').replace(
     /\s*\(Dev\)$/,
@@ -175,8 +183,9 @@ export function findPlaylistStepIndex(
     defaultEditingConfig?: boolean;
   }
 ): number {
+  const canonicalRoute = normalizeMenuRoute(currentRoute) ?? currentRoute;
   const exactIdx = playlist.findIndex((step) => {
-    if (step.route !== currentRoute) return false;
+    if ((normalizeMenuRoute(step.route) ?? step.route) !== canonicalRoute) return false;
     if (
       (currentRoute === 'main-menu' || currentRoute === 'manage-room') &&
       step.contextMode
@@ -211,6 +220,6 @@ export function findPlaylistStepIndex(
     return true;
   });
   if (exactIdx >= 0) return exactIdx;
-  const routeFallbackIdx = playlist.findIndex((s) => s.route === currentRoute);
+  const routeFallbackIdx = playlist.findIndex((s) => (normalizeMenuRoute(s.route) ?? s.route) === canonicalRoute);
   return Math.max(0, routeFallbackIdx);
 }

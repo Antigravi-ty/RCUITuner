@@ -7,7 +7,7 @@ import {
 import {
   type ActiveMenuRoute,
   type MenuVisibilityTier,
-  MENU_ROUTE_CONFIG,
+  normalizeMenuRoute,
 } from './menuLayerRouteConfig';
 
 export interface UseMenuLayerUrlSyncParams {
@@ -48,8 +48,8 @@ export function useMenuLayerUrlSync({
       if (p.tier === 'user' || p.tier === 'developer') {
         setVisibilityTier(p.tier);
       }
-      if (p.route && p.route in MENU_ROUTE_CONFIG) {
-        const nextRoute = p.route as ActiveMenuRoute;
+      const nextRoute = normalizeMenuRoute(p.route);
+      if (nextRoute) {
         setCurrentRoute(nextRoute);
         setDisplayedRoute(nextRoute);
       }
@@ -82,7 +82,7 @@ export function useMenuLayerUrlSync({
     updateUrlParams(
       {
         tier: visibilityTier,
-        route: currentRoute,
+        route: normalizeMenuRoute(currentRoute) ?? currentRoute,
         subtab,
         ctx: currentRoute === 'main-menu' ? layer1ContextMode : null,
       },

@@ -36,12 +36,14 @@ const USER_L3_ROUTE_ITEMS: DeepRouteButtonItem[] = [
 const DEV_L3_ROUTE_ITEMS: DeepRouteButtonItem[] = [
   { route: 'dev-sandboxes', label: 'Sandboxes & Isolation (6-Tab Isolation Chamber)', panel: 'layer3-dev-sandboxes' },
   { route: 'exp-multi-bots', label: 'Multi-Bots (3v3 orchestration)', panel: 'layer3-exp-multi-bots' },
+  { route: 'exp-botpack-9700488', label: 'BotPack #9700488 (8 Native Models)', panel: 'layer3-exp-botpack' },
   { route: 'dev-active-tuners', label: 'Active Tuners (Phase matrix and audio)', panel: 'layer3-dev-active-tuners' },
   { route: 'dev-calibrated-presets', label: 'Calibrated Presets (Calibrated Tuner)', panel: 'layer3-dev-calibrated-presets' },
   { route: 'dev-self-test', label: 'Self Test (Self-Test Suites)', panel: 'layer3-dev-self-test' },
+  { route: 'dev-remote-profile', label: 'Remote Profile (Cloud Account Sync)', panel: 'layer3-dev-remote-profile' },
   { route: 'dev-under-development', label: 'Under Development (Feature in Development)', panel: 'layer3-dev-under-development' },
   { route: 'dev-quick-actions', label: 'Quick Actions (Dev Quick Actions)', panel: 'layer3-dev-quick-actions' },
-  { route: 'audio-eq', label: 'Acoustics & EQ (Acoustic Equalization)', panel: 'layer3-acoustics-equalizer' },
+  { route: 'acoustics-equalizer', label: 'Acoustics & EQ (Acoustic Equalization)', panel: 'layer3-acoustics-equalizer' },
 ];
 
 const USER_L4_ROUTE_ITEMS: DeepRouteButtonItem[] = [
@@ -103,7 +105,7 @@ export const MenuLayerDeepRouteRenderer: React.FC<MenuLayerDeepRouteRendererProp
 
   const renderRouteButtons = (items: DeepRouteButtonItem[]) =>
     items.map((item) => {
-      const isActive = currentRoute === item.route;
+      const isActive = currentRoute === item.route || (item.route === 'acoustics-equalizer' && currentRoute === 'audio-eq');
       return (
         <button
           key={item.route}

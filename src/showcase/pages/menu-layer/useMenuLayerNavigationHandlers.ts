@@ -10,6 +10,7 @@ import { readUrlParams } from '../../stores/urlSync';
 import type { Layer3StepOverrideState } from './MenuLayerStageRecipeRouter';
 import {
   MENU_ROUTE_CONFIG,
+  normalizeMenuRoute,
   type ActiveMenuRoute,
   type LivePreviewAnimPhase,
   type MenuVisibilityTier,
@@ -47,17 +48,15 @@ export function useMenuLayerNavigationHandlers({
 
   const [rawCurrentRoute, setCurrentRoute] = useState<ActiveMenuRoute>(() => {
     const p = readUrlParams();
-    return p.route && p.route in MENU_ROUTE_CONFIG ? (p.route as ActiveMenuRoute) : 'main-menu';
+    return normalizeMenuRoute(p.route) ?? 'main-menu';
   }, 'currentRoute');
-  const currentRoute: ActiveMenuRoute =
-    rawCurrentRoute && rawCurrentRoute in MENU_ROUTE_CONFIG ? rawCurrentRoute : 'main-menu';
+  const currentRoute: ActiveMenuRoute = normalizeMenuRoute(rawCurrentRoute) ?? 'main-menu';
 
   const [rawDisplayedRoute, setDisplayedRoute] = useState<ActiveMenuRoute>(() => {
     const p = readUrlParams();
-    return p.route && p.route in MENU_ROUTE_CONFIG ? (p.route as ActiveMenuRoute) : 'main-menu';
+    return normalizeMenuRoute(p.route) ?? 'main-menu';
   }, 'displayedRoute');
-  const displayedRoute: ActiveMenuRoute =
-    rawDisplayedRoute && rawDisplayedRoute in MENU_ROUTE_CONFIG ? rawDisplayedRoute : currentRoute;
+  const displayedRoute: ActiveMenuRoute = normalizeMenuRoute(rawDisplayedRoute) ?? currentRoute;
 
   const [transitionMode, setTransitionMode] = useState<ContainerTransitionMode>(
     'fluid-morph',
@@ -144,9 +143,10 @@ export function useMenuLayerNavigationHandlers({
   };
 
   const handleSelectRoute = (
-    targetRoute: ActiveMenuRoute,
+    rawTargetRoute: ActiveMenuRoute,
     options?: { pushHistory?: boolean }
   ) => {
+    const targetRoute = normalizeMenuRoute(rawTargetRoute) ?? rawTargetRoute;
     if (targetRoute === currentRoute) return;
     const shouldPush = options?.pushHistory !== false;
     if (shouldPush && currentRoute !== 'layer-0' && targetRoute !== 'layer-0') {

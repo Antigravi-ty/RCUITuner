@@ -12,6 +12,7 @@ import type { Layer1MenuContextMode } from '../../../ui-core/recipes/layer1MenuC
 import {
   type ActiveMenuRoute,
   type MenuVisibilityTier,
+  normalizeMenuRoute,
   ROUTE_TO_PANEL_ID,
 } from './menuLayerRouteConfig';
 
@@ -70,7 +71,7 @@ export function useMenuLayerAdaptiveMetrics({
     if (route === 'settings') return `settings:${visibilityTier}`;
     if (route === 'garage') return 'garage';
     if (route === 'manage-room') return `manage-room:${layer1ContextMode}`;
-    return route;
+    return normalizeMenuRoute(route) ?? route;
   };
 
   const contentWrapperRef = useRef<HTMLDivElement | null>(null);

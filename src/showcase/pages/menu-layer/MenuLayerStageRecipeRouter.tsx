@@ -21,6 +21,7 @@ import { StoreSnapshotScope } from '../../../ui-core/stores/storeSnapshotScope';
 import { PRESET_WINDOWS } from '../../../ui-core/stores/devFloatingPresets';
 import {
   MENU_ROUTE_CONFIG,
+  normalizeMenuRoute,
   type ActiveMenuRoute,
 } from './menuLayerRouteConfig';
 import {
@@ -174,7 +175,8 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
                     'Enter Submenu: Ball Trajectory Predictor (support TAB Side collapsed real-time preview)'
                   );
                 } else {
-                  handleSelectRoute(route as ActiveMenuRoute);
+                  const target = normalizeMenuRoute(route);
+                  if (target) handleSelectRoute(target);
                 }
               },
             },

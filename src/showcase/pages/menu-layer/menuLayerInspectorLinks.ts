@@ -398,7 +398,10 @@ export function resolveNodePathInspectorLinks(
     currentRoute === 'training-config' ||
     currentRoute === 'dev-sandboxes' ||
     currentRoute === 'dev-active-tuners' ||
-    currentRoute === 'dev-calibrated-presets'
+    currentRoute === 'dev-calibrated-presets' ||
+    currentRoute === 'dev-self-test' ||
+    currentRoute === 'dev-quick-actions' ||
+    currentRoute === 'dev-remote-profile'
   ) {
     return {
       pageRecipeTarget,

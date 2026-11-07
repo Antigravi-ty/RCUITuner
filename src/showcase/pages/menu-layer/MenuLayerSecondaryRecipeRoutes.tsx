@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Layer1MenuContextMode } from '../../../ui-core/recipes/layer1MenuContextSpecs';
+import { normalizeMenuRoute, type ActiveMenuRoute } from './menuLayerRouteConfig';
 import { Layer3AcousticsEqualizerRecipe } from '../../../ui-core/recipes/Layer3AcousticsEqualizerRecipe';
 import { Layer3BallTrajectoryRecipe } from '../../../ui-core/recipes/Layer3BallTrajectoryRecipe';
 import { Layer3CameraRecipe } from '../../../ui-core/recipes/Layer3CameraRecipe';
@@ -45,7 +46,7 @@ export const MenuLayerSecondaryRecipeRoutes = React.memo<MenuLayerSecondaryRecip
 
     return (
       <>
-        {displayedRoute === 'audio-eq' && (
+        {(displayedRoute === 'acoustics-equalizer' || displayedRoute === 'audio-eq') && (
           <StoreSnapshotScope
             overrides={{ appStore: { developerMode: visibilityTier === 'developer' } }}
           >
@@ -96,11 +97,39 @@ export const MenuLayerSecondaryRecipeRoutes = React.memo<MenuLayerSecondaryRecip
         )}
 
         {displayedRoute === 'dev-sandboxes' && (
-          <Layer3DevSandboxesRecipe isLight={isLight} onBack={onBack} />
+          <StoreSnapshotScope
+            overrides={{
+              appStore: {
+                navigate: (route: string) => {
+                  const target = normalizeMenuRoute(route);
+                  if (target) {
+                    setLastParentRoute('dev-sandboxes');
+                    handleSelectRoute(target);
+                  }
+                },
+              },
+            }}
+          >
+            <Layer3DevSandboxesRecipe isLight={isLight} onBack={onBack} />
+          </StoreSnapshotScope>
         )}
 
         {displayedRoute === 'dev-active-tuners' && (
-          <Layer3DevActiveTunersRecipe isLight={isLight} onBack={onBack} />
+          <StoreSnapshotScope
+            overrides={{
+              appStore: {
+                navigate: (route: string) => {
+                  const target = normalizeMenuRoute(route);
+                  if (target) {
+                    setLastParentRoute('dev-active-tuners');
+                    handleSelectRoute(target);
+                  }
+                },
+              },
+            }}
+          >
+            <Layer3DevActiveTunersRecipe isLight={isLight} onBack={onBack} />
+          </StoreSnapshotScope>
         )}
 
         {displayedRoute === 'dev-calibrated-presets' && (
@@ -108,7 +137,21 @@ export const MenuLayerSecondaryRecipeRoutes = React.memo<MenuLayerSecondaryRecip
         )}
 
         {displayedRoute === 'dev-self-test' && (
-          <Layer3DevSelfTestRecipe isLight={isLight} onBack={onBack} />
+          <StoreSnapshotScope
+            overrides={{
+              appStore: {
+                navigate: (route: string) => {
+                  const target = normalizeMenuRoute(route);
+                  if (target) {
+                    setLastParentRoute('dev-self-test');
+                    handleSelectRoute(target);
+                  }
+                },
+              },
+            }}
+          >
+            <Layer3DevSelfTestRecipe isLight={isLight} onBack={onBack} />
+          </StoreSnapshotScope>
         )}
 
         {displayedRoute === 'dev-under-development' && (

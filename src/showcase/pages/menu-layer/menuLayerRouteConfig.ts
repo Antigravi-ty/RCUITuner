@@ -12,6 +12,7 @@ export type ActiveMenuRoute =
   | 'garage'
   | 'settings'
   | 'manage-room'
+  | 'acoustics-equalizer'
   | 'audio-eq'
   | 'trajectory'
   | 'host-match'
@@ -46,6 +47,7 @@ export const ROUTE_TO_PANEL_ID: Record<Exclude<ActiveMenuRoute, 'layer-0'>, Menu
   'garage': 'layer2-garage',
   'settings': 'layer2-settings',
   'manage-room': 'layer2-manage-room',
+  'acoustics-equalizer': 'layer3-acoustics-equalizer',
   'audio-eq': 'layer3-acoustics-equalizer',
   'trajectory': 'layer3-ball-trajectory',
   'host-match': 'layer3-host-match',
@@ -133,7 +135,7 @@ export const MENU_SANDBOX_JUMP_ITEMS: SandboxJumpEntry[] = [
   makeJumpItem('7A.D9', 'Layer3DevUnderDevelopmentRecipe', 'Under Development (Staging)', 'Layer 3 · Dev', 'dev-under-development', 'developer'),
   makeJumpItem('7A.D9R', 'Layer3DevRemoteProfileRecipe', 'Remote Profile & Account Management', 'Layer 3 · Dev', 'dev-remote-profile', 'developer'),
   makeJumpItem('7A.D9Q', 'Layer3DevQuickActionsRecipe', 'Quick Actions & Match Toggles', 'Layer 3 · Dev', 'dev-quick-actions', 'developer'),
-  makeJumpItem('7A.D10', 'Layer3AcousticsEqualizerRecipe', 'Acoustics & EQ Detail', 'Layer 3 · Dev', 'audio-eq', 'developer'),
+  makeJumpItem('7A.D10', 'Layer3AcousticsEqualizerRecipe', 'Acoustics & EQ Detail', 'Layer 3 · Dev', 'acoustics-equalizer', 'developer'),
   makeJumpItem('7A.D11', 'Layer4AdvancedAudioRecipe', 'Advanced Audio Synthesis Pool', 'Layer 4 · Dev', 'advanced-audio', 'developer'),
   makeJumpItem('7A.D12', 'Layer4EventTriggerRulesRecipe', 'Event & Trigger Rules Engine', 'Layer 4 · Dev', 'event-trigger-rules', 'developer'),
   makeJumpItem('7A.D13', 'Layer4DevSignalingLabRecipe', '4-Server Signaling & Dual Bridge Lab', 'Layer 4 · Dev', 'dev-signaling-lab', 'developer'),
@@ -165,6 +167,7 @@ export const MENU_ROUTE_CONFIG: Record<ActiveMenuRoute, LayerRouteConfig> = {
   'garage': makeRouteCfg('garage', 'Garage Loadout', 2, 640, 'user', 'main-menu'),
   'settings': makeRouteCfg('settings', 'Game Settings', 2, 680, 'both', 'main-menu'),
   'manage-room': makeRouteCfg('manage-room', 'Online Room Control', 2, 720, 'user', 'play'),
+  'acoustics-equalizer': makeRouteCfg('acoustics-equalizer', 'Acoustics & EQ', 3, 480, 'developer', 'settings'),
   'audio-eq': makeRouteCfg('audio-eq', 'Acoustics & EQ', 3, 480, 'developer', 'settings'),
   'trajectory': makeRouteCfg('trajectory', 'Ball Trajectory Predictor', 3, 560, 'both', 'settings'),
   'host-match': makeRouteCfg('host-match', 'Host Match Room', 3, 520, 'user', 'play'),
@@ -249,6 +252,14 @@ export const isLayer3RouteAvailable = (
   }
   return true;
 };
+
+export function normalizeMenuRoute(route?: string | null): ActiveMenuRoute | null {
+  if (!route) return null;
+  if (route === 'audio-eq' || route === 'acoustics-equalizer') {
+    return 'acoustics-equalizer';
+  }
+  return route in MENU_ROUTE_CONFIG ? (route as ActiveMenuRoute) : null;
+}
 
 export type LivePreviewAnimPhase =
   | 'expanded'
