@@ -20,8 +20,8 @@ import {
   buildMergedFloatingPresets,
   useFloatingWindowsCalibration,
 } from './floating-windows/useFloatingWindowsCalibration';
+import { useFloatingPlaylistState } from './floating-windows/floatingWindowsLinearPlaylists';
 import { RapidReviewTriageBar } from '../components/review/RapidReviewTriageBar';
-import { useReviewLedgerStore } from '../components/review/reviewLedgerStore';
 import { AutoConfigTunerPanel } from '../components/tuner/AutoConfigTunerPanel';
 
 const useState = createScopedSyncedState('page:floating-windows-v2');
@@ -123,28 +123,26 @@ export const FloatingWindowsSimulationPage: React.FC<FloatingWindowsSimulationPa
   );
   const currentPreset = activeTierWindows[currentIndex] || activeTierWindows[0];
 
-  const { manualMinWidths, manualMinHeights } = useFloatingWindowsCalibration(currentPreset);
+  const { manualMinWidths, manualMinHeights, spawnPresetIntoSandbox } =
+    useFloatingWindowsCalibration(currentPreset);
 
-  const navigationSeq = useReviewLedgerStore((s) => s.navigationSeq);
-  const activeUnitKey = useReviewLedgerStore((s) => s.activeUnitKey);
-  useEffect(() => {
-    if (navigationSeq === 0 || !activeUnitKey.startsWith('floating:')) return;
-    const [surfaceId, variantId = 'default'] = activeUnitKey.split('::');
-    const fwId = surfaceId.replace(/^floating:/, '');
-    const target = allWindows.find((w) => w.id === fwId);
-    if (!target) return;
-    const targetTier: FloatingWindowVisibilityTier =
-      target.tier === 'developer' ? 'developer' : 'user';
-    if (targetTier !== tier) {
-      setTier(targetTier);
-    }
-    setSelectedWindowId(target.id);
-    if (variantId && variantId !== 'default') {
-      setActiveSubTab(variantId);
-    } else {
-      setActiveSubTab(target.tabs?.[0]?.id || '');
-    }
-  }, [navigationSeq]);
+  const {
+    activePlaylist,
+    activePlaylistIdx,
+    activePlaylistUnit,
+    activePlaylistPresets,
+    toolbarDisplayPreset,
+  } = useFloatingPlaylistState({
+    tier,
+    fwMode,
+    activeTierWindows,
+    allWindows,
+    currentPreset,
+    activeSubTab,
+    setTier,
+    setSelectedWindowId,
+    setActiveSubTab,
+  });
 
   useEffect(() => {
     updateUrlParams({
@@ -157,38 +155,6 @@ export const FloatingWindowsSimulationPage: React.FC<FloatingWindowsSimulationPa
       fwMode,
     });
   }, [tier, currentPreset, activeSubTab, fwMode]);
-
-  const spawnPresetIntoSandbox = (preset: PresetConfig, singletonOverride?: boolean) => {
-    const savedManualMinW =
-      typeof manualMinWidths[preset.id] === 'number'
-        ? Math.round(manualMinWidths[preset.id])
-        : undefined;
-    const savedManualMinH =
-      typeof manualMinHeights[preset.id] === 'number'
-        ? Math.round(manualMinHeights[preset.id])
-        : undefined;
-    floatingSandboxStore.spawnWindow({
-      id: preset.id,
-      title: preset.title,
-      subtitle: preset.summary,
-      category: preset.category,
-      width: savedManualMinW ?? preset.minWidth ?? preset.width,
-      height:
-        savedManualMinH !== undefined
-          ? Math.max(savedManualMinH, preset.height)
-          : preset.height,
-      minWidth: preset.minWidth,
-      manualMinWidth: savedManualMinW,
-      minHeight: preset.minHeight,
-      manualMinHeight: savedManualMinH,
-      maxWidth: preset.maxWidth,
-      maxHeight: preset.maxHeight,
-      autoFitHeight: preset.autoFitHeight,
-      resizable: preset.resizable,
-      singleton: singletonOverride ?? preset.singleton,
-      startMinimized: false,
-    });
-  };
 
   useEffect(() => {
     if (fwMode !== 'inspector' || !currentPreset) return;
@@ -215,10 +181,16 @@ export const FloatingWindowsSimulationPage: React.FC<FloatingWindowsSimulationPa
   };
 
   const handleStepWindow = (delta: number) => {
-    const nextIdx = (currentIndex + delta + activeTierWindows.length) % activeTierWindows.length;
-    const nextPreset = activeTierWindows[nextIdx];
-    if (nextPreset) {
-      handleSelectPreset(nextPreset);
+    if (activePlaylist.length === 0) return;
+    const nextIdx =
+      (activePlaylistIdx + delta + activePlaylist.length) % activePlaylist.length;
+    const nextUnit = activePlaylist[nextIdx];
+    if (!nextUnit) return;
+    const windowChanged = nextUnit.windowId !== selectedWindowId;
+    setSelectedWindowId(nextUnit.windowId);
+    setActiveSubTab(nextUnit.subtab || '');
+    if (windowChanged && fwMode === 'stack') {
+      spawnPresetIntoSandbox(nextUnit.preset);
     }
   };
 
@@ -244,7 +216,7 @@ export const FloatingWindowsSimulationPage: React.FC<FloatingWindowsSimulationPa
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentIndex, activeTierWindows, fwMode, manualMinWidths, manualMinHeights]);
+  }, [activePlaylistIdx, activePlaylist, selectedWindowId, fwMode, manualMinWidths, manualMinHeights]);
 
   const handleAddPresetToStack = (
     preset: PresetConfig,
@@ -337,9 +309,9 @@ export const FloatingWindowsSimulationPage: React.FC<FloatingWindowsSimulationPa
         isLight={isLight}
         tier={tier}
         fwMode={fwMode}
-        currentIndex={currentIndex}
-        activeTierWindows={activeTierWindows}
-        currentPreset={currentPreset}
+        currentIndex={activePlaylistIdx}
+        activeTierWindows={activePlaylistPresets}
+        currentPreset={toolbarDisplayPreset}
         boundary={{
           containerPreset,
           setContainerPreset,
@@ -365,6 +337,8 @@ export const FloatingWindowsSimulationPage: React.FC<FloatingWindowsSimulationPa
         currentIndex={currentIndex}
         currentPreset={currentPreset}
         activeSubTab={activeSubTab}
+        playlistIndex={activePlaylistIdx}
+        activePlaylistUnit={activePlaylistUnit}
       />
 
       <FloatingWindowsScannerControlBar
