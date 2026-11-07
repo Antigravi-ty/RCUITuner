@@ -10,12 +10,18 @@ import type { Layer1MenuContextMode } from '../../../ui-core/recipes/layer1MenuC
 import type { ShowcaseTab } from '../../sidebarNavConfig';
 import type {
   ActiveMenuRoute,
+  Layer3StepProgressStatus,
   LinearPlaylistStep,
   LivePreviewAnimPhase,
   MenuVisibilityTier,
 } from './menuLayerRouteConfig';
 import type { resolveRouteAuditInfo } from './menuLayerLinearPlaylists';
-import type { Layer3StepOverrideState } from './MenuLayerStageRecipeRouter';
+
+export interface Layer3StepOverrideState {
+  progressStatus?: Layer3StepProgressStatus;
+  currentStep?: number;
+  defaultEditingConfig?: boolean;
+}
 
 export interface MenuLayerSandboxContextValue {
   stageRef: React.RefObject<HTMLDivElement | null>;

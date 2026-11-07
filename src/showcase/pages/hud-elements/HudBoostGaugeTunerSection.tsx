@@ -1,11 +1,8 @@
 import React from 'react';
 import { useBoostGaugeStore } from '../../../ui-core/stores/boostGaugeStore';
 import { Flame, RotateCcw, Moon, Sun, Copy, Check, Code2 } from 'lucide-react';
-import {
-  CircularBoostGauge,
-  getBoostSegmentColor,
-  type BoostThemeOverride,
-} from '../../../ui-core/hud/CircularBoostGauge';
+import { CircularBoostGauge, type BoostThemeOverride } from '../../../ui-core/hud/CircularBoostGauge';
+import { getBoostSegmentColor } from '../../../ui-core/hud/boostGaugeConfig';
 import { type HudBoostListener } from '../../../ui-core/stores/hudTransientTypes';
 import { SliderControl } from '../../../ui-core/primitives/SliderControl';
 import { ToggleSwitch } from '../../../ui-core/primitives/ToggleSwitch';

@@ -1,19 +1,13 @@
 import React, { useEffect, Suspense, lazy, useMemo } from 'react';
 import { Sidebar } from './showcase/Sidebar';
 import {
-  WORKSPACE_SECTIONS,
-  WORKSPACE_SPECS,
-  getApprovalLedgerSummary,
-  getNavItemMeta,
-  getWorkspaceForTab,
-  isValidShowcaseTab,
-  readWorkspaceFromUrl,
-  syncWorkspaceUrlParam,
-  type ShowcaseTab,
-  type TunerWorkspaceId,
-} from './showcase/sidebarNavConfig';
+  JumpOriginReturnBanner,
+  TopWorkspaceHeaderBar,
+  type JumpOriginRecord,
+} from './showcase/SidebarWorkspaceHeader';
+import { WORKSPACE_SECTIONS, WORKSPACE_SPECS, getApprovalLedgerSummary, syncWorkspaceUrlParam } from './showcase/workspaceSpecs';
+import { getNavItemMeta, getWorkspaceForTab, isValidShowcaseTab, readWorkspaceFromUrl, type ShowcaseTab, type TunerWorkspaceId } from './showcase/sidebarNavConfig';
 import { OverviewPage } from './showcase/pages/OverviewPage';
-import { ViewportControls } from './showcase/ViewportControls';
 
 const BadgesPage = lazy(() => import('./showcase/pages/BadgesPage').then((m) => ({ default: m.BadgesPage })));
 const TabsPage = lazy(() => import('./showcase/pages/TabsPage').then((m) => ({ default: m.TabsPage })));
@@ -46,24 +40,10 @@ import { SafeAreaHud } from './ui-core/viewport/SafeAreaHud';
 import { useViewportStore, viewportStore } from './ui-core/stores/viewportStore';
 import { DialogueStackContainer } from './ui-core/compounds/Dialogue';
 import { SectionErrorBoundary } from './showcase/components/SectionErrorBoundary';
-import {
-  ShieldAlert,
-  ArrowLeft,
-  FlaskConical,
-  ClipboardCheck,
-  CheckCircle2,
-} from 'lucide-react';
+import { ShieldAlert } from 'lucide-react';
 import { useAccentStore } from './showcase/stores/themeStore';
 import { readUrlParams, updateUrlParams } from './showcase/stores/urlSync';
 import { useSyncedState } from './showcase/stores/crossClientSync';
-
-interface JumpOriginRecord {
-  fromTab: ShowcaseTab;
-  fromHref: string;
-  fromDesc: string;
-  toTab: ShowcaseTab;
-  targetId?: string;
-}
 
 function resolveInitialTabFromUrl(): ShowcaseTab {
   const rawTab = readUrlParams().tab;
@@ -264,77 +244,15 @@ export const App: React.FC = () => {
           right: `${safeAreaMargin}%`,
         }}
       >
-        <header
-          className={`h-16 px-4 md:px-6 border-b flex items-center justify-between gap-3 shrink-0 z-20 transition-colors ${
-            isLight ? 'bg-white border-neutral-200/90 shadow-2xs' : 'bg-neutral-950 border-neutral-800'
-          }`}
-        >
-          <div className="flex items-center gap-2.5 text-xs min-w-0">
-            <span className="font-bold tracking-tight shrink-0">RCUITuner</span>
-            <span className="text-neutral-400 shrink-0">/</span>
-            {activeSectionMeta && (
-              <span className={`hidden lg:inline-flex px-1.5 py-0.5 rounded text-[10px] font-mono font-extrabold border shrink-0 ${activeSectionMeta.badgeColor}`}>
-                {activeSectionMeta.code}
-              </span>
-            )}
-            <span className={`font-mono font-medium truncate ${tokens.text}`}>
-              {activeNavMeta?.label ?? activeTab}
-            </span>
-          </div>
-
-          <div
-            className={`flex items-center gap-1 p-1 rounded-xl border shrink-0 ${
-              isLight ? 'bg-neutral-100/90 border-neutral-200/90' : 'bg-neutral-900/90 border-neutral-800'
-            }`}
-          >
-            {(['alpha', 'bravo'] as const).map((wsId) => {
-              const isSelected = activeWorkspace === wsId;
-              const isAlpha = wsId === 'alpha';
-              return (
-                <button
-                  key={wsId}
-                  type="button"
-                  onClick={() => handleSelectWorkspace(wsId)}
-                  data-top-workspace={wsId}
-                  title={`${WORKSPACE_SPECS[wsId].title} · ${WORKSPACE_SPECS[wsId].subtitle} (Alt+${isAlpha ? '1' : '2'})`}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer ${
-                    isSelected
-                      ? isLight
-                        ? isAlpha
-                          ? 'bg-white text-amber-800 font-bold shadow-xs border border-amber-400/60'
-                          : 'bg-white text-sky-800 font-bold shadow-xs border border-sky-400/60'
-                        : isAlpha
-                        ? 'bg-neutral-800 text-amber-300 font-bold shadow-xs border border-amber-500/50'
-                        : 'bg-neutral-800 text-sky-300 font-bold shadow-xs border border-sky-500/50'
-                      : isLight
-                      ? 'text-neutral-600 hover:text-neutral-900 hover:bg-white/50'
-                      : 'text-neutral-400 hover:text-neutral-100 hover:bg-neutral-800/50'
-                  }`}
-                >
-                  {isAlpha ? (
-                    <FlaskConical className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-                  ) : (
-                    <ClipboardCheck className="h-3.5 w-3.5 text-sky-500 shrink-0" />
-                  )}
-                  <span>{isAlpha ? 'Workspace Alpha' : 'Workspace Bravo'}</span>
-                  <span className="hidden xl:inline text-[10px] opacity-75">
-                    {isAlpha ? '· 母版与独立实验室' : '· 面板审批与精调'}
-                  </span>
-                  {!isAlpha && (
-                    <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-                      <CheckCircle2 className="h-2.5 w-2.5" />
-                      <span>{ledgerSummary.approvedCount}/{ledgerSummary.totalSurfaces}</span>
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="flex items-center gap-3 shrink-0">
-            <ViewportControls isLight={isLight} />
-          </div>
-        </header>
+        <TopWorkspaceHeaderBar
+          isLight={isLight}
+          activeTab={activeTab}
+          activeNavLabel={activeNavMeta?.label}
+          activeSectionMeta={activeSectionMeta}
+          activeWorkspace={activeWorkspace}
+          onSelectWorkspace={handleSelectWorkspace}
+          ledgerSummary={ledgerSummary}
+        />
 
         <div className="flex-1 flex overflow-hidden min-h-0 relative">
           <Sidebar
@@ -348,37 +266,12 @@ export const App: React.FC = () => {
 
           <main className="flex-1 h-full overflow-y-auto overflow-x-auto [overflow-anchor:none] min-w-0 relative select-text bg-white dark:bg-neutral-950">
             {lastJumpOrigin && lastJumpOrigin.toTab === activeTab && (
-              <div
-                className={`sticky top-0 z-40 px-6 py-2 border-b flex items-center justify-between gap-3 text-xs font-mono backdrop-blur-md ${
-                  isLight
-                    ? 'bg-amber-50/95 border-amber-200/90 text-amber-900 shadow-2xs'
-                    : 'bg-neutral-900/95 border-amber-500/30 text-amber-200 shadow-md'
-                }`}
-              >
-                <div className="flex items-center gap-2 flex-wrap">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (typeof window !== 'undefined' && window.history.length > 1) window.history.back();
-                      else handleReturnToJumpOrigin();
-                    }}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-bold bg-amber-500 hover:bg-amber-400 text-neutral-950 transition-all cursor-pointer active:scale-95 shadow-2xs"
-                  >
-                    <ArrowLeft className="h-3.5 w-3.5" />
-                    <span>Return ({lastJumpOrigin.fromDesc})</span>
-                  </button>
-                  <span className="opacity-80">
-                    History stack{lastJumpOrigin.targetId ? ` · #${lastJumpOrigin.targetId}` : ''}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setLastJumpOrigin(null)}
-                  className="px-2 py-0.5 rounded opacity-60 hover:opacity-100 cursor-pointer"
-                >
-                  Dismiss x
-                </button>
-              </div>
+              <JumpOriginReturnBanner
+                isLight={isLight}
+                lastJumpOrigin={lastJumpOrigin}
+                onReturn={handleReturnToJumpOrigin}
+                onDismiss={() => setLastJumpOrigin(null)}
+              />
             )}
 
             <div

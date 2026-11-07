@@ -6,13 +6,9 @@ import {
 import { Badge } from '../../../ui-core/primitives/Badge';
 import { useMenuLayoutStore } from '../../../ui-core/stores/menuLayoutStore';
 import { DEFAULT_PANEL_SIZING, type MenuPanelId } from '../../../ui-core/tokens/menuLayoutTokens';
-import {
-  useCameraSettingsStyleStore,
-  CAMERA_SETTINGS_STYLE_PRESETS,
-  type CameraSettingsPresetId,
-} from '../../../ui-core/stores/cameraSettingsStyleStore';
+import { useCameraSettingsStyleStore, CAMERA_SETTINGS_STYLE_PRESETS, type CameraSettingsPresetId } from '../../../ui-core/stores/cameraSettingsStyleStore';
 import { useQuickNotificationStore } from '../../../ui-core/stores/quickNotificationStore';
-import { dispatchOnlineRoomErrorNotification } from '../../../ui-core/recipes/online/onlineRoomErrorNotification';
+import { dispatchOnlineRoomErrorNotification } from '../../../ui-core/recipes/online/OnlineRoomCreationProgress';
 import { USER_LINEAR_PLAYLIST } from './menuLayerLinearPlaylists';
 import { useMenuLayerSandbox } from './MenuLayerSandboxContext';
 

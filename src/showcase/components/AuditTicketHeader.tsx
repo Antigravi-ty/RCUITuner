@@ -242,12 +242,12 @@ export const AuditTicketHeader: React.FC<AuditTicketHeaderProps> = React.memo(
             title={`Unit: ${unitKey} | Bucket: ${bucket} (${staleReason})`}
           >
             {status === 'rejected'
-              ? '🔴 REJECTED'
+              ? '[REJECTED]'
               : status === 'deferred'
-              ? '🟡 DEFERRED'
+              ? '[DEFERRED]'
               : bucket === 'bucket-3-template'
-              ? '🟣 TEMPLATE-STALE'
-              : '🟢 APPROVED'}
+              ? '[TEMPLATE-STALE]'
+              : '[APPROVED]'}
           </span>
 
           {tunerStatus && (

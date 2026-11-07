@@ -1,10 +1,7 @@
 import { useCallback } from 'react';
 import type { ArenaLightingPreset } from '../../ArenaBackdrop';
 import { crossClientSync, useSyncedState } from '../../stores/crossClientSync';
-import {
-  DEFAULT_BALL_VISUAL_CONFIG,
-  updateBallVisualConfig,
-} from '../../../ui-core/stores/ballVisualStore';
+import { DEFAULT_BALL_VISUAL_CONFIG, updateBallVisualConfig } from '../../../ui-core/config/ballVisualConfig';
 import {
   resetNameTagConfig,
   setNameTagRuntimeState,

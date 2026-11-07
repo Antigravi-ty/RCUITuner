@@ -1,9 +1,6 @@
 import React from 'react';
-import {
-  STEP_12_TIER_PRESETS,
-  type BoostColorMode,
-  type BoostColorScheme,
-} from '../../../ui-core/hud/CircularBoostGauge';
+import { STEP_12_TIER_PRESETS } from '../../../ui-core/hud/boostGaugeConfig';
+import { type BoostColorMode, type BoostColorScheme } from '../../../ui-core/hud/CircularBoostGauge';
 import { useBoostGaugeStore } from '../../../ui-core/stores/boostGaugeStore';
 
 export interface HudBoostGaugePaletteAndModeControlsProps {

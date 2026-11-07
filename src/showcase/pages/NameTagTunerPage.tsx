@@ -2,7 +2,7 @@ import React, { useCallback, useEffect } from 'react';
 import { RotateCcw, Shuffle, Eye, Activity } from 'lucide-react';
 import { NameTagTunerFloatingWindow } from '../../ui-core/panels/dev/NameTagTunerFloatingWindow';
 import { Badge } from '../../ui-core/primitives/Badge';
-import { updateBallVisualConfig } from '../../ui-core/stores/ballVisualStore';
+import { updateBallVisualConfig } from '../../ui-core/config/ballVisualConfig';
 import {
   setNameTagRuntimeState,
   updateNameTagConfig,
@@ -12,11 +12,8 @@ import type { ArenaLightingPreset } from '../ArenaBackdrop';
 import { PageJumpDirectory, type JumpDirectoryItem } from '../PageJumpDirectory';
 import { TunerConfigExporterBar } from '../components/tuner/TunerConfigExporterBar';
 import { NameTagModeShootoutSection } from './name-tag-tuner/NameTagModeShootoutSection';
-import {
-  buildKickoffCars,
-  KICKOFF_SLOT_PAIRS,
-  NameTagStageCanvas,
-} from './name-tag-tuner/NameTagStageCanvas';
+import { buildKickoffCars, KICKOFF_SLOT_PAIRS } from './name-tag-tuner/nameTagArenaProjectionMath';
+import { NameTagStageCanvas } from './name-tag-tuner/NameTagStageCanvas';
 import { useNameTagSyncedState } from './name-tag-tuner/useNameTagSyncedState';
 
 const JUMP_ITEMS: JumpDirectoryItem[] = [

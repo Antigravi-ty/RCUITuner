@@ -2,17 +2,8 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Sun, Moon, PanelLeftOpen } from 'lucide-react';
 import { useAccentStore } from './stores/themeStore';
 import { SidebarWorkspaceHeader } from './SidebarWorkspaceHeader';
-import {
-  PYRAMID_LAYERS,
-  SIDEBAR_NAV_ITEMS,
-  WORKSPACE_SECTIONS,
-  WORKSPACE_SPECS,
-  getApprovalLedgerSummary,
-  getWorkspaceForTab,
-  type ShowcaseTab,
-  type TunerWorkspaceId,
-  type WorkspaceSectionId,
-} from './sidebarNavConfig';
+import { PYRAMID_LAYERS, SIDEBAR_NAV_ITEMS, getWorkspaceForTab, type ShowcaseTab, type TunerWorkspaceId, type WorkspaceSectionId } from './sidebarNavConfig';
+import { WORKSPACE_SECTIONS, WORKSPACE_SPECS, getApprovalLedgerSummary } from './workspaceSpecs';
 
 export interface SidebarProps {
   activeTab: ShowcaseTab;

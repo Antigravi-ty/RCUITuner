@@ -6,7 +6,9 @@ import { SegmentedSwitch } from '../../../ui-core/primitives/SegmentedSwitch';
 import { ToggleSwitch } from '../../../ui-core/primitives/ToggleSwitch';
 import { ColorSwatchInput } from '../../components/tuner/ColorSwatchInput';
 import { JumpDirectoryItem } from '../../PageJumpDirectory';
-export type StageBgMode = 'solid' | 'gradient' | 'arena' | 'flow';
+import { useCenterUpperSyncedState, type StageBgMode } from './useCenterUpperSyncedState';
+
+export type { StageBgMode };
 
 export interface CustomAnnouncementPreset {
   id: string;
@@ -45,8 +47,6 @@ export const CUSTOM_ANNOUNCEMENT_PRESETS: CustomAnnouncementPreset[] = [
 export const BG_COLOR_SWATCHES = ['#090D16', '#000000', '#0F172A', '#1E293B', '#18181B', '#0E2218', '#23121B', '#334155', '#CBD5E1', '#F8FAFC'];
 
 export const RL_GLOW_SWATCHES = ['#FFE600', '#FACC15', '#F59E0B', '#FB923C', '#38BDF8', '#22C55E', '#EF4444', '#A855F7', '#FFFFFF'];
-
-import { useCenterUpperSyncedState } from './useCenterUpperSyncedState';
 
 export interface CenterUpperStageBackdropBarProps {
   isLight: boolean;

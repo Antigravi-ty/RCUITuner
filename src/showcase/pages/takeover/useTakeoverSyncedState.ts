@@ -3,18 +3,10 @@ import {
   CenterUpperTypographyConfig,
   CenterUpperTimingConfig,
 } from '../../../ui-core/hud/CenterUpperInfoHUD';
-import {
-  TakeoverGlowConfig,
-  TakeoverSignal,
-  DEFAULT_TAKEOVER_GLOW,
-  DEFAULT_TAKEOVER_TYPOGRAPHY,
-  DEFAULT_TAKEOVER_TIMING,
-  DEFAULT_TAKEOVER_LAYOUT,
-} from '../../../ui-core/hud/TakeoverCountdownHUD';
-import {
-  type TakeoverVignetteConfig,
-  DEFAULT_TAKEOVER_VIGNETTE,
-} from '../../../ui-core/hud/TakeoverVignetteOverlay';
+import { TakeoverGlowConfig, TakeoverSignal } from '../../../ui-core/hud/TakeoverCountdownHUD';
+import { DEFAULT_TAKEOVER_GLOW, DEFAULT_TAKEOVER_TYPOGRAPHY, DEFAULT_TAKEOVER_TIMING, DEFAULT_TAKEOVER_LAYOUT } from '../../../ui-core/hud/takeoverCountdownDefaults';
+import { type TakeoverVignetteConfig } from '../../../ui-core/hud/TakeoverVignetteOverlay';
+import { DEFAULT_TAKEOVER_VIGNETTE } from '../../../ui-core/hud/takeoverVignetteMath';
 import { ArenaLightingPreset } from '../../ArenaBackdrop';
 import { useSyncedState, crossClientSync } from '../../stores/crossClientSync';
 import type { StageBgMode } from '../center-upper-info/CenterUpperStageBackdropBar';

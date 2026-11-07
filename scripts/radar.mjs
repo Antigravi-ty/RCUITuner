@@ -27,7 +27,10 @@ import {
 import {
   analyzeConfigPurity,
   analyzeFragmentationWarnings,
+  analyzeHygieneInvariants,
   analyzeLineLengthAndCasts,
+  analyzeMicroFragments,
+  analyzeValueReExports,
   checkLockfileInvariants,
   detectCircularDependencies,
   getLayerInfo,
@@ -61,11 +64,18 @@ let totalAsAnyCount = 0;
 const asAnyByFile = [];
 const configPurityErrors = [];
 const layerViolations = [];
+const brokenImportErrors = [];
+const valueReExportErrors = [];
+const cjkErrors = [];
+const emojiErrors = [];
+const domainHygieneErrors = [];
+const anyHygieneErrors = [];
 const widePropsErrors = [];
 const widePropsWarnings = [];
 const arbitrarySplitErrors = [];
 const gutSharingErrors = [];
 const dependencyGraph = new Map();
+const runtimeDependencyGraph = new Map();
 const incomingRefCounts = new Map(allRelFiles.map((f) => [f, 0]));
 
 for (const absFile of allFiles) {
@@ -96,6 +106,13 @@ for (const absFile of allFiles) {
   }
 
   configPurityErrors.push(...analyzeConfigPurity(content, relFile));
+  valueReExportErrors.push(...analyzeValueReExports(content, relFile));
+
+  const hygiene = analyzeHygieneInvariants(content, relFile);
+  cjkErrors.push(...hygiene.cjkViolations);
+  emojiErrors.push(...hygiene.emojiViolations);
+  domainHygieneErrors.push(...hygiene.domainViolations);
+  anyHygieneErrors.push(...hygiene.anyViolations);
 
   const baseName = path.basename(relFile, path.extname(relFile));
   if (ARBITRARY_SPLIT_FILENAME_RE.test(baseName)) {
@@ -107,18 +124,25 @@ for (const absFile of allFiles) {
 
   const fromLayer = getLayerInfo(relFile);
   const rawImports = parseFileImports(content, absFile);
-  const resolvedDeps = [];
+  const allResolvedDeps = [];
+  const runtimeResolvedDeps = [];
 
   for (const imp of rawImports) {
     const targetAbs = resolveImportTarget(absFile, imp.spec);
-    if (!targetAbs) continue;
+    if (!targetAbs) {
+      if (imp.spec.startsWith('.')) {
+        brokenImportErrors.push({ from: relFile, spec: imp.spec });
+      }
+      continue;
+    }
     const targetRel = toRelPath(targetAbs);
 
     if (targetRel !== relFile && incomingRefCounts.has(targetRel)) {
       incomingRefCounts.set(targetRel, incomingRefCounts.get(targetRel) + 1);
     }
+    allResolvedDeps.push(targetRel);
     if (!imp.isTypeOnly) {
-      resolvedDeps.push(targetRel);
+      runtimeResolvedDeps.push(targetRel);
     }
 
     const toLayer = getLayerInfo(targetRel);
@@ -136,7 +160,8 @@ for (const absFile of allFiles) {
       }
     }
   }
-  dependencyGraph.set(relFile, resolvedDeps);
+  dependencyGraph.set(relFile, allResolvedDeps);
+  runtimeDependencyGraph.set(relFile, runtimeResolvedDeps);
 
   for (const finding of analyzeWideWaist(content, relFile)) {
     if (finding.severity === 'error') widePropsErrors.push(finding);
@@ -147,6 +172,7 @@ for (const absFile of allFiles) {
 }
 
 const fragmentationWarnings = analyzeFragmentationWarnings(fileStatsList);
+const microFragmentErrors = analyzeMicroFragments(fileStatsList, incomingRefCounts);
 
 const deadFiles = [];
 for (const [relFile, refCount] of incomingRefCounts.entries()) {
@@ -155,20 +181,28 @@ for (const [relFile, refCount] of incomingRefCounts.entries()) {
   }
 }
 
+// Full import graph (including `import type`) used for cycle detection — 100% aligned with RocketCompanion
 const cycles = detectCircularDependencies(dependencyGraph);
 const tsResult = runTypeScriptCheck();
 const approvalReport = checkAndSyncApprovalLedger({
   allRelFiles,
-  dependencyGraph,
+  dependencyGraph: runtimeDependencyGraph,
   syncApproval: SYNC_APPROVAL,
 });
 
 const totalErrors =
   lockfileViolations.length +
   (tsResult.ok ? 0 : 1) +
+  brokenImportErrors.length +
   lineViolations.length +
   byteViolations.length +
   configPurityErrors.length +
+  valueReExportErrors.length +
+  microFragmentErrors.length +
+  cjkErrors.length +
+  emojiErrors.length +
+  domainHygieneErrors.length +
+  anyHygieneErrors.length +
   layerViolations.length +
   cycles.length +
   deadFiles.length +
@@ -181,12 +215,19 @@ const summary = {
   lockfileViolations,
   typescriptOk: tsResult.ok,
   typescriptErrors: tsResult.errors,
+  brokenImportErrors,
   lineViolations,
   lineWarnings,
   byteViolations,
   byteWarnings,
+  microFragmentErrors,
   fragmentationWarnings,
   configPurityErrors,
+  valueReExportErrors,
+  cjkErrors,
+  emojiErrors,
+  domainHygieneErrors,
+  anyHygieneErrors,
   layerViolations,
   circularDependencies: cycles,
   deadFiles,
@@ -205,7 +246,7 @@ if (JSON_MODE) {
 }
 
 console.log('======================================================================');
-console.log(' RCUITuner Architecture, TypeScript & 3-Layer Semantic Radar v3');
+console.log(' RCUITuner Architecture, TypeScript & 3-Layer Semantic Radar v4');
 console.log('======================================================================');
 console.log(`Scanned Source Files : ${allFiles.length}`);
 console.log(
@@ -215,7 +256,9 @@ console.log(
 );
 console.log(
   `1. TypeScript Strict : ${
-    tsResult.ok ? 'PASS (0 errors)' : `FAIL (${tsResult.errors.length} lines)`
+    tsResult.ok && brokenImportErrors.length === 0
+      ? 'PASS (0 errors, 0 broken imports)'
+      : `FAIL (${tsResult.errors.length} tsc lines, ${brokenImportErrors.length} broken imports)`
   }`
 );
 console.log(
@@ -224,25 +267,29 @@ console.log(
   }`
 );
 console.log(
-  `3. L1 config/ Purity : ${
-    configPurityErrors.length === 0
-      ? 'PASS (0 export let / localStorage / subscriber Sets)'
-      : `FAIL (${configPurityErrors.length} violations)`
+  `3. L1 Purity & 0-ReExport : ${
+    configPurityErrors.length === 0 && valueReExportErrors.length === 0
+      ? 'PASS (0 config leaks, 0 direct/indirect value re-exports)'
+      : `FAIL (${configPurityErrors.length} config leaks, ${valueReExportErrors.length} value re-exports)`
   }`
 );
 console.log(
-  `4. Circular Deps     : ${cycles.length === 0 ? 'PASS (0 cycles)' : `FAIL (${cycles.length} cycles)`}`
+  `4. Circular Deps (all): ${
+    cycles.length === 0 ? 'PASS (0 runtime/type cycles)' : `FAIL (${cycles.length} cycles)`
+  }`
 );
 console.log(
-  `5. Dead File Scan    : ${
-    deadFiles.length === 0 ? 'PASS (0 isolated files)' : `FAIL (${deadFiles.length} unused files)`
+  `5. Dead & Micro-Frag : ${
+    deadFiles.length === 0 && microFragmentErrors.length === 0
+      ? 'PASS (0 dead files, 0 single-ref <65L micro-fragments)'
+      : `FAIL (${deadFiles.length} dead files, ${microFragmentErrors.length} <65L micro-fragments)`
   }`
 );
 console.log(
   `6. Dual-Cap Volume   : ${
     lineViolations.length === 0 && byteViolations.length === 0
-      ? `PASS (0 >= ${LINE_ERROR_THRESHOLD}L, ${lineWarnings.length} warn >= ${LINE_WARN_THRESHOLD}L, ${fragmentationWarnings.length} <65L fragments)`
-      : `FAIL (${lineViolations.length} line caps, ${byteViolations.length} byte caps)`
+      ? `PASS (0 >= ${LINE_ERROR_THRESHOLD}L, 0 >= ${BYTE_ERROR_THRESHOLD}B | Warn: ${lineWarnings.length} >= ${LINE_WARN_THRESHOLD}L, ${byteWarnings.length} >= ${BYTE_WARN_THRESHOLD}B)`
+      : `FAIL (${lineViolations.length} >= ${LINE_ERROR_THRESHOLD}L, ${byteViolations.length} >= ${BYTE_ERROR_THRESHOLD}B)`
   }`
 );
 console.log(
@@ -262,7 +309,14 @@ console.log(
   }`
 );
 console.log(
-  `9. Hygiene Metrics   : ${longLineWarnings.length} lines >= ${SINGLE_LINE_CHAR_WARN_THRESHOLD} chars (warn), ${totalAsAnyCount} \`as any\` casts`
+  `9. Hygiene & Domain  : ${
+    cjkErrors.length === 0 &&
+    emojiErrors.length === 0 &&
+    domainHygieneErrors.length === 0 &&
+    anyHygieneErrors.length === 0
+      ? `PASS (0 CJK, 0 Emoji, 0 Domain leaks, 0 Any-cap breaches | ${longLineWarnings.length} long lines, ${totalAsAnyCount} total \`as any\`)`
+      : `FAIL (${cjkErrors.length} CJK, ${emojiErrors.length} Emoji, ${domainHygieneErrors.length} Domain, ${anyHygieneErrors.length} Any)`
+  }`
 );
 console.log('----------------------------------------------------------------------');
 
@@ -271,11 +325,20 @@ if (!tsResult.ok) {
   console.error('\n[ERROR] TypeScript Compilation Failures:');
   for (const line of tsResult.errors.slice(0, 25)) console.error(`  ${line}`);
 }
+for (const b of brokenImportErrors) console.error(`  [Broken Import] ${b.from} -> ${b.spec}`);
 for (const v of layerViolations) {
   console.error(`  [Layer Violation] ${v.from} (${v.fromLayer}) -> ${v.to} (${v.toLayer})`);
 }
+for (const c of cycles) console.error(`  [Circular Dependency] ${c.join(' -> ')}`);
+for (const r of valueReExportErrors) console.error(`  [Re-Export Violation] ${r.file}: ${r.reason}`);
+for (const m of microFragmentErrors) console.error(`  [Micro-Fragment] ${m.file}: ${m.reason}`);
 for (const f of deadFiles) console.error(`  [Dead File] ${f}`);
 for (const f of lineViolations) console.error(`  [Line Cap] ${f.file} (${f.lines} lines)`);
+for (const f of byteViolations) console.error(`  [Byte Cap] ${f.file} (${f.bytes} bytes)`);
+for (const c of cjkErrors) console.error(`  [CJK Violation] ${c.file}:${c.line}`);
+for (const e of emojiErrors) console.error(`  [Emoji Violation] ${e.file}:${e.line}`);
+for (const d of domainHygieneErrors) console.error(`  [Domain Violation] ${d.file}:${d.line} (${d.reason})`);
+for (const a of anyHygieneErrors) console.error(`  [Any Violation] ${a.file}:${a.line} (${a.reason})`);
 for (const p of widePropsErrors) {
   console.error(`  [Wide Waist] ${p.file} -> ${p.interfaceName} (${p.propCount} fields)`);
 }

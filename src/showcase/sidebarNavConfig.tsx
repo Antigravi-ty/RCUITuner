@@ -23,58 +23,9 @@ import {
   PanelRightClose,
   Megaphone,
 } from 'lucide-react';
-import {
-  WORKSPACE_SECTIONS,
-  WORKSPACE_SPECS,
-  getApprovalLedgerSummary,
-  syncWorkspaceUrlParam,
-  type ApprovalLedgerSummary,
-  type TunerWorkspaceId,
-  type TunerWorkspaceSpec,
-  type WorkspaceSectionId,
-  type WorkspaceSectionMeta,
-} from './workspaceSpecs';
+import type { ApprovalLedgerSummary, ShowcaseTab, TunerWorkspaceId, TunerWorkspaceSpec, WorkspaceSectionId, WorkspaceSectionMeta } from './workspaceSpecs';
 
-export {
-  WORKSPACE_SECTIONS,
-  WORKSPACE_SPECS,
-  getApprovalLedgerSummary,
-  syncWorkspaceUrlParam,
-  type ApprovalLedgerSummary,
-  type TunerWorkspaceId,
-  type TunerWorkspaceSpec,
-  type WorkspaceSectionId,
-  type WorkspaceSectionMeta,
-};
-
-export type ShowcaseTab =
-  | 'overview'
-  | 'foundations'
-  | 'badges'
-  | 'tabs'
-  | 'stacks'
-  | 'cards'
-  | 'play-cards'
-  | 'panels'
-  | 'composable-nesting'
-  | 'dialogue'
-  | 'quick-notification'
-  | 'animation'
-  | 'navigation'
-  | 'hud-elements'
-  | 'center-upper-info'
-  | 'takeover'
-  | 'temporal-overlay'
-  | 'charts-curves'
-  | 'viewport-safe-area'
-  | 'loading-preview'
-  | 'name-tag-tuner'
-  | 'recipes'
-  | 'live-preview'
-  | 'edge-inspector'
-  | 'floating-windows'
-  | 'layer-preview'
-  | 'notification-integration';
+export type { ApprovalLedgerSummary, ShowcaseTab, TunerWorkspaceId, TunerWorkspaceSpec, WorkspaceSectionId, WorkspaceSectionMeta };
 
 export interface SidebarLayerMeta {
   code: string;

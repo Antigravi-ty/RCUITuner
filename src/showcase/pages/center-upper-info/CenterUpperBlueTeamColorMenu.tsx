@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Palette, RotateCcw, Copy, Check, Sliders, Trophy } from 'lucide-react';
-import {
-  CenterUpperBlueTeamConfig,
-  DEFAULT_WINNER_BLUE_TEAM_CONFIG,
-} from '../../../ui-core/hud/CenterUpperInfoHUD';
+import { CenterUpperBlueTeamConfig } from '../../../ui-core/hud/CenterUpperInfoHUD';
+import { DEFAULT_WINNER_BLUE_TEAM_CONFIG } from '../../../ui-core/hud/centerUpperInfoDefaults';
 import { SliderControl } from '../../../ui-core/primitives/SliderControl';
 import { ToggleSwitch } from '../../../ui-core/primitives/ToggleSwitch';
 import {

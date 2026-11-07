@@ -1,12 +1,7 @@
 import React from 'react';
 import { RotateCcw, Eye, ArrowLeftRight } from 'lucide-react';
-import {
-  type TakeoverVignetteConfig,
-  type TakeoverVignetteRenderMode,
-  DEFAULT_TAKEOVER_VIGNETTE,
-  formatVignetteEndpointRgba,
-  computeVignetteAxisOffsets,
-} from '../../../ui-core/hud/TakeoverVignetteOverlay';
+import { type TakeoverVignetteConfig, type TakeoverVignetteRenderMode } from '../../../ui-core/hud/TakeoverVignetteOverlay';
+import { DEFAULT_TAKEOVER_VIGNETTE, formatVignetteEndpointRgba, computeVignetteAxisOffsets } from '../../../ui-core/hud/takeoverVignetteMath';
 import { CubicBezierCurveEditor, type CubicBezierPreset } from '../../../ui-core/charts/CubicBezierCurveEditor';
 import { SliderControl } from '../../../ui-core/primitives/SliderControl';
 import { SegmentedSwitch } from '../../../ui-core/primitives/SegmentedSwitch';

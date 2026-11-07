@@ -1,20 +1,11 @@
 import { useCallback } from 'react';
-import {
-  CenterUpperGlowConfig,
-  CenterUpperBlueTeamConfig,
-  CenterUpperTypographyConfig,
-  CenterUpperTimingConfig,
-  CenterUpperInfoVariant,
-  WinnerTeamPreset,
-  DEFAULT_RL_COUNTDOWN_GLOW,
-  DEFAULT_WINNER_BLUE_TEAM_CONFIG,
-  DEFAULT_CENTER_UPPER_TYPOGRAPHY,
-  DEFAULT_CENTER_UPPER_TIMING,
-} from '../../../ui-core/hud/CenterUpperInfoHUD';
+import { CenterUpperGlowConfig, CenterUpperBlueTeamConfig, CenterUpperTypographyConfig, CenterUpperTimingConfig, CenterUpperInfoVariant, WinnerTeamPreset } from '../../../ui-core/hud/CenterUpperInfoHUD';
+import { DEFAULT_RL_COUNTDOWN_GLOW, DEFAULT_WINNER_BLUE_TEAM_CONFIG, DEFAULT_CENTER_UPPER_TYPOGRAPHY, DEFAULT_CENTER_UPPER_TIMING } from '../../../ui-core/hud/centerUpperInfoDefaults';
 import { hexToRgbTuple } from '../../components/tuner/ColorSwatchInput';
 import { ArenaLightingPreset } from '../../ArenaBackdrop';
 import { useSyncedState, crossClientSync } from '../../stores/crossClientSync';
-import type { StageBgMode } from './CenterUpperStageBackdropBar';
+
+export type StageBgMode = 'solid' | 'gradient' | 'arena' | 'flow';
 
 export function useCenterUpperSyncedState() {
   const [stageBgMode, setStageBgMode] = useSyncedState<StageBgMode>('5e:stageBgMode', 'solid');

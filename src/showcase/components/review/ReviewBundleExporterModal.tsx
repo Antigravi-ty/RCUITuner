@@ -204,7 +204,7 @@ export const ReviewBundleExporterModal: React.FC<ReviewBundleExporterModalProps>
                   >
                     <div className="flex items-center justify-between gap-2 flex-wrap">
                       <span className="font-bold text-rose-500">
-                        🚨 Fix Workspace Alpha Mother First: {cluster.shortName}
+                        [ALERT] Fix Workspace Alpha Mother First: {cluster.shortName}
                       </span>
                       <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-500 font-bold">
                         {cluster.rejectedUnits.length} Rejected / {cluster.totalUnitsUsingDep} Total Surfaces
@@ -227,7 +227,7 @@ export const ReviewBundleExporterModal: React.FC<ReviewBundleExporterModalProps>
                   >
                     <div className="flex items-center justify-between gap-2 flex-wrap">
                       <span className="font-bold text-sky-500">
-                        🎯 Alpha Mother Healthy ({cluster.shortName}) → Fix Bravo Locally
+                        [LOCAL] Alpha Mother Healthy ({cluster.shortName}) → Fix Bravo Locally
                       </span>
                       <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-500 font-bold">
                         {cluster.approvedUnits.length} Approved Sibling Surfaces

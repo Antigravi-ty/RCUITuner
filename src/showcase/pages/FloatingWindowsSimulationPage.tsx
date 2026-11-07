@@ -13,7 +13,7 @@ import {
   DEV_PRESET_WINDOWS,
   PRESET_WINDOWS,
 } from '../../ui-core/stores/devFloatingPresets';
-import { getDiscoveredFloatingSurfaces } from '../../ui-core/manifest/surfaceRegistry';
+import { getDiscoveredFloatingSurfaces } from '../../ui-core/manifest/floatingSurfaceRegistry';
 import {
   resolveCalibratedSurfaceSizing,
   subscribeSurfaceCalibration,

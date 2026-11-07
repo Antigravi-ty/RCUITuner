@@ -7,7 +7,7 @@ import {
   drawNameTagPillCard2D,
   renderNameTagOverlayPass2D,
 } from '../../../ui-core/config/nameTagPillRenderer';
-import { buildSinglePillCard2D } from './NameTagStageCanvas';
+import { buildSinglePillCard2D } from './nameTagArenaProjectionMath';
 
 interface ModeDescriptor {
   mode: NameTagBoostIndicatorMode;

@@ -211,9 +211,9 @@ export function formatReviewBundleMarkdown(
       `**${payload.summary.rejectedCount}** Rejected · ` +
       `**${payload.summary.deferredCount}** Deferred · ` +
       `**${payload.summary.pendingCount}** Pending (Total ${payload.summary.totalUnits} units)`,
-    `- **3-Bucket Queue Snapshot**: 🔴 Bucket 1 (Visual/New): \`${payload.summary.bucket1VisualCount}\` · ` +
-      `🟡 Bucket 2 (Config/Sizing): \`${payload.summary.bucket2ConfigCount}\` · ` +
-      `🟣 Bucket 3 (Template-Stale): \`${payload.summary.bucket3TemplateCount}\``,
+    `- **3-Bucket Queue Snapshot**: [B1] Bucket 1 (Visual/New): \`${payload.summary.bucket1VisualCount}\` · ` +
+      `[B2] Bucket 2 (Config/Sizing): \`${payload.summary.bucket2ConfigCount}\` · ` +
+      `[B3] Bucket 3 (Template-Stale): \`${payload.summary.bucket3TemplateCount}\``,
     '',
     '## 1. [Root-Cause Triage Recommendation] (Alpha ⇄ Bravo Attribution)',
   ];
@@ -224,7 +224,7 @@ export function formatReviewBundleMarkdown(
     );
   } else {
     if (alphaFixes.length > 0) {
-      lines.push('### 🚨 Systemic Workspace Alpha Mother Component Findings (Fix First)');
+      lines.push('### [ALERT] Systemic Workspace Alpha Mother Component Findings (Fix First)');
       for (const c of alphaFixes.slice(0, 8)) {
         lines.push(
           `- **${c.shortName}** (\`${c.alphaDep}\`): Co-occurs across **${c.rejectedUnits.length}** rejected units (\`${c.rejectedUnits.join('`, `')}\`).`,
@@ -233,7 +233,7 @@ export function formatReviewBundleMarkdown(
       }
     }
     if (bravoLocalFixes.length > 0) {
-      lines.push('### 🎯 Localized Workspace Bravo Surface Findings (Alpha Mother Healthy)');
+      lines.push('### [LOCAL] Localized Workspace Bravo Surface Findings (Alpha Mother Healthy)');
       for (const c of bravoLocalFixes.slice(0, 8)) {
         lines.push(`- **${c.shortName}**: ${c.recommendation}`);
       }
@@ -246,7 +246,7 @@ export function formatReviewBundleMarkdown(
   } else {
     for (const u of rejected) {
       lines.push(
-        `- 🔴 **[${u.referenceCode}] ${u.label}** (\`${u.unitKey}\`)`,
+        `- [REJECTED] **[${u.referenceCode}] ${u.label}** (\`${u.unitKey}\`)`,
         `  - **Source**: \`${u.sourceFile}\`${u.subViewFile ? ` → \`${u.subViewFile}\`` : ''}`,
         `  - **Bucket / Reason**: \`${u.bucket}\` (\`${u.staleReason}\`)`,
         `  - **Reviewer Note**: ${u.note.trim() || '*(Instant Reject via R shortcut — no note required)*'}`
@@ -258,7 +258,7 @@ export function formatReviewBundleMarkdown(
     lines.push('', '## 3. Deferred Units (Hold Queue)');
     for (const u of deferred) {
       lines.push(
-        `- 🟡 **[${u.referenceCode}] ${u.label}** (\`${u.unitKey}\`) — \`${u.sourceFile}\`${
+        `- [DEFERRED] **[${u.referenceCode}] ${u.label}** (\`${u.unitKey}\`) — \`${u.sourceFile}\`${
           u.note.trim() ? ` · Note: ${u.note.trim()}` : ''
         }`
       );
@@ -269,7 +269,7 @@ export function formatReviewBundleMarkdown(
     lines.push('', '## 4. Approved Units With Reviewer Notes');
     for (const u of withNotes) {
       lines.push(
-        `- 🟢 **[${u.referenceCode}] ${u.label}** (\`${u.unitKey}\`): ${u.note.trim()}`
+        `- [APPROVED] **[${u.referenceCode}] ${u.label}** (\`${u.unitKey}\`): ${u.note.trim()}`
       );
     }
   }

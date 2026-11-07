@@ -39,13 +39,12 @@ import {
   type ActiveMenuRoute,
   type Layer3StepProgressStatus,
 } from './menuLayerRouteConfig';
-import { useMenuLayerSandbox } from './MenuLayerSandboxContext';
+import {
+  useMenuLayerSandbox,
+  type Layer3StepOverrideState,
+} from './MenuLayerSandboxContext';
 
-export interface Layer3StepOverrideState {
-  progressStatus?: Layer3StepProgressStatus;
-  currentStep?: number;
-  defaultEditingConfig?: boolean;
-}
+export type { Layer3StepOverrideState };
 
 export interface MenuLayerStageRecipeRouterProps {
   isLight: boolean;

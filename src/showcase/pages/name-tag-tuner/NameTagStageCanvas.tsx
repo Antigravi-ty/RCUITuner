@@ -17,26 +17,10 @@ import {
   setNameTagTelemetrySnapshot,
 } from '../../../ui-core/stores/nameTagTunerStore';
 import { ArenaBackdrop, type ArenaLightingPreset } from '../../ArenaBackdrop';
-import {
-  buildKickoffCars,
-  buildSinglePillCard2D,
-  CLASSIC_BALL_RADIUS,
-  KICKOFF_SLOT_PAIRS,
-  projectWorldPoint,
-  resolveNameTagCameraBasis,
-  type KickoffCarSpawn,
-  type KickoffSlotPair,
-  type Vec3,
-} from './nameTagArenaProjectionMath';
+import { buildSinglePillCard2D, CLASSIC_BALL_RADIUS, projectWorldPoint, resolveNameTagCameraBasis, type KickoffCarSpawn, type KickoffSlotPair, type Vec3 } from './nameTagArenaProjectionMath';
 import { renderNameTag3DScenePass } from './nameTagArenaScenePainter';
 
-export {
-  buildKickoffCars,
-  buildSinglePillCard2D,
-  KICKOFF_SLOT_PAIRS,
-  type KickoffCarSpawn,
-  type KickoffSlotPair,
-};
+export type { KickoffCarSpawn, KickoffSlotPair };
 
 export interface NameTagStageCanvasProps {
   config: NameTagConfig;

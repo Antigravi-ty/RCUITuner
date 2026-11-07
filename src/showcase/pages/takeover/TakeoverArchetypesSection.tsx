@@ -4,10 +4,8 @@ import {
   CenterUpperTypographyConfig,
   CenterUpperTimingConfig,
 } from '../../../ui-core/hud/CenterUpperInfoHUD';
-import {
-  TakeoverGlowConfig,
-  resolveTakeoverTopLabelVisuals,
-} from '../../../ui-core/hud/TakeoverCountdownHUD';
+import { TakeoverGlowConfig } from '../../../ui-core/hud/TakeoverCountdownHUD';
+import { resolveTakeoverTopLabelVisuals } from '../../../ui-core/hud/takeoverCountdownDefaults';
 import type { TakeoverVignetteConfig } from '../../../ui-core/hud/TakeoverVignetteOverlay';
 import { Badge } from '../../../ui-core/primitives/Badge';
 import { CodeBlock } from '../../CodeBlock';

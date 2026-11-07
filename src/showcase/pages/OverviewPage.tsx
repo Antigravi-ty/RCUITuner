@@ -351,7 +351,8 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ isLight = true, onSe
           code={`// src/ui-core/recipes/Layer3AudioEqRecipe.tsx
 import React, { useState } from 'react';
 // L2 Layout: 3-Stage Panel Shell
-import { PanelContainer, PanelHeader, PanelContent, PanelFooter } from '../../ui-core/layout/Panel';
+import { PanelContainer, PanelHeader, PanelContent } from '../../ui-core/layout/Panel';
+import { PanelFooter } from '../../ui-core/layout/PanelFooter';
 // L3 Compounds & L1 Primitives: Import required atomic sliders and tabs
 import { UnderlineTabs } from '../../ui-core/primitives/UnderlineTabs';
 import { SliderControl } from '../../ui-core/primitives/SliderControl';

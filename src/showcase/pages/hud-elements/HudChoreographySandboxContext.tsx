@@ -7,8 +7,9 @@ import type {
   MatchHudChoreographySignal,
 } from '../../../ui-core/stores/hudTransientTypes';
 import type { HudLayoutStrategy, HudSlotMode } from '../../../ui-core/layout/HudAnchorStage';
-import type { FlipSimMode, JumpPlacementOption } from './HudChoreographyTopBandColumn';
 
+export type FlipSimMode = 'auto-drain' | 'grounded' | 'multi-flip' | 'unlimited' | 'expired';
+export type JumpPlacementOption = 'top-left' | 'center-bottom-right' | 'center-bottom-left';
 export type ScorePresetKey = '1digit' | '2digit' | '3digit';
 
 export interface HudChoreographySandboxContextValue {

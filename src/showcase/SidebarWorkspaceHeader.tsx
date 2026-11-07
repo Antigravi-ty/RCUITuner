@@ -8,14 +8,171 @@ import {
   FlaskConical,
   ClipboardCheck,
   Layers,
+  ArrowLeft,
 } from 'lucide-react';
 import { useAccentStore } from './stores/themeStore';
 import { AccentColor } from '../ui-core/tokens/colors';
 import {
   WORKSPACE_SPECS,
   type ApprovalLedgerSummary,
+  type ShowcaseTab,
   type TunerWorkspaceId,
+  type WorkspaceSectionMeta,
 } from './workspaceSpecs';
+import { ViewportControls } from './ViewportControls';
+
+export interface JumpOriginRecord {
+  fromTab: ShowcaseTab;
+  fromHref: string;
+  fromDesc: string;
+  toTab: ShowcaseTab;
+  targetId?: string;
+}
+
+export interface TopWorkspaceHeaderBarProps {
+  isLight: boolean;
+  activeTab: ShowcaseTab;
+  activeNavLabel?: string;
+  activeSectionMeta?: WorkspaceSectionMeta;
+  activeWorkspace: TunerWorkspaceId;
+  onSelectWorkspace: (ws: TunerWorkspaceId) => void;
+  ledgerSummary: ApprovalLedgerSummary;
+}
+
+export const TopWorkspaceHeaderBar: React.FC<TopWorkspaceHeaderBarProps> = ({
+  isLight,
+  activeTab,
+  activeNavLabel,
+  activeSectionMeta,
+  activeWorkspace,
+  onSelectWorkspace,
+  ledgerSummary,
+}) => {
+  const { tokens } = useAccentStore();
+  return (
+    <header
+      className={`h-16 px-4 md:px-6 border-b flex items-center justify-between gap-3 shrink-0 z-20 transition-colors ${
+        isLight ? 'bg-white border-neutral-200/90 shadow-2xs' : 'bg-neutral-950 border-neutral-800'
+      }`}
+    >
+      <div className="flex items-center gap-2.5 text-xs min-w-0">
+        <span className="font-bold tracking-tight shrink-0">RCUITuner</span>
+        <span className="text-neutral-400 shrink-0">/</span>
+        {activeSectionMeta && (
+          <span
+            className={`hidden lg:inline-flex px-1.5 py-0.5 rounded text-[10px] font-mono font-extrabold border shrink-0 ${activeSectionMeta.badgeColor}`}
+          >
+            {activeSectionMeta.code}
+          </span>
+        )}
+        <span className={`font-mono font-medium truncate ${tokens.text}`}>
+          {activeNavLabel ?? activeTab}
+        </span>
+      </div>
+
+      <div
+        className={`flex items-center gap-1 p-1 rounded-xl border shrink-0 ${
+          isLight ? 'bg-neutral-100/90 border-neutral-200/90' : 'bg-neutral-900/90 border-neutral-800'
+        }`}
+      >
+        {(['alpha', 'bravo'] as const).map((wsId) => {
+          const isSelected = activeWorkspace === wsId;
+          const isAlpha = wsId === 'alpha';
+          return (
+            <button
+              key={wsId}
+              type="button"
+              onClick={() => onSelectWorkspace(wsId)}
+              data-top-workspace={wsId}
+              title={`${WORKSPACE_SPECS[wsId].title} · ${WORKSPACE_SPECS[wsId].subtitle} (Alt+${isAlpha ? '1' : '2'})`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer ${
+                isSelected
+                  ? isLight
+                    ? isAlpha
+                      ? 'bg-white text-amber-800 font-bold shadow-xs border border-amber-400/60'
+                      : 'bg-white text-sky-800 font-bold shadow-xs border border-sky-400/60'
+                    : isAlpha
+                    ? 'bg-neutral-800 text-amber-300 font-bold shadow-xs border border-amber-500/50'
+                    : 'bg-neutral-800 text-sky-300 font-bold shadow-xs border border-sky-500/50'
+                  : isLight
+                  ? 'text-neutral-600 hover:text-neutral-900 hover:bg-white/50'
+                  : 'text-neutral-400 hover:text-neutral-100 hover:bg-neutral-800/50'
+              }`}
+            >
+              {isAlpha ? (
+                <FlaskConical className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+              ) : (
+                <ClipboardCheck className="h-3.5 w-3.5 text-sky-500 shrink-0" />
+              )}
+              <span>{isAlpha ? 'Workspace Alpha' : 'Workspace Bravo'}</span>
+              <span className="hidden xl:inline text-[10px] opacity-75">
+                {isAlpha ? '· Primitives & Lab' : '· Approval & Calibration'}
+              </span>
+              {!isAlpha && (
+                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                  <CheckCircle2 className="h-2.5 w-2.5" />
+                  <span>
+                    {ledgerSummary.approvedCount}/{ledgerSummary.totalSurfaces}
+                  </span>
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="flex items-center gap-3 shrink-0">
+        <ViewportControls isLight={isLight} />
+      </div>
+    </header>
+  );
+};
+
+export interface JumpOriginReturnBannerProps {
+  isLight: boolean;
+  lastJumpOrigin: JumpOriginRecord;
+  onReturn: () => void;
+  onDismiss: () => void;
+}
+
+export const JumpOriginReturnBanner: React.FC<JumpOriginReturnBannerProps> = ({
+  isLight,
+  lastJumpOrigin,
+  onReturn,
+  onDismiss,
+}) => (
+  <div
+    className={`sticky top-0 z-40 px-6 py-2 border-b flex items-center justify-between gap-3 text-xs font-mono backdrop-blur-md ${
+      isLight
+        ? 'bg-amber-50/95 border-amber-200/90 text-amber-900 shadow-2xs'
+        : 'bg-neutral-900/95 border-amber-500/30 text-amber-200 shadow-md'
+    }`}
+  >
+    <div className="flex items-center gap-2 flex-wrap">
+      <button
+        type="button"
+        onClick={() => {
+          if (typeof window !== 'undefined' && window.history.length > 1) window.history.back();
+          else onReturn();
+        }}
+        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-bold bg-amber-500 hover:bg-amber-400 text-neutral-950 transition-all cursor-pointer active:scale-95 shadow-2xs"
+      >
+        <ArrowLeft className="h-3.5 w-3.5" />
+        <span>Return ({lastJumpOrigin.fromDesc})</span>
+      </button>
+      <span className="opacity-80">
+        History stack{lastJumpOrigin.targetId ? ` · #${lastJumpOrigin.targetId}` : ''}
+      </span>
+    </div>
+    <button
+      type="button"
+      onClick={onDismiss}
+      className="px-2 py-0.5 rounded opacity-60 hover:opacity-100 cursor-pointer"
+    >
+      Dismiss x
+    </button>
+  </div>
+);
 
 export interface SidebarWorkspaceHeaderProps {
   activeWorkspace: TunerWorkspaceId;
@@ -84,7 +241,7 @@ export const SidebarWorkspaceHeader: React.FC<SidebarWorkspaceHeaderProps> = ({
         <button
           type="button"
           onClick={onCollapse}
-          title="Collapse side navigation · Current Window Only (⌘B / Ctrl+B)"
+          title="Collapse side navigation · Current Window Only (Cmd+B / Ctrl+B)"
           aria-label="Collapse Sidebar"
           className={`h-7 w-7 shrink-0 rounded-lg border flex items-center justify-center transition-colors cursor-pointer ${
             isLight
@@ -119,7 +276,7 @@ export const SidebarWorkspaceHeader: React.FC<SidebarWorkspaceHeaderProps> = ({
             title="Switch to Workspace Alpha: L0–L5 Foundations, Universal 3-Stage Shells & HUD/Spatial Labs (Alt+1)"
           >
             <FlaskConical className="h-3.5 w-3.5 shrink-0 text-amber-500" />
-            <span className="truncate">Alpha · 母版</span>
+            <span className="truncate">Alpha · Primitives</span>
           </button>
 
           <button
@@ -136,7 +293,7 @@ export const SidebarWorkspaceHeader: React.FC<SidebarWorkspaceHeaderProps> = ({
             title="Switch to Workspace Bravo: L6–L7 Menu Recipes, 29 Floating Windows & 3-Layer Approval Pipeline (Alt+2)"
           >
             <ClipboardCheck className="h-3.5 w-3.5 shrink-0 text-sky-500" />
-            <span className="truncate">Bravo · 审批</span>
+            <span className="truncate">Bravo · Approval</span>
           </button>
         </div>
 

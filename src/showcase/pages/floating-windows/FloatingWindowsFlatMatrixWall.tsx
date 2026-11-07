@@ -11,7 +11,7 @@ import { getFloatingWindowIcon } from '../../../ui-core/navigation/FloatingWindo
 import { useMenuLayoutStore } from '../../../ui-core/stores/menuLayoutStore';
 import { StoreSnapshotScope } from '../../../ui-core/stores/storeSnapshotScope';
 import { DEFAULT_FLOATING_SHELL_TOKENS } from '../../../ui-core/tokens/menuLayoutTokens';
-import { getDiscoveredFloatingSurfaces } from '../../../ui-core/manifest/surfaceRegistry';
+import { getDiscoveredFloatingSurfaces } from '../../../ui-core/manifest/floatingSurfaceRegistry';
 import { AuditTicketHeader } from '../../components/AuditTicketHeader';
 import {
   USER_PRESET_WINDOWS,

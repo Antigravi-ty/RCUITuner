@@ -1,10 +1,7 @@
 import React from 'react';
 import { RotateCcw, Timer, Layers } from 'lucide-react';
 import { CenterUpperTimingConfig } from '../../../ui-core/hud/CenterUpperInfoHUD';
-import {
-  DEFAULT_TAKEOVER_TIMING,
-  DEFAULT_TAKEOVER_LAYOUT,
-} from '../../../ui-core/hud/TakeoverCountdownHUD';
+import { DEFAULT_TAKEOVER_TIMING, DEFAULT_TAKEOVER_LAYOUT } from '../../../ui-core/hud/takeoverCountdownDefaults';
 import { SliderControl } from '../../../ui-core/primitives/SliderControl';
 
 export interface TakeoverOffsetAndMotionCardProps {

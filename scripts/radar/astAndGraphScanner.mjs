@@ -4,8 +4,10 @@ import { execSync } from 'node:child_process';
 import {
   FRAGMENT_EXEMPT_FILENAME_RE,
   LAYER_RULES,
+  MAX_ANY_PER_FILE,
   MIN_FRAGMENT_LINE_THRESHOLD,
   ROOT_DIR,
+  ROOT_ENTRY_FILES,
   SINGLE_LINE_CHAR_WARN_THRESHOLD,
 } from './constants.mjs';
 
@@ -303,3 +305,189 @@ export function detectCircularDependencies(dependencyGraph) {
   }
   return cycles;
 }
+
+function stripCommentsForScan(content) {
+  return content.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+}
+
+/**
+ * Root-Cause Zero Value Re-Export Gate:
+ * Catches BOTH direct (`export { x } from './y'`, `export * from './y'`)
+ * AND indirect two-step bypasses (`import { x } from './y'; export { x };`).
+ * Only `export type { ... }` is permitted outside `src/ui-core/index.ts`.
+ */
+export function analyzeValueReExports(content, relPath) {
+  if (relPath === 'src/ui-core/index.ts') return [];
+  const violations = [];
+  const cleaned = stripCommentsForScan(content);
+
+  // 1. Direct `export * from '...'`
+  const starExportRe = /(?:^|\n)\s*export\s+(?!type\b)\*\s*(?:as\s+\w+\s+)?from\s+['"]([^'"]+)['"]/g;
+  let m;
+  while ((m = starExportRe.exec(cleaned)) !== null) {
+    violations.push({
+      file: relPath,
+      kind: 'direct-star-reexport',
+      target: m[1],
+      reason: `Direct value star re-export (\`export * from '${m[1]}'\`) is forbidden.`,
+    });
+  }
+
+  // 2. Direct `export { a, b } from '...'`
+  const namedFromRe = /(?:^|\n)\s*export\s+(type\s+)?\{([^}]*)\}\s*from\s*['"]([^'"]+)['"]/g;
+  while ((m = namedFromRe.exec(cleaned)) !== null) {
+    if (m[1]) continue; // `export type { ... } from '...'`
+    const specs = m[2]
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const valueSpecs = specs.filter((s) => !/^type\s+/.test(s));
+    if (valueSpecs.length > 0) {
+      violations.push({
+        file: relPath,
+        kind: 'direct-named-reexport',
+        target: m[3],
+        symbols: valueSpecs,
+        reason: `Direct value re-export (\`export { ${valueSpecs.join(', ')} } from '${m[3]}'\`) is forbidden. Import from canonical source instead.`,
+      });
+    }
+  }
+
+  // 3. Indirect two-step value re-export (`import { x } from './y'; export { x };`)
+  const importedValueLocals = new Map();
+  const importStmtRe = /(?:^|\n)\s*import\s+(type\s+)?([\s\S]*?)\s+from\s*['"]([^'"]+)['"]/g;
+  while ((m = importStmtRe.exec(cleaned)) !== null) {
+    if (m[1]) continue;
+    const clause = m[2].trim();
+    const fromSpec = m[3];
+    const braceMatch = clause.match(/\{([^}]*)\}/);
+    if (braceMatch) {
+      for (const rawSpec of braceMatch[1].split(',').map((s) => s.trim()).filter(Boolean)) {
+        if (/^type\s+/.test(rawSpec)) continue;
+        const asParts = rawSpec.split(/\s+as\s+/);
+        const localName = (asParts[1] || asParts[0]).trim();
+        if (localName) importedValueLocals.set(localName, fromSpec);
+      }
+    }
+    const beforeBrace = clause.replace(/\{[\s\S]*?\}/, '').replace(/,/g, '').trim();
+    if (beforeBrace && !beforeBrace.startsWith('*')) {
+      importedValueLocals.set(beforeBrace, fromSpec);
+    }
+  }
+
+  const localExportRe = /(?:^|\n)\s*export\s+(type\s+)?\{([^}]*)\}(?!\s*from\b)/g;
+  while ((m = localExportRe.exec(cleaned)) !== null) {
+    if (m[1]) continue;
+    const specs = m[2]
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const reexported = [];
+    for (const rawSpec of specs) {
+      if (/^type\s+/.test(rawSpec)) continue;
+      const asParts = rawSpec.split(/\s+as\s+/);
+      const localName = asParts[0].trim();
+      if (importedValueLocals.has(localName)) {
+        reexported.push(`${localName} (from ${importedValueLocals.get(localName)})`);
+      }
+    }
+    if (reexported.length > 0) {
+      violations.push({
+        file: relPath,
+        kind: 'indirect-two-step-reexport',
+        symbols: reexported,
+        reason: `Indirect two-step value re-export (\`import + export { ... }\`) is forbidden: ${reexported.join(', ')}.`,
+      });
+    }
+  }
+
+  return violations;
+}
+
+/**
+ * Single-Reference Micro-Fragment Gate (<65L with <= 1 incoming reference):
+ * Matches RocketCompanion's `MIN_NON_TRIVIAL_LINES = 65` check.
+ */
+export function analyzeMicroFragments(fileStatsList, incomingRefCounts) {
+  const microFragmentErrors = [];
+  for (const stat of fileStatsList) {
+    if (stat.lines >= MIN_FRAGMENT_LINE_THRESHOLD) continue;
+    if (ROOT_ENTRY_FILES.has(stat.file)) continue;
+    const totalRefs = incomingRefCounts.get(stat.file) || 0;
+    if (totalRefs <= 1) {
+      microFragmentErrors.push({
+        file: stat.file,
+        lines: stat.lines,
+        incomingRefs: totalRefs,
+        reason: `File is only ${stat.lines} lines (< ${MIN_FRAGMENT_LINE_THRESHOLD}L) and has ${totalRefs} incoming reference(s). Inline into its caller.`,
+      });
+    }
+  }
+  return microFragmentErrors;
+}
+
+const CJK_RE = /[\u4e00-\u9fff\u3040-\u30ff\uac00-\ud7af]/;
+const EMOJI_RE = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u;
+const FORBIDDEN_SOCCER_RE = /\bsocc(?:er|ar)\b/i;
+const FORBIDDEN_SECRET_URL_RE = /wss:\/\/[a-z0-9.-]*ngrok|https:\/\/[a-z0-9.-]*supabase\.co\/storage\/v1\/object\/sign/i;
+
+export function analyzeHygieneInvariants(content, relPath) {
+  const cjkViolations = [];
+  const emojiViolations = [];
+  const domainViolations = [];
+  const anyViolations = [];
+
+  const lines = content.split(/\r?\n/);
+  let fileAnyCount = 0;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (CJK_RE.test(line)) {
+      cjkViolations.push({ file: relPath, line: i + 1 });
+    }
+    if (EMOJI_RE.test(line)) {
+      emojiViolations.push({ file: relPath, line: i + 1 });
+    }
+    const stripped = line.replace(/\/\/.*$/, '');
+    if (FORBIDDEN_SOCCER_RE.test(stripped)) {
+      domainViolations.push({
+        file: relPath,
+        line: i + 1,
+        kind: 'non-neutral-ball-term',
+        reason: 'Use neutral "ball" terminology instead of "soccer"/"soccar".',
+      });
+    }
+    if (FORBIDDEN_SECRET_URL_RE.test(stripped)) {
+      domainViolations.push({
+        file: relPath,
+        line: i + 1,
+        kind: 'hardcoded-broker-or-secret-url',
+        reason: 'Hardcoded private broker/signed URL detected.',
+      });
+    }
+    const anyMatches = stripped.match(/(?::\s*any\b|\bas\s+any\b|<\s*any\s*>)/g);
+    if (anyMatches) {
+      fileAnyCount += anyMatches.length;
+      if (/^\s*export\b/.test(stripped)) {
+        anyViolations.push({
+          file: relPath,
+          line: i + 1,
+          kind: 'boundary-any',
+          reason: 'Exported module boundary must not use `any`.',
+        });
+      }
+    }
+  }
+
+  if (fileAnyCount > MAX_ANY_PER_FILE) {
+    anyViolations.push({
+      file: relPath,
+      line: 1,
+      kind: 'excessive-any',
+      reason: `File contains ${fileAnyCount} \`any\` usages (max ${MAX_ANY_PER_FILE}).`,
+    });
+  }
+
+  return { cjkViolations, emojiViolations, domainViolations, anyViolations, fileAnyCount };
+}
+

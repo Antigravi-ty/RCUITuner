@@ -8,13 +8,8 @@ import {
 import {
   CenterUpperTypographyConfig,
 } from '../../../ui-core/hud/CenterUpperInfoHUD';
-import {
-  TakeoverGlowConfig,
-  TakeoverTopLabelStyleConfig,
-  DEFAULT_TAKEOVER_GLOW,
-  DEFAULT_TAKEOVER_TOP_LABEL_STYLE,
-  DEFAULT_TAKEOVER_TYPOGRAPHY,
-} from '../../../ui-core/hud/TakeoverCountdownHUD';
+import { TakeoverGlowConfig, TakeoverTopLabelStyleConfig } from '../../../ui-core/hud/TakeoverCountdownHUD';
+import { DEFAULT_TAKEOVER_GLOW, DEFAULT_TAKEOVER_TOP_LABEL_STYLE, DEFAULT_TAKEOVER_TYPOGRAPHY } from '../../../ui-core/hud/takeoverCountdownDefaults';
 import { SliderControl } from '../../../ui-core/primitives/SliderControl';
 import { SegmentedSwitch } from '../../../ui-core/primitives/SegmentedSwitch';
 import { ToggleSwitch } from '../../../ui-core/primitives/ToggleSwitch';

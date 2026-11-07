@@ -1,9 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { RotateCcw, Timer, Palette, Sliders, Layers } from 'lucide-react';
-import {
-  DEFAULT_RL_COUNTDOWN_GLOW, DEFAULT_WINNER_BLUE_TEAM_CONFIG, DEFAULT_CENTER_UPPER_TYPOGRAPHY,
-  DEFAULT_CENTER_UPPER_TIMING,
-} from '../../../ui-core/hud/CenterUpperInfoHUD';
+import { DEFAULT_RL_COUNTDOWN_GLOW, DEFAULT_WINNER_BLUE_TEAM_CONFIG, DEFAULT_CENTER_UPPER_TYPOGRAPHY, DEFAULT_CENTER_UPPER_TIMING } from '../../../ui-core/hud/centerUpperInfoDefaults';
 import { SliderControl } from '../../../ui-core/primitives/SliderControl';
 import { SegmentedSwitch } from '../../../ui-core/primitives/SegmentedSwitch';
 import { ToggleSwitch } from '../../../ui-core/primitives/ToggleSwitch';

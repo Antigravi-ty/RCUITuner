@@ -2,7 +2,35 @@ import {
   SURFACE_CALIBRATION_OVERRIDES,
   UI_APPROVAL_LEDGER,
 } from '../ui-core/manifest/surfaceCalibration';
-import type { ShowcaseTab } from './sidebarNavConfig';
+
+export type ShowcaseTab =
+  | 'overview'
+  | 'foundations'
+  | 'badges'
+  | 'tabs'
+  | 'stacks'
+  | 'cards'
+  | 'play-cards'
+  | 'panels'
+  | 'composable-nesting'
+  | 'dialogue'
+  | 'quick-notification'
+  | 'animation'
+  | 'navigation'
+  | 'hud-elements'
+  | 'center-upper-info'
+  | 'takeover'
+  | 'temporal-overlay'
+  | 'charts-curves'
+  | 'viewport-safe-area'
+  | 'loading-preview'
+  | 'name-tag-tuner'
+  | 'recipes'
+  | 'live-preview'
+  | 'edge-inspector'
+  | 'floating-windows'
+  | 'layer-preview'
+  | 'notification-integration';
 
 export type TunerWorkspaceId = 'alpha' | 'bravo';
 
@@ -30,8 +58,8 @@ export const WORKSPACE_SPECS: Record<TunerWorkspaceId, TunerWorkspaceSpec> = {
   alpha: {
     id: 'alpha',
     code: 'WORKSPACE ALPHA',
-    shortLabel: 'Alpha · 母版与组件实验室',
-    title: '底层母版与独立组件实验室',
+    shortLabel: 'Alpha · Master Primitives & Component Lab',
+    title: 'Foundational Master Primitives & Isolated Component Lab',
     subtitle:
       'L0–L5 Tokens, Atomic Primitives, Universal 3-Stage Shells & In-Game HUD/Spatial Labs',
     defaultTab: 'panels',
@@ -41,8 +69,8 @@ export const WORKSPACE_SPECS: Record<TunerWorkspaceId, TunerWorkspaceSpec> = {
   bravo: {
     id: 'bravo',
     code: 'WORKSPACE BRAVO',
-    shortLabel: 'Bravo · 面板审批与精调流水线',
-    title: '集成面板审批与精调流水线',
+    shortLabel: 'Bravo · Panel Approval & Calibration Pipeline',
+    title: 'Integrated Panel Approval & Calibration Pipeline',
     subtitle:
       'L6–L7 Menu Recipes, Floating Windows, 3-Layer Semantic Approval & Calibration Overlay',
     defaultTab: 'recipes',

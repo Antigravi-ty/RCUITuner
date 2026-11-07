@@ -10,10 +10,11 @@ export const SRC_DIR = path.join(ROOT_DIR, 'src');
 export const LINE_WARN_THRESHOLD = 550;
 export const LINE_ERROR_THRESHOLD = 600;
 
-export const BYTE_WARN_THRESHOLD = 22 * 1024; // 22 KB warn
-export const BYTE_ERROR_THRESHOLD = 32 * 1024; // 32 KB hard cap
+export const BYTE_WARN_THRESHOLD = 16 * 1024; // 16 KB (16,384 B) warn — aligned with RocketCompanion
+export const BYTE_ERROR_THRESHOLD = 22_000; // 22 KB (22,000 B) hard error — aligned with RocketCompanion
 
 export const MIN_FRAGMENT_LINE_THRESHOLD = 65;
+export const MAX_ANY_PER_FILE = 5;
 
 export const SINGLE_LINE_CHAR_WARN_THRESHOLD = 240;
 

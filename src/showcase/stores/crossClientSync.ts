@@ -19,8 +19,19 @@ export interface CrossClientSyncStatus {
   lastSyncAt: number | null;
 }
 
-type KeyListener = (value: any) => void;
+type KeyListener = (value: unknown) => void;
 type ResetListener = (scopePrefix?: string) => void;
+
+interface ViteHotTransport {
+  send?: (event: string, payload: Record<string, unknown>) => void;
+  on?: <T = unknown>(event: string, cb: (data: T) => void) => void;
+}
+
+function getViteHot(): ViteHotTransport | undefined {
+  if (typeof import.meta === 'undefined') return undefined;
+  return (import.meta as unknown as { hot?: ViteHotTransport }).hot;
+}
+
 interface SyncBusSingleton {
   clientId: string;
   mirror: Map<string, unknown>;
@@ -43,7 +54,7 @@ interface SyncBusSingleton {
 const GLOBAL_BUS_KEY = '__RC_UI_TUNER_CROSS_CLIENT_SYNC_BUS_V3__';
 const FLUSH_INTERVAL_MS = 16;
 function getOrCreateBus(): SyncBusSingleton {
-  const g = globalThis as Record<string, any>;
+  const g = globalThis as Record<string, unknown>;
   if (g[GLOBAL_BUS_KEY]) {
     const existing = g[GLOBAL_BUS_KEY] as SyncBusSingleton;
     if (!existing.defaults) existing.defaults = new Map<string, unknown>();
@@ -52,7 +63,7 @@ function getOrCreateBus(): SyncBusSingleton {
   }
   const clientId =
     Math.random().toString(36).slice(2, 10) + '-' + Date.now().toString(36).slice(-4);
-  const hasViteHot = typeof import.meta !== 'undefined' && Boolean((import.meta as any).hot);
+  const hasViteHot = Boolean(getViteHot());
   const hasBC = !hasViteHot && typeof BroadcastChannel !== 'undefined';
   const syncEnabledByHost = Boolean(g.__RC_UI_TUNER_ENABLE_SYNC__);
   const bus: SyncBusSingleton = {
@@ -150,7 +161,7 @@ function applyResetInternal(scopePrefix?: string, preserveKeys: string[] = ['app
 }
 
 function sendViaTransport(event: string, payload: Record<string, unknown>) {
-  const hot = typeof import.meta !== 'undefined' ? (import.meta as any).hot : undefined;
+  const hot = getViteHot();
   if (hot && typeof hot.send === 'function') {
     hot.send(event, payload);
     return;
@@ -216,7 +227,7 @@ function scheduleSeedFlush() {
 function initTransportOnce() {
   if (bus.initialized) return;
   bus.initialized = true;
-  const hot = typeof import.meta !== 'undefined' ? (import.meta as any).hot : undefined;
+  const hot = getViteHot();
   if (hot && typeof hot.on === 'function') {
     hot.on( 'rc-ui-tuner:sync-patch',
       (data: { senderId?: string; entries?: Record<string, unknown> }) => {
@@ -289,10 +300,10 @@ function initTransportOnce() {
 }
 
 export function setCrossClientSyncEnabled(enabled = true): void {
-  const g = globalThis as Record<string, any>;
+  const g = globalThis as Record<string, unknown>;
   g.__RC_UI_TUNER_ENABLE_SYNC__ = enabled;
   if (enabled) {
-    const hasViteHot = typeof import.meta !== 'undefined' && Boolean((import.meta as any).hot);
+    const hasViteHot = Boolean(getViteHot());
     const hasBC = !hasViteHot && typeof BroadcastChannel !== 'undefined';
     updateStatus({
       paused: false, connected: hasViteHot || hasBC,
@@ -303,7 +314,7 @@ export function setCrossClientSyncEnabled(enabled = true): void {
   }
 }
 
-if (Boolean((globalThis as Record<string, any>).__UI_STORYBOOK_ENABLE_SYNC__)) {
+if (Boolean((globalThis as Record<string, unknown>).__UI_STORYBOOK_ENABLE_SYNC__)) {
   initTransportOnce();
 }
 
@@ -364,9 +375,11 @@ export const crossClientSync = {
     if (!set) {
       set = new Set<KeyListener>();
       bus.keyListeners.set(key, set);
-    } set.add(listener);
+    }
+    const wrapped = listener as KeyListener;
+    set.add(wrapped);
     return () => {
-      set?.delete(listener);
+      set?.delete(wrapped);
       if (set && set.size === 0) {
         bus.keyListeners.delete(key);
       } };
