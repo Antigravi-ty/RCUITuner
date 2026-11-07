@@ -5,14 +5,17 @@ import {
   DEFAULT_DEMO_INDICATOR_CONFIG,
   resolveDemoIndicatorConfig,
   type EdgeDemoIndicatorConfig,
-  type EdgePlayerSlotState,
   type HudRosterViewMode,
 } from '../../../ui-core/stores/hudTransientTypes';
 import { BombEmojiSvg } from '../../../ui-core/primitives/svg/packagedSvgDefinitions';
 import { SliderControl } from '../../../ui-core/primitives/SliderControl';
 import { ToggleSwitch } from '../../../ui-core/primitives/ToggleSwitch';
 import { Badge } from '../../../ui-core/primitives/Badge';
-import { EdgeDemoStagePreview } from './EdgeDemoStagePreview';
+import {
+  DEMO_COLOR_SWATCHES,
+  EdgeDemoStagePreview,
+  buildDemoPreviewRosters,
+} from './EdgeDemoStagePreview';
 
 const useState = createScopedSyncedState('hud-5a-2-demo-inspector');
 
@@ -20,36 +23,22 @@ export interface EdgeDemoInspectorSectionProps {
   isLight: boolean;
 }
 
-const COLOR_SWATCHES = [
-  { hex: '#EF4444', label: 'Crimson Red' },
-  { hex: '#F97316', label: 'Flame Orange' },
-  { hex: '#FACC15', label: 'Solar Yellow' },
-  { hex: '#38BDF8', label: 'Cyan Glow' },
-  { hex: '#A855F7', label: 'Neon Purple' },
-  { hex: '#FFFFFF', label: 'Pure White' },
-] as const;
+const ALL_SLOTS = [1, 2, 3, 4, 5, 6] as const;
+const VIEW_MODES: HudRosterViewMode[] = ['player-live', 'goal-replay', 'spectator'];
+const SIZE_PRESETS = [12, 14, 16, 18, 20, 22, 24];
 
 export const EdgeDemoInspectorSection: React.FC<EdgeDemoInspectorSectionProps> = React.memo(
   ({ isLight }) => {
     const [rawDemoCfg, setDemoCfg] = useState<EdgeDemoIndicatorConfig>(
-      {
-        ...DEFAULT_DEMO_INDICATOR_CONFIG,
-      },
+      { ...DEFAULT_DEMO_INDICATOR_CONFIG },
       'demoCfg'
     );
     const demoCfg = resolveDemoIndicatorConfig(rawDemoCfg);
-    const [persistentDemo, setPersistentDemo] = useState<boolean>(true, 'persistentDemo');
-    const [respawnRemSec, setRespawnRemSec] = useState<number>(1.8, 'respawnRemSec');
+    const [persistentDemo, setPersistentDemo] = useState(true, 'persistentDemo');
+    const [respawnRemSec, setRespawnRemSec] = useState(1.8, 'respawnRemSec');
     const [viewMode, setViewMode] = useState<HudRosterViewMode>('player-live', 'viewMode');
     const [demoSlots, setDemoSlots] = useState<Record<1 | 2 | 3 | 4 | 5 | 6, boolean>>(
-      {
-        1: false,
-        2: true,
-        3: false,
-        4: true,
-        5: true,
-        6: false,
-      },
+      { 1: false, 2: true, 3: false, 4: true, 5: true, 6: false },
       'demoSlots'
     );
 
@@ -61,93 +50,8 @@ export const EdgeDemoInspectorSection: React.FC<EdgeDemoInspectorSectionProps> =
       setDemoSlots((prev) => ({ ...prev, [k]: !prev[k] }));
     };
 
-    const leftPlayers = useMemo<EdgePlayerSlotState[]>(
-      () => [
-        {
-          slotKey: 1,
-          team: 'left',
-          name: 'You (Octane_99)',
-          boostAmount: 85,
-          exists: true,
-          isSelf: true,
-          isFocusedPov: true,
-          isDemolished: persistentDemo && demoSlots[1],
-          demoRespawnRemainingSec: respawnRemSec,
-          demoRespawnTotalSec: 3.0,
-          demolishedAtMs: 100,
-        },
-        {
-          slotKey: 2,
-          team: 'left',
-          name: 'Zen_Master_RL',
-          boostAmount: 42,
-          exists: true,
-          isSelf: false,
-          isFocusedPov: false,
-          isDemolished: persistentDemo && demoSlots[2],
-          demoRespawnRemainingSec: respawnRemSec,
-          demoRespawnTotalSec: 3.0,
-          demolishedAtMs: 110,
-        },
-        {
-          slotKey: 3,
-          team: 'left',
-          name: 'Vatira_KC',
-          boostAmount: 100,
-          exists: true,
-          isSelf: false,
-          isFocusedPov: false,
-          isDemolished: persistentDemo && demoSlots[3],
-          demoRespawnRemainingSec: respawnRemSec,
-          demoRespawnTotalSec: 3.0,
-          demolishedAtMs: 120,
-        },
-      ],
-      [persistentDemo, demoSlots, respawnRemSec]
-    );
-
-    const rightPlayers = useMemo<EdgePlayerSlotState[]>(
-      () => [
-        {
-          slotKey: 4,
-          team: 'right',
-          name: 'Firstkiller_NA',
-          boostAmount: 64,
-          exists: true,
-          isSelf: false,
-          isFocusedPov: false,
-          isDemolished: persistentDemo && demoSlots[4],
-          demoRespawnRemainingSec: respawnRemSec,
-          demoRespawnTotalSec: 3.0,
-          demolishedAtMs: 130,
-        },
-        {
-          slotKey: 5,
-          team: 'right',
-          name: 'BeastMode_Fennec',
-          boostAmount: 18,
-          exists: true,
-          isSelf: false,
-          isFocusedPov: false,
-          isDemolished: persistentDemo && demoSlots[5],
-          demoRespawnRemainingSec: Math.max(0.2, respawnRemSec - 0.8),
-          demoRespawnTotalSec: 3.0,
-          demolishedAtMs: 140,
-        },
-        {
-          slotKey: 6,
-          team: 'right',
-          name: 'Daniel_SSG',
-          boostAmount: 90,
-          exists: true,
-          isSelf: false,
-          isFocusedPov: false,
-          isDemolished: persistentDemo && demoSlots[6],
-          demoRespawnRemainingSec: respawnRemSec,
-          demoRespawnTotalSec: 3.0,
-          demolishedAtMs: 150,
-        },
-      ],
+    const [leftPlayers, rightPlayers] = useMemo(
+      () => buildDemoPreviewRosters(persistentDemo, demoSlots, respawnRemSec),
       [persistentDemo, demoSlots, respawnRemSec]
     );
 
@@ -157,6 +61,8 @@ export const EdgeDemoInspectorSection: React.FC<EdgeDemoInspectorSectionProps> =
         : respawnRemSec > 1.0
         ? 'stage 2 · Yellow (2.0s~1.0s)'
         : 'stage 3 · Red (1.0s~0.0s)';
+
+    const activeRedBtn = 'bg-red-600 text-white border-red-600 font-bold';
 
     return (
       <section id="hud-5a-2-demo-inspector" className="flex flex-col gap-4 scroll-mt-24">
@@ -176,7 +82,6 @@ export const EdgeDemoInspectorSection: React.FC<EdgeDemoInspectorSectionProps> =
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-          {/* Left: Dedicated Persistent Demolished Strip & Isolated Card Preview Stage */}
           <EdgeDemoStagePreview
             isLight={isLight}
             viewMode={viewMode}
@@ -186,7 +91,6 @@ export const EdgeDemoInspectorSection: React.FC<EdgeDemoInspectorSectionProps> =
             toggleSlotDemo={toggleSlotDemo}
           />
 
-          {/* Right: Dedicated Configuration Menu for Bomb SVG Size, Persistence & Styling */}
           <div
             className={`lg:col-span-7 p-6 rounded-3xl border flex flex-col justify-between gap-4 transition-colors shadow-2xs ${
               isLight
@@ -202,19 +106,16 @@ export const EdgeDemoInspectorSection: React.FC<EdgeDemoInspectorSectionProps> =
                     CONFIGURATION PANEL: DEMOLISHED SLOT & BOMB SVG
                   </span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => setDemoCfg({ ...DEFAULT_DEMO_INDICATOR_CONFIG })}
-                    className="px-2 py-0.5 rounded-lg border border-neutral-400/40 text-[11px] font-mono cursor-pointer hover:bg-neutral-500/10 flex items-center gap-1"
-                  >
-                    <RotateCcw className="h-3 w-3" />
-                    <span>reset to default</span>
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setDemoCfg({ ...DEFAULT_DEMO_INDICATOR_CONFIG })}
+                  className="px-2 py-0.5 rounded-lg border border-neutral-400/40 text-[11px] font-mono cursor-pointer hover:bg-neutral-500/10 flex items-center gap-1"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  <span>reset to default</span>
+                </button>
               </div>
 
-              {/* Row 1: Persistent Demolished Toggle + Slot Switches + View Mode */}
               <div className="flex flex-wrap items-center justify-between gap-3 py-1">
                 <div className="flex items-center gap-2.5">
                   <span className="text-xs font-semibold">Persistent explosion status display:</span>
@@ -227,7 +128,7 @@ export const EdgeDemoInspectorSection: React.FC<EdgeDemoInspectorSectionProps> =
 
                 <div className="flex items-center gap-1 font-mono text-xs">
                   <span className="text-[11px] opacity-75">Exploded Slot:</span>
-                  {([1, 2, 3, 4, 5, 6] as const).map((k) => (
+                  {ALL_SLOTS.map((k) => (
                     <button
                       key={k}
                       type="button"
@@ -244,7 +145,7 @@ export const EdgeDemoInspectorSection: React.FC<EdgeDemoInspectorSectionProps> =
                 </div>
 
                 <div className="flex items-center gap-1 font-mono text-xs">
-                  {(['player-live', 'goal-replay', 'spectator'] as const).map((m) => (
+                  {VIEW_MODES.map((m) => (
                     <button
                       key={m}
                       type="button"
@@ -261,7 +162,6 @@ export const EdgeDemoInspectorSection: React.FC<EdgeDemoInspectorSectionProps> =
                 </div>
               </div>
 
-              {/* Row 2: Variant Selector + Size Slider + Direct Number Input + Quick Size Presets */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-neutral-100 dark:border-neutral-800/60">
                 <div className="flex flex-col gap-1.5">
                   <div className="flex items-center justify-between">
@@ -300,14 +200,14 @@ export const EdgeDemoInspectorSection: React.FC<EdgeDemoInspectorSectionProps> =
                     onChange={(v) => updateDemoCfg({ sizePx: v })}
                   />
                   <div className="flex items-center gap-1 flex-wrap font-mono text-[11px]">
-                    {[12, 14, 16, 18, 20, 22, 24].map((sz) => (
+                    {SIZE_PRESETS.map((sz) => (
                       <button
                         key={sz}
                         type="button"
                         onClick={() => updateDemoCfg({ sizePx: sz })}
                         className={`px-2 py-0.5 rounded border cursor-pointer transition-all ${
                           demoCfg.sizePx === sz
-                            ? 'bg-red-600 text-white border-red-600 font-bold'
+                            ? activeRedBtn
                             : 'border-neutral-400/40 opacity-75 hover:opacity-100'
                         }`}
                       >
@@ -325,9 +225,7 @@ export const EdgeDemoInspectorSection: React.FC<EdgeDemoInspectorSectionProps> =
                         type="button"
                         onClick={() => updateDemoCfg({ variant: 'bomb-svg' })}
                         className={`px-2.5 py-0.5 rounded-lg border cursor-pointer flex items-center gap-1 ${
-                          demoCfg.variant === 'bomb-svg'
-                            ? 'bg-red-600 text-white border-red-600 font-bold'
-                            : 'border-neutral-400/40 opacity-80'
+                          demoCfg.variant === 'bomb-svg' ? activeRedBtn : 'border-neutral-400/40 opacity-80'
                         }`}
                       >
                         <BombEmojiSvg size={12} color="currentColor" strokeWidth={2} />
@@ -337,9 +235,7 @@ export const EdgeDemoInspectorSection: React.FC<EdgeDemoInspectorSectionProps> =
                         type="button"
                         onClick={() => updateDemoCfg({ variant: 'cross' })}
                         className={`px-2.5 py-0.5 rounded-lg border cursor-pointer ${
-                          demoCfg.variant === 'cross'
-                            ? 'bg-red-600 text-white border-red-600 font-bold'
-                            : 'border-neutral-400/40 opacity-80'
+                          demoCfg.variant === 'cross' ? activeRedBtn : 'border-neutral-400/40 opacity-80'
                         }`}
                       >
                         x Classic Red X
@@ -361,7 +257,6 @@ export const EdgeDemoInspectorSection: React.FC<EdgeDemoInspectorSectionProps> =
                 </div>
               </div>
 
-              {/* Row 3: Outer Glow & Respawn Bar Progress Stage */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-neutral-100 dark:border-neutral-800/60">
                 <SliderControl
                   label="Outer glow blur radius (Glow Blur)"
@@ -388,11 +283,10 @@ export const EdgeDemoInspectorSection: React.FC<EdgeDemoInspectorSectionProps> =
                 />
               </div>
 
-              {/* Row 4: Color Swatches + Custom Color Input */}
               <div className="flex items-center justify-between gap-2 pt-2 border-t border-neutral-100 dark:border-neutral-800/60 flex-wrap">
                 <span className="text-xs font-semibold">Primary and glow color scheme (Color & Glow):</span>
                 <div className="flex items-center gap-2 flex-wrap">
-                  {COLOR_SWATCHES.map((sw) => (
+                  {DEMO_COLOR_SWATCHES.map((sw) => (
                     <button
                       key={sw.hex}
                       type="button"
@@ -402,9 +296,7 @@ export const EdgeDemoInspectorSection: React.FC<EdgeDemoInspectorSectionProps> =
                           ? 'ring-2 ring-red-500 font-bold'
                           : 'opacity-80 hover:opacity-100'
                       }`}
-                      style={{
-                        borderColor: `${sw.hex}88`,
-                      }}
+                      style={{ borderColor: `${sw.hex}88` }}
                     >
                       <span
                         className="w-2.5 h-2.5 rounded-full border border-black/20"

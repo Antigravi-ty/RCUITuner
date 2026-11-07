@@ -9,6 +9,41 @@ import {
 
 export type { FlipSimMode, JumpPlacementOption };
 
+const ALL_SLOTS = [1, 2, 3, 4, 5, 6] as const;
+const DEMO_SWATCHES = [
+  { hex: '#EF4444', label: 'red' },
+  { hex: '#F97316', label: 'Orange' },
+  { hex: '#FACC15', label: 'Yellow' },
+  { hex: '#38BDF8', label: 'Cyan' },
+  { hex: '#FFFFFF', label: 'White' },
+] as const;
+
+const LAYOUT_STRATEGIES = [
+  {
+    key: 'reserve',
+    label: 'Fixed Placeholder (recommended)',
+    title: 'Fixed Placeholder (Reserved): top bar 56px Always Keep, 1-3 and 4-6 Position locked',
+  },
+  {
+    key: 'collapse-local',
+    label: 'Partial Flow',
+    title: 'Partial Flow: Hide Top-Left Telemetry Left Column Only 1-3 Auto-move Up',
+  },
+  {
+    key: 'collapse-symmetric',
+    label: 'Symmetrical Flow',
+    title: 'Symmetrical Flow: When Top-Left Telemetry Hidden, 1-3 and 4-6 Sync Move Up',
+  },
+] as const;
+
+const FLIP_SIM_ITEMS = [
+  { key: 'auto-drain', label: '150Step Decrement' },
+  { key: 'grounded', label: 'Ground Fill' },
+  { key: 'multi-flip', label: 'Multi(×2)' },
+  { key: 'unlimited', label: 'Unlimited(∞)' },
+  { key: 'expired', label: 'No Flip(0)' },
+] as const;
+
 export const HudChoreographyDemoAndPovControls: React.FC = () => {
   const {
     myTeamSide,
@@ -20,8 +55,8 @@ export const HudChoreographyDemoAndPovControls: React.FC = () => {
     handleToggleOpponentDemoCompact,
     persistentDemo,
     onTogglePersistentDemo,
-    demoIndicatorConfig,
-    onUpdateDemoIndicatorConfig,
+    demoIndicatorConfig: demoCfg,
+    onUpdateDemoIndicatorConfig: updateDemo,
   } = useHudChoreographySandbox();
 
   const isMyTeamOrange = myTeamSide === 'orange';
@@ -31,17 +66,11 @@ export const HudChoreographyDemoAndPovControls: React.FC = () => {
       <div className="flex items-center justify-between gap-1 flex-wrap text-xs font-mono">
         <div className="flex items-center gap-1">
           <span className="text-[11px] opacity-70">POV:</span>
-          {([1, 2, 3, 4, 5, 6] as const).map((k) => {
+          {ALL_SLOTS.map((k) => {
             if (!slotExists[k]) return null;
             const isSelected = focusedSlot === k;
-            const activeColor =
-              k <= 3
-                ? isMyTeamOrange
-                  ? 'bg-orange-600 text-white'
-                  : 'bg-blue-600 text-white'
-                : isMyTeamOrange
-                ? 'bg-blue-600 text-white'
-                : 'bg-orange-600 text-white';
+            const isOrange = k <= 3 ? isMyTeamOrange : !isMyTeamOrange;
+            const activeColor = isOrange ? 'bg-orange-600 text-white' : 'bg-blue-600 text-white';
             return (
               <button
                 key={k}
@@ -77,7 +106,7 @@ export const HudChoreographyDemoAndPovControls: React.FC = () => {
             <ShieldAlert className="h-3 w-3" />
             Explosion:
           </span>
-          {([1, 2, 3, 4, 5, 6] as const).map((k) => {
+          {ALL_SLOTS.map((k) => {
             if (!slotExists[k]) return null;
             return (
               <button
@@ -122,21 +151,21 @@ export const HudChoreographyDemoAndPovControls: React.FC = () => {
         <div className="flex items-center justify-between gap-1.5 flex-wrap">
           <span className="text-[10px] font-bold flex items-center gap-1 text-red-500">
             <BombEmojiSvg
-              size={Math.min(18, Math.max(11, demoIndicatorConfig.sizePx || 16))}
-              color={demoIndicatorConfig.color}
-              strokeWidth={demoIndicatorConfig.strokeWidth}
-              glowColor={demoIndicatorConfig.glowColor}
-              glowBlurPx={demoIndicatorConfig.glowBlurPx}
-              glowIntensityPct={demoIndicatorConfig.glowIntensityPct}
+              size={Math.min(18, Math.max(11, demoCfg.sizePx || 16))}
+              color={demoCfg.color}
+              strokeWidth={demoCfg.strokeWidth}
+              glowColor={demoCfg.glowColor}
+              glowBlurPx={demoCfg.glowBlurPx}
+              glowIntensityPct={demoCfg.glowIntensityPct}
             />
             <span>Blown-up gray indicator (`#3F3F46`):</span>
           </span>
           <div className="flex items-center gap-1">
             <button
               type="button"
-              onClick={() => onUpdateDemoIndicatorConfig({ variant: 'bomb-svg' })}
+              onClick={() => updateDemo({ variant: 'bomb-svg' })}
               className={`px-2 py-0.5 rounded text-[10px] cursor-pointer flex items-center gap-1 transition-all ${
-                demoIndicatorConfig.variant === 'bomb-svg'
+                demoCfg.variant === 'bomb-svg'
                   ? 'bg-red-600 text-white font-bold shadow-xs'
                   : 'border border-neutral-400/40 opacity-80'
               }`}
@@ -146,9 +175,9 @@ export const HudChoreographyDemoAndPovControls: React.FC = () => {
             </button>
             <button
               type="button"
-              onClick={() => onUpdateDemoIndicatorConfig({ variant: 'cross' })}
+              onClick={() => updateDemo({ variant: 'cross' })}
               className={`px-2 py-0.5 rounded text-[10px] cursor-pointer transition-all ${
-                demoIndicatorConfig.variant === 'cross'
+                demoCfg.variant === 'cross'
                   ? 'bg-red-600 text-white font-bold shadow-xs'
                   : 'border border-neutral-400/40 opacity-80'
               }`}
@@ -166,8 +195,8 @@ export const HudChoreographyDemoAndPovControls: React.FC = () => {
               min={10}
               max={28}
               step={1}
-              value={demoIndicatorConfig.sizePx || 16}
-              onChange={(e) => onUpdateDemoIndicatorConfig({ sizePx: Number(e.target.value) })}
+              value={demoCfg.sizePx || 16}
+              onChange={(e) => updateDemo({ sizePx: Number(e.target.value) })}
               className="w-14 accent-red-500 cursor-pointer"
             />
             <input
@@ -175,11 +204,11 @@ export const HudChoreographyDemoAndPovControls: React.FC = () => {
               min={8}
               max={32}
               step={1}
-              value={demoIndicatorConfig.sizePx || 16}
+              value={demoCfg.sizePx || 16}
               onChange={(e) => {
                 const v = Number(e.target.value);
                 if (!Number.isNaN(v) && v >= 8 && v <= 36) {
-                  onUpdateDemoIndicatorConfig({ sizePx: v });
+                  updateDemo({ sizePx: v });
                 }
               }}
               className="w-10 px-1 py-0.2 rounded border border-red-500/30 bg-transparent text-center font-bold tabular-nums"
@@ -194,11 +223,11 @@ export const HudChoreographyDemoAndPovControls: React.FC = () => {
               min={1.0}
               max={3.0}
               step={0.1}
-              value={demoIndicatorConfig.strokeWidth}
-              onChange={(e) => onUpdateDemoIndicatorConfig({ strokeWidth: Number(e.target.value) })}
+              value={demoCfg.strokeWidth}
+              onChange={(e) => updateDemo({ strokeWidth: Number(e.target.value) })}
               className="w-12 accent-red-500 cursor-pointer"
             />
-            <span className="tabular-nums font-bold">{demoIndicatorConfig.strokeWidth.toFixed(1)}</span>
+            <span className="tabular-nums font-bold">{demoCfg.strokeWidth.toFixed(1)}</span>
           </label>
 
           <label className="flex items-center gap-1">
@@ -208,30 +237,22 @@ export const HudChoreographyDemoAndPovControls: React.FC = () => {
               min={0}
               max={14}
               step={1}
-              value={demoIndicatorConfig.glowBlurPx}
-              onChange={(e) => onUpdateDemoIndicatorConfig({ glowBlurPx: Number(e.target.value) })}
+              value={demoCfg.glowBlurPx}
+              onChange={(e) => updateDemo({ glowBlurPx: Number(e.target.value) })}
               className="w-12 accent-red-500 cursor-pointer"
             />
-            <span className="tabular-nums font-bold">{demoIndicatorConfig.glowBlurPx}px</span>
+            <span className="tabular-nums font-bold">{demoCfg.glowBlurPx}px</span>
           </label>
 
           <div className="flex items-center gap-1">
-            {(
-              [
-                { hex: '#EF4444', label: 'red' },
-                { hex: '#F97316', label: 'Orange' },
-                { hex: '#FACC15', label: 'Yellow' },
-                { hex: '#38BDF8', label: 'Cyan' },
-                { hex: '#FFFFFF', label: 'White' },
-              ] as const
-            ).map((sw) => (
+            {DEMO_SWATCHES.map((sw) => (
               <button
                 key={sw.hex}
                 type="button"
-                onClick={() => onUpdateDemoIndicatorConfig({ color: sw.hex, glowColor: sw.hex })}
+                onClick={() => updateDemo({ color: sw.hex, glowColor: sw.hex })}
                 title={`color & Glow: ${sw.label} (${sw.hex})`}
                 className={`w-3.5 h-3.5 rounded-full cursor-pointer border transition-transform ${
-                  demoIndicatorConfig.color.toUpperCase() === sw.hex
+                  demoCfg.color.toUpperCase() === sw.hex
                     ? 'scale-125 border-white ring-1 ring-red-500'
                     : 'border-black/30 opacity-80 hover:opacity-100'
                 }`}
@@ -266,80 +287,46 @@ export const HudChoreographyTopBandColumn: React.FC = () => {
         <span>3. Top bar equal three-way split (`HudTopSplitBand`) &amp; Bottom Gauge</span>
       </span>
 
-      {/* Layout Strategy Switcher */}
       <div className="flex items-center justify-between gap-1 flex-wrap text-xs font-mono">
         <span className="text-[11px] opacity-75">Top bar hidden placeholder strategy:</span>
         <div className="flex items-center gap-1 flex-wrap">
-          <button
-            type="button"
-            onClick={() => setLayoutStrategy('reserve')}
-            className={`px-2 py-0.5 rounded text-[11px] cursor-pointer transition-colors ${
-              layoutStrategy === 'reserve'
-                ? 'bg-emerald-500 text-neutral-950 font-bold'
-                : 'border border-neutral-400/40 opacity-85 hover:opacity-100'
-            }`}
-            title="Fixed Placeholder (Reserved): top bar 56px Always Keep, 1-3 and 4-6 Position locked"
-          >
-            Fixed Placeholder (recommended)
-          </button>
-          <button
-            type="button"
-            onClick={() => setLayoutStrategy('collapse-local')}
-            className={`px-2 py-0.5 rounded text-[11px] cursor-pointer transition-colors ${
-              layoutStrategy === 'collapse-local'
-                ? 'bg-emerald-500 text-neutral-950 font-bold'
-                : 'border border-neutral-400/40 opacity-85 hover:opacity-100'
-            }`}
-            title="Partial Flow: Hide Top-Left Telemetry Left Column Only 1-3 Auto-move Up"
-          >
-            Partial Flow
-          </button>
-          <button
-            type="button"
-            onClick={() => setLayoutStrategy('collapse-symmetric')}
-            className={`px-2 py-0.5 rounded text-[11px] cursor-pointer transition-colors ${
-              layoutStrategy === 'collapse-symmetric'
-                ? 'bg-emerald-500 text-neutral-950 font-bold'
-                : 'border border-neutral-400/40 opacity-85 hover:opacity-100'
-            }`}
-            title="Symmetrical Flow: When Top-Left Telemetry Hidden, 1-3 and 4-6 Sync Move Up"
-          >
-            Symmetrical Flow
-          </button>
+          {LAYOUT_STRATEGIES.map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => setLayoutStrategy(item.key)}
+              className={`px-2 py-0.5 rounded text-[11px] cursor-pointer transition-colors ${
+                layoutStrategy === item.key
+                  ? 'bg-emerald-500 text-neutral-950 font-bold'
+                  : 'border border-neutral-400/40 opacity-85 hover:opacity-100'
+              }`}
+              title={item.title}
+            >
+              {item.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Top Split Band Controls: Telemetry (Left) */}
       <div className="flex items-center justify-between text-xs font-mono gap-1 flex-wrap">
         <span className="text-[11px] opacity-75">top bar 56px Diagnostic Area:</span>
-        <div className="flex items-center gap-1 flex-wrap">
-          <button
-            type="button"
-            onClick={() => setShowTelemetryTopLeft((v) => !v)}
-            className={`px-2 py-0.5 rounded text-[11px] cursor-pointer transition-colors ${
-              showTelemetryTopLeft
-                ? 'bg-emerald-500 text-neutral-950 font-bold'
-                : 'border border-neutral-400/40'
-            }`}
-          >
-            top left Telemetry:{showTelemetryTopLeft ? 'Show' : 'hidden'}
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => setShowTelemetryTopLeft((v) => !v)}
+          className={`px-2 py-0.5 rounded text-[11px] cursor-pointer transition-colors ${
+            showTelemetryTopLeft
+              ? 'bg-emerald-500 text-neutral-950 font-bold'
+              : 'border border-neutral-400/40'
+          }`}
+        >
+          top left Telemetry:{showTelemetryTopLeft ? 'Show' : 'hidden'}
+        </button>
       </div>
 
-      {/* Second Flip Indicator 150-Step (120Hz) State Controls */}
       <div className="flex items-center justify-between gap-1 flex-wrap text-xs font-mono">
         <span className="text-[11px] opacity-75">Second Flip (1.25s/150Step):</span>
         <div className="flex items-center gap-1 flex-wrap">
-          {(
-            [
-              { key: 'auto-drain', label: '150Step Decrement' },
-              { key: 'grounded', label: 'Ground Fill' },
-              { key: 'multi-flip', label: 'Multi(×2)' },
-              { key: 'unlimited', label: 'Unlimited(∞)' },
-              { key: 'expired', label: 'No Flip(0)' },
-            ] as const
-          ).map((item) => (
+          {FLIP_SIM_ITEMS.map((item) => (
             <button
               key={item.key}
               type="button"
@@ -356,7 +343,6 @@ export const HudChoreographyTopBandColumn: React.FC = () => {
         </div>
       </div>
 
-      {/* Flip Placement & BallCam */}
       <div className="flex items-center justify-between text-xs font-mono">
         <span className="text-[11px] opacity-75">Flip Align / BallCam:</span>
         <div className="flex items-center gap-1 flex-wrap">

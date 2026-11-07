@@ -24,6 +24,12 @@ export interface HudBoostGaugeTunerSectionProps {
   subscribeBoostFn?: (listener: HudBoostListener) => () => void;
 }
 
+const THEME_OVERRIDES = [
+  { id: 'auto', label: 'Auto (Follow Global)' },
+  { id: 'dark', label: 'Force Dark (Dark Overlay)', icon: Moon },
+  { id: 'light', label: 'Force Light (Light Overlay)', icon: Sun },
+] as const;
+
 export const HudBoostGaugeTunerSection: React.FC<HudBoostGaugeTunerSectionProps> = ({
   isLight,
   is120HzLive,
@@ -47,13 +53,12 @@ export const HudBoostGaugeTunerSection: React.FC<HudBoostGaugeTunerSectionProps>
     rotationDeg,
     size: gaugeSize,
     setToken,
-    updateTokens,
     resetTokens,
     exportConfigCode,
   } = useBoostGaugeStore();
 
-  const [showCode, setShowCode] = React.useState<boolean>(false);
-  const [copiedConfig, setCopiedConfig] = React.useState<boolean>(false);
+  const [showCode, setShowCode] = React.useState(false);
+  const [copiedConfig, setCopiedConfig] = React.useState(false);
 
   const setThemeOverride = (v: BoostThemeOverride) => setToken('themeOverride', v);
 
@@ -72,10 +77,16 @@ export const HudBoostGaugeTunerSection: React.FC<HudBoostGaugeTunerSectionProps>
   };
 
   const boostSegment = getBoostSegmentColor(boostAmount, colorScheme);
-
   const inputCls = isLight
     ? 'bg-neutral-50 border-neutral-300 text-neutral-900'
     : 'bg-neutral-950 border-neutral-700 text-white';
+
+  const modeSummary =
+    colorMode === 'inverted'
+      ? 'Invert(Dial Color Shift+Fixed Text Color)'
+      : colorMode === 'ring-only'
+      ? 'Ring Only(Fixed Text Color)'
+      : 'standard(Ring+Text Color Change)';
 
   return (
     <SectionErrorBoundary title="5A.5 · CircularBoostGauge" isLight={isLight}>
@@ -96,7 +107,6 @@ export const HudBoostGaugeTunerSection: React.FC<HudBoostGaugeTunerSectionProps>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-          {/* Left Preview Stage */}
           <div
             className={`lg:col-span-5 p-6 rounded-3xl border flex flex-col items-center justify-between gap-4 transition-all ${
               isLight
@@ -134,14 +144,7 @@ export const HudBoostGaugeTunerSection: React.FC<HudBoostGaugeTunerSectionProps>
 
             <div className="w-full flex items-center justify-between text-[11px] font-mono px-2 py-1.5 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5">
               <span>
-                Mode:{' '}
-                <strong className="text-amber-500">
-                  {colorMode === 'inverted'
-                    ? 'Invert(Dial Color Shift+Fixed Text Color)'
-                    : colorMode === 'ring-only'
-                    ? 'Ring Only(Fixed Text Color)'
-                    : 'standard(Ring+Text Color Change)'}
-                </strong>
+                Mode: <strong className="text-amber-500">{modeSummary}</strong>
               </span>
               <span>
                 Color Scheme:{' '}
@@ -152,7 +155,6 @@ export const HudBoostGaugeTunerSection: React.FC<HudBoostGaugeTunerSectionProps>
             </div>
           </div>
 
-          {/* Right Configuration Panel */}
           <div
             className={`lg:col-span-7 p-6 rounded-3xl border flex flex-col justify-between gap-4 transition-colors shadow-2xs ${
               isLight
@@ -161,7 +163,6 @@ export const HudBoostGaugeTunerSection: React.FC<HudBoostGaugeTunerSectionProps>
             }`}
           >
             <div className="flex flex-col gap-3.5">
-              {/* Header */}
               <div className="flex items-center justify-between border-b pb-2.5 border-neutral-100 dark:border-neutral-800/70 flex-wrap gap-2">
                 <div className="flex items-center gap-2">
                   <Flame className="h-4 w-4" style={{ color: boostSegment.color }} />
@@ -207,17 +208,10 @@ export const HudBoostGaugeTunerSection: React.FC<HudBoostGaugeTunerSectionProps>
                     onClick={handleCopyConfig}
                     className="px-2.5 py-0.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-[11px] font-mono cursor-pointer transition-all flex items-center gap-1 shadow-2xs"
                   >
-                    {copiedConfig ? (
-                      <>
-                        <Check className="h-3 w-3" />
-                        <span>config copied (Copied!)</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="h-3 w-3" />
-                        <span>Copy Config (Copy Config)</span>
-                      </>
-                    )}
+                    {copiedConfig ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                    <span>
+                      {copiedConfig ? 'config copied (Copied!)' : 'Copy Config (Copy Config)'}
+                    </span>
                   </button>
                   <button
                     type="button"
@@ -226,84 +220,6 @@ export const HudBoostGaugeTunerSection: React.FC<HudBoostGaugeTunerSectionProps>
                   >
                     <RotateCcw className="h-3 w-3" />
                     <span>reset to default</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Calibrated Quick Comparison Presets */}
-              <div className="flex items-center justify-between gap-2 flex-wrap px-3 py-2 rounded-xl border border-amber-500/25 bg-amber-500/5 font-mono text-[11px]">
-                <span className="font-bold text-amber-500">Calibrate preset shortcut comparison:</span>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      updateTokens({
-                        colorScheme: 'step-12',
-                        colorMode: 'inverted',
-                        fixedTextColor: '#FFFFFF',
-                        ringInnerPct: 60,
-                        ringOuterPct: 98,
-                        lineCap: 'round',
-                        cutoutAngleDeg: 90,
-                        rotationDeg: -45,
-                        size: 148,
-                      });
-                      setGaugeSize(148);
-                    }}
-                    className={`px-2 py-0.5 rounded-lg border cursor-pointer transition-all ${
-                      colorMode === 'inverted' &&
-                      colorScheme === 'step-12' &&
-                      ringInnerPct === 60 &&
-                      ringOuterPct === 98 &&
-                      rotationDeg === -45
-                        ? 'bg-amber-500 text-neutral-950 border-amber-500 font-bold'
-                        : 'border-neutral-400/40 hover:bg-neutral-500/10'
-                    }`}
-                  >
-                    scheme A: Invert Hollow Ring (12Level · Vacant100-X%Transparent · 60%~98% · -45°)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      updateTokens({
-                        colorScheme: 'step-12',
-                        colorMode: 'ring-only',
-                        fixedTextColor: '#FFFFFF',
-                        ringInnerPct: 60,
-                        ringOuterPct: 98,
-                        lineCap: 'round',
-                        cutoutAngleDeg: 90,
-                        rotationDeg: -45,
-                        size: 148,
-                      });
-                      setGaugeSize(148);
-                    }}
-                    className={`px-2 py-0.5 rounded-lg border cursor-pointer transition-all ${
-                      colorMode === 'ring-only' &&
-                      colorScheme === 'step-12' &&
-                      ringInnerPct === 60 &&
-                      ringOuterPct === 98 &&
-                      rotationDeg === -45
-                        ? 'bg-sky-500 text-white border-sky-500 font-bold'
-                        : 'border-neutral-400/40 hover:bg-neutral-500/10'
-                    }`}
-                  >
-                    scheme B: Ring color change with fixed white text (12Level · Rounded60%~98% · -45°)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIs120HzLive(false);
-                      setIsUnlimitedBoost(false);
-                      setBoostAmount(35);
-                    }}
-                    className={`px-2 py-0.5 rounded-lg border cursor-pointer transition-all ${
-                      !is120HzLive && boostAmount === 35
-                        ? 'bg-emerald-500 text-neutral-950 border-emerald-500 font-bold'
-                        : 'border-neutral-400/40 hover:bg-neutral-500/10'
-                    }`}
-                  >
-                    Fixed Point 35% Inspect (Compare 65% Transparent Crop &amp; Rounded/Flat Cut)
                   </button>
                 </div>
               </div>
@@ -318,7 +234,6 @@ export const HudBoostGaugeTunerSection: React.FC<HudBoostGaugeTunerSectionProps>
                 </div>
               )}
 
-              {/* 1. Boost Amount Slider & Unlimited Boost + Dark Mode Override */}
               <div className="flex flex-col gap-2">
                 <SliderControl
                   label="Advance Value (Dragging slider will pause 120Hz Stream and switch to manual inspection)"
@@ -345,16 +260,9 @@ export const HudBoostGaugeTunerSection: React.FC<HudBoostGaugeTunerSectionProps>
                     />
                   </div>
 
-                  {/* Dark Mode Override Selector */}
                   <div className="flex items-center gap-1 font-mono text-xs">
                     <span className="text-[11px] font-semibold mr-1">Dark Mode Override:</span>
-                    {(
-                      [
-                        { id: 'auto', label: 'Auto (Follow Global)' },
-                        { id: 'dark', label: 'Force Dark (Dark Overlay)', icon: Moon },
-                        { id: 'light', label: 'Force Light (Light Overlay)', icon: Sun },
-                      ] as const
-                    ).map((opt) => (
+                    {THEME_OVERRIDES.map((opt) => (
                       <button
                         key={opt.id}
                         type="button"
@@ -378,6 +286,7 @@ export const HudBoostGaugeTunerSection: React.FC<HudBoostGaugeTunerSectionProps>
                 boostAmount={boostAmount}
                 setBoostAmount={setBoostAmount}
                 setIsUnlimitedBoost={setIsUnlimitedBoost}
+                onGaugeSizeChange={setGaugeSize}
               />
 
               <HudBoostGaugeGeometryControls

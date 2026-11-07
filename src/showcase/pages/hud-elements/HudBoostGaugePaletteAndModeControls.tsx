@@ -9,7 +9,19 @@ export interface HudBoostGaugePaletteAndModeControlsProps {
   boostAmount: number;
   setBoostAmount: (val: number) => void;
   setIsUnlimitedBoost: (val: boolean) => void;
+  onGaugeSizeChange: (val: number) => void;
 }
+
+const CALIBRATION_PRESET_BASE = {
+  colorScheme: 'step-12' as const,
+  fixedTextColor: '#FFFFFF',
+  ringInnerPct: 60,
+  ringOuterPct: 98,
+  lineCap: 'round' as const,
+  cutoutAngleDeg: 90,
+  rotationDeg: -45,
+  size: 148,
+};
 
 const CLASSIC_4_TIER_ITEMS = [
   {
@@ -50,15 +62,80 @@ export const HudBoostGaugePaletteAndModeControls: React.FC<
     boostAmount,
     setBoostAmount,
     setIsUnlimitedBoost,
+    onGaugeSizeChange,
   }) => {
-    const { colorScheme, colorMode, fixedTextColor, setToken } = useBoostGaugeStore();
+    const {
+      colorScheme,
+      colorMode,
+      fixedTextColor,
+      ringInnerPct,
+      ringOuterPct,
+      rotationDeg,
+      setToken,
+      updateTokens,
+    } = useBoostGaugeStore();
 
     const setColorScheme = (v: BoostColorScheme) => setToken('colorScheme', v);
     const setColorMode = (v: BoostColorMode) => setToken('colorMode', v);
     const setFixedTextColor = (v: string) => setToken('fixedTextColor', v);
 
+    const applyPreset = (mode: 'inverted' | 'ring-only') => {
+      updateTokens({ ...CALIBRATION_PRESET_BASE, colorMode: mode });
+      onGaugeSizeChange(148);
+    };
+
+    const isPresetGeometry =
+      colorScheme === 'step-12' &&
+      ringInnerPct === 60 &&
+      ringOuterPct === 98 &&
+      rotationDeg === -45;
+    const presetIdleCls = 'border-neutral-400/40 hover:bg-neutral-500/10';
+
     return (
       <>
+        <div className="flex items-center justify-between gap-2 flex-wrap px-3 py-2 rounded-xl border border-amber-500/25 bg-amber-500/5 font-mono text-[11px]">
+          <span className="font-bold text-amber-500">Calibrate preset shortcut comparison:</span>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <button
+              type="button"
+              onClick={() => applyPreset('inverted')}
+              className={`px-2 py-0.5 rounded-lg border cursor-pointer transition-all ${
+                colorMode === 'inverted' && isPresetGeometry
+                  ? 'bg-amber-500 text-neutral-950 border-amber-500 font-bold'
+                  : presetIdleCls
+              }`}
+            >
+              scheme A: Invert Hollow Ring (12Level · Vacant100-X%Transparent · 60%~98% · -45°)
+            </button>
+            <button
+              type="button"
+              onClick={() => applyPreset('ring-only')}
+              className={`px-2 py-0.5 rounded-lg border cursor-pointer transition-all ${
+                colorMode === 'ring-only' && isPresetGeometry
+                  ? 'bg-sky-500 text-white border-sky-500 font-bold'
+                  : presetIdleCls
+              }`}
+            >
+              scheme B: Ring color change with fixed white text (12Level · Rounded60%~98% · -45°)
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIs120HzLive(false);
+                setIsUnlimitedBoost(false);
+                setBoostAmount(35);
+              }}
+              className={`px-2 py-0.5 rounded-lg border cursor-pointer transition-all ${
+                !is120HzLive && boostAmount === 35
+                  ? 'bg-emerald-500 text-neutral-950 border-emerald-500 font-bold'
+                  : presetIdleCls
+              }`}
+            >
+              Fixed Point 35% Inspect (Compare 65% Transparent Crop &amp; Rounded/Flat Cut)
+            </button>
+          </div>
+        </div>
+
         {/* 2. Color Scheme (4-Color vs 12-Step 9-Tier) + Quick Tier Buttons */}
         <div className="flex flex-col gap-2 pt-2 border-t border-neutral-100 dark:border-neutral-800/60">
           <div className="flex items-center justify-between flex-wrap gap-2">
