@@ -68,6 +68,7 @@ export const LAYER_RULES = [
   { prefix: 'src/ui-core/stores/', rank: 1, name: 'L1:Stores' },
   { prefix: 'src/ui-core/utils/', rank: 1, name: 'L1:Utils' },
   { prefix: 'src/ui-core/manifest/surfaceRegistry.ts', rank: 6, name: 'L6:SurfaceRegistry' },
+  { prefix: 'src/ui-core/manifest/floatingSurfaceRegistry.ts', rank: 6, name: 'L6:SurfaceRegistry' },
   { prefix: 'src/ui-core/manifest/', rank: 1, name: 'L1:Manifest' },
   { prefix: 'src/ui-core/primitives/', rank: 2, name: 'L2:Primitives' },
   { prefix: 'src/ui-core/layout/', rank: 2, name: 'L2:Layout' },

@@ -19,6 +19,7 @@ import { FloatingWindowsScannerControlBar } from './floating-windows/FloatingWin
 import { FloatingWindowsStageToolbar } from './floating-windows/FloatingWindowsStageToolbar';
 import { FloatingWindowsAuditSection } from './floating-windows/FloatingWindowsAuditSection';
 import { useFloatingWindowsCalibration } from './floating-windows/useFloatingWindowsCalibration';
+import { RapidReviewTriageBar } from '../components/review/RapidReviewTriageBar';
 
 const useState = createScopedSyncedState('page:floating-windows-v2');
 
@@ -379,6 +380,8 @@ export const FloatingWindowsSimulationPage: React.FC<FloatingWindowsSimulationPa
         handleStepWindow={handleStepWindow}
         handleSelectPreset={handleSelectPreset}
       />
+
+      <RapidReviewTriageBar isLight={isLight} />
     </div>
   );
 };

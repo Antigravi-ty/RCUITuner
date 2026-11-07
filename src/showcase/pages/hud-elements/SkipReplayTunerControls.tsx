@@ -33,15 +33,14 @@ export const VARIANT_OPTIONS: {
   { id: 'waiting', label: 'Sync / Waiting Clock', defaultHex: '#38BDF8', tag: 'WAITING' },
 ];
 
+import { createScopedSyncedState } from '../../stores/crossClientSync';
+
+const useState = createScopedSyncedState('hud-5a-2-skip-inspector');
+
 export interface SkipReplayTunerControlsProps {
   isLight: boolean;
   skipCfg: Required<EdgeSkipIndicatorConfig>;
-  viewMode: HudRosterViewMode;
-  setViewMode: (mode: HudRosterViewMode) => void;
-  mixedAuxSlots: boolean;
-  setMixedAuxSlots: (val: boolean) => void;
   copiedJson: boolean;
-  skipSlots: Record<1 | 2 | 3 | 4 | 5 | 6, boolean>;
   toggleSlotSkip: (k: 1 | 2 | 3 | 4 | 5 | 6) => void;
   updateSkipCfg: (patch: Partial<EdgeSkipIndicatorConfig>) => void;
   setSkipCfg: (cfg: EdgeSkipIndicatorConfig) => void;
@@ -52,17 +51,18 @@ export const SkipReplayTunerControls: React.FC<SkipReplayTunerControlsProps> = R
   ({
     isLight,
     skipCfg,
-    viewMode,
-    setViewMode,
-    mixedAuxSlots,
-    setMixedAuxSlots,
     copiedJson,
-    skipSlots,
     toggleSlotSkip,
     updateSkipCfg,
     setSkipCfg,
     handleCopyConfigJson,
   }) => {
+    const [viewMode, setViewMode] = useState<HudRosterViewMode>('goal-replay', 'viewMode');
+    const [mixedAuxSlots, setMixedAuxSlots] = useState<boolean>(false, 'mixedAuxSlots');
+    const [skipSlots] = useState<Record<1 | 2 | 3 | 4 | 5 | 6, boolean>>(
+      { 1: true, 2: false, 3: true, 4: true, 5: true, 6: false },
+      'skipSlots'
+    );
     return (
       <div
         className={`lg:col-span-7 p-6 rounded-3xl border flex flex-col justify-between gap-4 transition-colors shadow-2xs ${

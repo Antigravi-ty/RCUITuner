@@ -1,28 +1,27 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Sun,
-  Moon,
-  Palette,
-  PanelLeftClose,
-  PanelLeftOpen,
-} from 'lucide-react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Sun, Moon, PanelLeftOpen } from 'lucide-react';
 import { useAccentStore } from './stores/themeStore';
-import { AccentColor } from '../ui-core/tokens/colors';
+import { SidebarWorkspaceHeader } from './SidebarWorkspaceHeader';
 import {
   PYRAMID_LAYERS,
   SIDEBAR_NAV_ITEMS,
+  WORKSPACE_SECTIONS,
+  WORKSPACE_SPECS,
+  getApprovalLedgerSummary,
+  getWorkspaceForTab,
   type ShowcaseTab,
-  type SidebarLayerMeta,
+  type TunerWorkspaceId,
+  type WorkspaceSectionId,
 } from './sidebarNavConfig';
 
 export interface SidebarProps {
   activeTab: ShowcaseTab;
   onSelectTab: (tab: ShowcaseTab) => void;
+  activeWorkspace?: TunerWorkspaceId;
+  onSelectWorkspace?: (workspace: TunerWorkspaceId) => void;
   isLight: boolean;
   onToggleTheme: () => void;
-  /** Optional controlled collapsed state (defaults to per-window local state so observation devices can collapse independently) */
   collapsed?: boolean;
-  /** Optional callback when collapsed state changes */
   onCollapsedChange?: (collapsed: boolean) => void;
 }
 
@@ -31,15 +30,20 @@ const SIDEBAR_COLLAPSED_SESSION_KEY = 'rc-ui-tuner:sidebar-collapsed';
 export const Sidebar: React.FC<SidebarProps> = ({
   activeTab,
   onSelectTab,
+  activeWorkspace: controlledWorkspace,
+  onSelectWorkspace,
   isLight,
   onToggleTheme,
   collapsed: controlledCollapsed,
   onCollapsedChange,
 }) => {
-  const { accent, tokens, setAccent } = useAccentStore();
+  const { tokens } = useAccentStore();
+  const activeWorkspace: TunerWorkspaceId =
+    controlledWorkspace ?? getWorkspaceForTab(activeTab);
 
-  // Per-window/per-device local collapse state (intentionally NOT synced via crossClientSync
-  // so an observation device can collapse the sidebar while a tuning device keeps it open)
+  const [showAllPyramidLayers, setShowAllPyramidLayers] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
   const [internalCollapsed, setInternalCollapsed] = useState<boolean>(() => {
     try {
       return (
@@ -60,7 +64,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
         setInternalCollapsed(resolved);
         try {
           if (typeof sessionStorage !== 'undefined') {
-            sessionStorage.setItem(SIDEBAR_COLLAPSED_SESSION_KEY, resolved ? '1' : '0');
+            sessionStorage.setItem(
+              SIDEBAR_COLLAPSED_SESSION_KEY,
+              resolved ? '1' : '0'
+            );
           }
         } catch {
           // ignore storage errors
@@ -71,16 +78,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
     [controlledCollapsed, isCollapsed, onCollapsedChange]
   );
 
-  // Keyboard shortcut: Cmd+B / Ctrl+B toggles sidebar collapse on current device
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'b') {
         const target = e.target as HTMLElement | null;
         if (
           target &&
-          (target.tagName === 'INPUT' ||
-            target.tagName === 'TEXTAREA' ||
-            target.tagName === 'SELECT' ||
+          (['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) ||
             target.isContentEditable)
         ) {
           return;
@@ -93,13 +97,62 @@ export const Sidebar: React.FC<SidebarProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [setCollapsed]);
 
-  const layerKeys = Object.keys(PYRAMID_LAYERS) as (keyof typeof PYRAMID_LAYERS)[];
+  const ledgerSummary = useMemo(() => getApprovalLedgerSummary(), []);
 
-  const accentOptions: { key: AccentColor; label: string; dotClass: string }[] = [
-    { key: 'amber', label: 'warm orange', dotClass: 'bg-amber-500' },
-    { key: 'neutral', label: 'Neutral Monochrome (default)', dotClass: 'bg-neutral-900 dark:bg-neutral-100' },
-    { key: 'sky', label: 'Classic Blue', dotClass: 'bg-sky-500' },
-  ];
+  const handleWorkspaceClick = useCallback(
+    (ws: TunerWorkspaceId) => {
+      setShowAllPyramidLayers(false);
+      if (onSelectWorkspace) onSelectWorkspace(ws);
+      else onSelectTab(WORKSPACE_SPECS[ws].defaultTab);
+    },
+    [onSelectTab, onSelectWorkspace]
+  );
+
+  const normalizedSearch = searchQuery.trim().toLowerCase();
+
+  const filteredItems = useMemo(() => {
+    return SIDEBAR_NAV_ITEMS.filter((item) => {
+      if (
+        !showAllPyramidLayers &&
+        !normalizedSearch &&
+        item.workspace !== activeWorkspace
+      ) {
+        return false;
+      }
+      if (!normalizedSearch) return true;
+      return (
+        item.label.toLowerCase().includes(normalizedSearch) ||
+        item.id.toLowerCase().includes(normalizedSearch) ||
+        item.layer.toLowerCase().includes(normalizedSearch) ||
+        (item.badgeText &&
+          item.badgeText.toLowerCase().includes(normalizedSearch))
+      );
+    });
+  }, [activeWorkspace, normalizedSearch, showAllPyramidLayers]);
+
+  const groups = useMemo(() => {
+    if (showAllPyramidLayers) {
+      const keys = Object.keys(
+        PYRAMID_LAYERS
+      ) as (keyof typeof PYRAMID_LAYERS)[];
+      return keys.map((k) => ({
+        key: k,
+        meta: PYRAMID_LAYERS[k],
+        items: filteredItems.filter((item) => item.layer === k),
+      }));
+    }
+    const allSecKeys = Object.keys(WORKSPACE_SECTIONS) as WorkspaceSectionId[];
+    const secKeys = normalizedSearch
+      ? allSecKeys
+      : allSecKeys.filter(
+          (k) => WORKSPACE_SECTIONS[k].workspace === activeWorkspace
+        );
+    return secKeys.map((k) => ({
+      key: k,
+      meta: WORKSPACE_SECTIONS[k],
+      items: filteredItems.filter((item) => item.workspaceSection === k),
+    }));
+  }, [activeWorkspace, filteredItems, normalizedSearch, showAllPyramidLayers]);
 
   return (
     <>
@@ -107,7 +160,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <button
           type="button"
           onClick={() => setCollapsed(false)}
-          title="Expand side navigation (Expand Sidebar · Current Window Only/Device Active [⌘B / Ctrl+B])"
+          title="Expand side navigation (Expand Sidebar · Current Window Only [⌘B / Ctrl+B])"
           aria-label="Expand Sidebar"
           className={`absolute left-0 top-3 z-30 flex items-center gap-1.5 pl-2 pr-2.5 py-2 rounded-r-xl border border-l-0 text-xs font-mono font-medium shadow-md backdrop-blur transition-all cursor-pointer ${
             isLight
@@ -124,94 +177,37 @@ export const Sidebar: React.FC<SidebarProps> = ({
         className={`${
           isCollapsed
             ? 'w-0 border-r-0 opacity-0 pointer-events-none'
-            : 'w-68 border-r opacity-100'
+            : 'w-72 border-r opacity-100'
         } shrink-0 overflow-hidden flex flex-col justify-between transition-all duration-200 ease-out ${
           isLight
             ? 'bg-[#fbfbfd] border-neutral-200/80 text-neutral-800'
             : 'bg-neutral-950/80 border-neutral-800 text-neutral-200'
         }`}
       >
-        <div className="w-68 flex flex-col p-4 overflow-y-auto flex-1 min-h-0">
-          {/* Brand header + Local Collapse Button */}
-          <div
-            className={`flex items-center justify-between gap-2 pb-4 mb-4 border-b transition-colors ${
-              isLight ? 'border-neutral-200/80' : 'border-neutral-800/60'
-            }`}
-          >
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div
-                className={`h-8 w-8 shrink-0 rounded-lg ${tokens.badge} flex items-center justify-center font-bold text-base shadow-sm transition-colors`}
-              >
-                UI
-              </div>
-              <div className="flex flex-col min-w-0">
-                <span className="font-bold text-sm tracking-tight truncate">RCUITuner</span>
-                <span
-                  className={`text-[10px] font-mono truncate ${
-                    isLight ? 'text-neutral-500' : 'text-neutral-400'
-                  }`}
-                >
-                  L0–L7 Pyramid v2.0
-                </span>
-              </div>
-            </div>
+        <div className="w-72 flex flex-col p-3.5 overflow-y-auto flex-1 min-h-0 gap-3">
+          <SidebarWorkspaceHeader
+            activeWorkspace={activeWorkspace}
+            onSelectWorkspace={handleWorkspaceClick}
+            showAllPyramidLayers={showAllPyramidLayers}
+            onTogglePyramidLayers={() =>
+              setShowAllPyramidLayers((prev) => !prev)
+            }
+            searchQuery={searchQuery}
+            onSearchQueryChange={setSearchQuery}
+            ledgerSummary={ledgerSummary}
+            onCollapse={() => setCollapsed(true)}
+            isLight={isLight}
+          />
 
-            <button
-              type="button"
-              onClick={() => setCollapsed(true)}
-              title="Collapse side navigation · Current Window Only/Device Active, Suitable for full-screen spectator view (⌘B / Ctrl+B)"
-              aria-label="Collapse Sidebar"
-              className={`h-7 w-7 shrink-0 rounded-lg border flex items-center justify-center transition-colors cursor-pointer ${
-                isLight
-                  ? 'bg-white hover:bg-neutral-100 border-neutral-200/90 text-neutral-500 hover:text-neutral-900 shadow-2xs'
-                  : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-800 text-neutral-400 hover:text-neutral-100'
-              }`}
-            >
-              <PanelLeftClose className="h-3.5 w-3.5" />
-            </button>
-          </div>
-
-          {/* Global Accent Theme Selector */}
-          <div className="mb-4 pb-3 border-b border-neutral-200/60 dark:border-neutral-800/60 flex flex-col gap-1.5">
-            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-neutral-400">
-              <Palette className="h-3 w-3" />
-              <span>Visual Tone (Accent Theme)</span>
-            </div>
-            <div className="grid grid-cols-3 gap-1 bg-neutral-200/50 dark:bg-neutral-900 p-1 rounded-lg border border-neutral-300/40 dark:border-neutral-800">
-              {accentOptions.map((opt) => {
-                const isSelected = accent === opt.key;
-                return (
-                  <button
-                    key={opt.key}
-                    type="button"
-                    onClick={() => setAccent(opt.key)}
-                    className={`flex items-center justify-center gap-1 py-1 px-1.5 rounded text-[10px] font-medium transition-all cursor-pointer ${
-                      isSelected
-                        ? isLight
-                          ? 'bg-white text-neutral-900 font-bold shadow-xs'
-                          : 'bg-neutral-800 text-white font-bold shadow-xs'
-                        : 'text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200'
-                    }`}
-                    title={opt.label}
-                  >
-                    <span className={`h-2 w-2 rounded-full ${opt.dotClass} shrink-0`} />
-                    <span className="truncate">
-                      {opt.key === 'amber' ? 'warm orange' : opt.key === 'neutral' ? 'Neutral' : 'Classic'}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* L0 – L7 Pyramid Navigation Categories */}
-          <div className="flex flex-col gap-4">
-            {layerKeys.map((layerKey) => {
-              const meta = PYRAMID_LAYERS[layerKey];
-              const items = SIDEBAR_NAV_ITEMS.filter((item) => item.layer === layerKey);
+          <div className="flex flex-col gap-3.5">
+            {groups.map(({ key, meta, items }) => {
+              if (items.length === 0) return null;
               return (
-                <div key={layerKey} className="flex flex-col gap-1">
-                  <div className="px-2 mb-0.5 flex items-center gap-1.5" title={meta.rule}>
+                <div key={key} className="flex flex-col gap-1">
+                  <div
+                    className="px-2 mb-0.5 flex items-center gap-1.5"
+                    title={meta.rule}
+                  >
                     <span
                       className={`px-1.5 py-0.2 rounded text-[9px] font-mono font-extrabold border ${meta.badgeColor}`}
                     >
@@ -232,7 +228,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         key={item.id}
                         type="button"
                         onClick={() => onSelectTab(item.id)}
-                        className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-left cursor-pointer outline-none ${
+                        className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all text-left cursor-pointer outline-none ${
                           isActive
                             ? isLight
                               ? tokens.activeItemLight
@@ -242,8 +238,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                             : 'text-neutral-400 hover:bg-neutral-900/80 hover:text-neutral-200'
                         }`}
                       >
-                        <span className="shrink-0">{item.icon}</span>
-                        <span className="truncate">{item.label}</span>
+                        <span className="flex items-center gap-2 min-w-0">
+                          <span className="shrink-0">{item.icon}</span>
+                          <span className="truncate">{item.label}</span>
+                        </span>
+                        {item.badgeText && (
+                          <span className="px-1.5 py-0.2 rounded text-[9px] font-mono opacity-75 border border-current/20 shrink-0">
+                            {item.badgeText}
+                          </span>
+                        )}
                       </button>
                     );
                   })}
@@ -255,11 +258,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Theme Switcher Bottom Bar */}
         <div
-          className={`w-68 p-4 border-t flex items-center justify-between transition-colors ${
-            isLight ? 'border-neutral-200/80 bg-neutral-100/40' : 'border-neutral-800/60'
+          className={`w-72 p-3.5 border-t flex items-center justify-between transition-colors ${
+            isLight
+              ? 'border-neutral-200/80 bg-neutral-100/40'
+              : 'border-neutral-800/60'
           }`}
         >
-          <span className={`text-xs font-mono ${isLight ? 'text-neutral-500' : 'text-neutral-400'}`}>
+          <span
+            className={`text-xs font-mono ${
+              isLight ? 'text-neutral-500' : 'text-neutral-400'
+            }`}
+          >
             Dark / Light
           </span>
           <button

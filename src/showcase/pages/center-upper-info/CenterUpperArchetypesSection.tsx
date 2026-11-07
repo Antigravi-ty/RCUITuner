@@ -1,10 +1,6 @@
 import React from 'react';
 import {
   CenterUpperInfoPayload,
-  CenterUpperGlowConfig,
-  CenterUpperBlueTeamConfig,
-  CenterUpperTypographyConfig,
-  CenterUpperTimingConfig,
   CenterUpperInfoVariant,
   WinnerTeamPreset,
 } from '../../../ui-core/hud/CenterUpperInfoHUD';
@@ -14,17 +10,11 @@ import {
   CUSTOM_ANNOUNCEMENT_PRESETS,
   type CustomAnnouncementPreset,
 } from './CenterUpperStageBackdropBar';
+import { useCenterUpperSyncedState } from './useCenterUpperSyncedState';
+
 export interface CenterUpperArchetypesSectionProps {
   isLight: boolean;
-  stageBgColor: string;
-  winnerTeam: WinnerTeamPreset;
-  winnerBlueConfig: CenterUpperBlueTeamConfig;
-  activeVariant: CenterUpperInfoVariant;
-  upperCenterTopPct: number;
   activePayload: CenterUpperInfoPayload | null;
-  glowConfig: CenterUpperGlowConfig;
-  typoConfig: CenterUpperTypographyConfig;
-  timingConfig: CenterUpperTimingConfig;
   handleSelectVariant: (variant: CenterUpperInfoVariant) => void;
   startCountdownSequence: (stepIntervalOverride?: number) => void;
   handleSelectWinnerTeam: (team: WinnerTeamPreset) => void;
@@ -35,20 +25,22 @@ export const CenterUpperArchetypesSection: React.FC<
   CenterUpperArchetypesSectionProps
 > = ({
   isLight,
-  stageBgColor,
-  winnerTeam,
-  winnerBlueConfig,
-  activeVariant,
-  upperCenterTopPct,
   activePayload,
-  glowConfig,
-  typoConfig,
-  timingConfig,
   handleSelectVariant,
   startCountdownSequence,
   handleSelectWinnerTeam,
   handleApplyCustomPreset,
 }) => {
+  const {
+    stageBgColor,
+    winnerTeam,
+    winnerBlueConfig,
+    activeVariant,
+    upperCenterTopPct,
+    glowConfig,
+    typoConfig,
+    timingConfig,
+  } = useCenterUpperSyncedState();
   const blueGlowHex = winnerBlueConfig.syncGlowWithText
     ? winnerBlueConfig.textColor
     : winnerBlueConfig.glowColor;

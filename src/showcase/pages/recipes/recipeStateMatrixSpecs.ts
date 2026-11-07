@@ -21,7 +21,7 @@ export interface RecipeStateSnapshotSpec<TProps> {
 }
 
 export const LAYER1_MAIN_MENU_STATES: RecipeStateSnapshotSpec<{
-  contextVariation: Layer1MenuContextMode;
+  activeTab: Layer1MenuContextMode;
 }>[] = LAYER1_CONTEXT_VARIATIONS.map((meta) => ({
   id: meta.id,
   label: meta.label,
@@ -29,7 +29,7 @@ export const LAYER1_MAIN_MENU_STATES: RecipeStateSnapshotSpec<{
   componentName: 'Layer1MainMenuRecipe',
   sourceFile: 'recipes/Layer1MainMenuRecipe.tsx',
   subViewFile: 'recipes/layer1MenuContextSpecs.ts',
-  props: { contextVariation: meta.id },
+  props: { activeTab: meta.id },
 }));
 
 export const LAYER2_GARAGE_STATES: RecipeStateSnapshotSpec<{
@@ -83,16 +83,15 @@ export const LAYER2_GARAGE_STATES: RecipeStateSnapshotSpec<{
 
 export const LAYER2_SETTINGS_STATES: RecipeStateSnapshotSpec<{
   activeTab: SettingsTabId;
-  developerMode?: boolean;
 }>[] = [
   {
     id: 'settings-gameplay',
     label: '1. Gameplay Settings',
-    description: 'Camera, Keybindings, Ball Cam Indicator, Trajectory Predictor, Training Config, and Clock Pacing priority.',
+    description: 'Camera, Keybindings, Ball Cam Indicator, Trajectory Predictor, Show POV Hitbox, Training Config, and Experience Priority.',
     componentName: 'Layer2SettingsRecipe',
     sourceFile: 'recipes/Layer2SettingsRecipe.tsx',
     subViewFile: 'recipes/settings/tabs/GameplayTab.tsx',
-    props: { activeTab: 'gameplay', developerMode: true },
+    props: { activeTab: 'gameplay' },
   },
   {
     id: 'settings-audio',
@@ -101,7 +100,7 @@ export const LAYER2_SETTINGS_STATES: RecipeStateSnapshotSpec<{
     componentName: 'Layer2SettingsRecipe',
     sourceFile: 'recipes/Layer2SettingsRecipe.tsx',
     subViewFile: 'recipes/settings/tabs/AudioTab.tsx',
-    props: { activeTab: 'audio', developerMode: true },
+    props: { activeTab: 'audio' },
   },
   {
     id: 'settings-display',
@@ -110,7 +109,7 @@ export const LAYER2_SETTINGS_STATES: RecipeStateSnapshotSpec<{
     componentName: 'Layer2SettingsRecipe',
     sourceFile: 'recipes/Layer2SettingsRecipe.tsx',
     subViewFile: 'recipes/settings/tabs/DisplayTab.tsx',
-    props: { activeTab: 'display', developerMode: true },
+    props: { activeTab: 'display' },
   },
   {
     id: 'settings-advanced',
@@ -119,7 +118,7 @@ export const LAYER2_SETTINGS_STATES: RecipeStateSnapshotSpec<{
     componentName: 'Layer2SettingsRecipe',
     sourceFile: 'recipes/Layer2SettingsRecipe.tsx',
     subViewFile: 'recipes/settings/tabs/AdvancedTab.tsx',
-    props: { activeTab: 'advanced', developerMode: true },
+    props: { activeTab: 'advanced' },
   },
   {
     id: 'settings-developer',
@@ -128,7 +127,7 @@ export const LAYER2_SETTINGS_STATES: RecipeStateSnapshotSpec<{
     componentName: 'Layer2SettingsRecipe',
     sourceFile: 'recipes/Layer2SettingsRecipe.tsx',
     subViewFile: 'recipes/settings/tabs/DeveloperTab.tsx',
-    props: { activeTab: 'developer', developerMode: true },
+    props: { activeTab: 'developer' },
   },
 ];
 

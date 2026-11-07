@@ -9,39 +9,29 @@ import {
   BG_COLOR_SWATCHES,
   type StageBgMode,
 } from '../center-upper-info/CenterUpperStageBackdropBar';
+import { useTakeoverSyncedState } from './useTakeoverSyncedState';
+
 export interface TakeoverStageBackdropBarProps {
   isLight: boolean;
-  stageBgMode: StageBgMode;
-  setStageBgMode: (val: StageBgMode | ((prev: StageBgMode) => StageBgMode)) => void;
-  arenaPreset: ArenaLightingPreset;
-  setArenaPreset: (
-    val: ArenaLightingPreset | ((prev: ArenaLightingPreset) => ArenaLightingPreset)
-  ) => void;
-  stageBgColor: string;
-  setStageBgColor: (val: string | ((prev: string) => string)) => void;
-  stageBgSecondaryColor: string;
-  setStageBgSecondaryColor: (val: string | ((prev: string) => string)) => void;
-  stageBrightness: number;
-  setStageBrightness: (val: number | ((prev: number) => number)) => void;
-  showPitchLines: boolean;
-  setShowPitchLines: (val: boolean | ((prev: boolean) => boolean)) => void;
 }
 
 export const TakeoverStageBackdropBar: React.FC<TakeoverStageBackdropBarProps> = ({
   isLight,
-  stageBgMode,
-  setStageBgMode,
-  arenaPreset,
-  setArenaPreset,
-  stageBgColor,
-  setStageBgColor,
-  stageBgSecondaryColor,
-  setStageBgSecondaryColor,
-  stageBrightness,
-  setStageBrightness,
-  showPitchLines,
-  setShowPitchLines,
 }) => {
+  const {
+    stageBgMode,
+    setStageBgMode,
+    arenaPreset,
+    setArenaPreset,
+    stageBgColor,
+    setStageBgColor,
+    stageBgSecondaryColor,
+    setStageBgSecondaryColor,
+    stageBrightness,
+    setStageBrightness,
+    showPitchLines,
+    setShowPitchLines,
+  } = useTakeoverSyncedState();
   return (
     <div
       className={`p-4 rounded-2xl border grid grid-cols-1 md:grid-cols-3 gap-4 ${

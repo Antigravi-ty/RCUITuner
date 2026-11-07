@@ -32,6 +32,7 @@ import { Layer4ControllerSettingsRecipe } from '../../../ui-core/recipes/Layer4C
 import { Layer4EventTriggerRulesRecipe } from '../../../ui-core/recipes/Layer4EventTriggerRulesRecipe';
 import { Layer4DevSignalingLabRecipe } from '../../../ui-core/recipes/Layer4DevSignalingLabRecipe';
 import { floatingStore, type FloatingWindowItem } from '../../../ui-core/stores/floatingStore';
+import { StoreSnapshotScope } from '../../../ui-core/stores/storeSnapshotScope';
 import { type PresetConfig } from '../../../ui-core/stores/floatingPresets';
 import { PRESET_WINDOWS } from '../../../ui-core/stores/devFloatingPresets';
 import {
@@ -118,47 +119,52 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
   return (
     <>
       {displayedRoute === 'main-menu' && (
-        <Layer1MainMenuRecipe
-          isLight={isLight}
-          contextVariation={layer1ContextMode}
-          touchMode={touchMode}
-          touchInputAgent={touchInputAgent}
-          onTouchInputAgentChange={setTouchInputAgent}
-          onResume={() => {
-            handleSelectRoute('layer-0');
-            showToast('Enter Level Zero Match (Layer 0 · No Menu State)');
-          }}
-          onNavigatePlay={() => handleSelectRoute('play')}
-          onNavigateGarage={() => handleSelectRoute('garage')}
-          onNavigateSettings={(tab) => {
-            if (tab) setSettingsTab(tab);
-            handleSelectRoute('settings');
-          }}
-          onNavigateManageRoom={() => handleSelectRoute('manage-room')}
-          onNavigateExpMultiBotsConfig={() => handleSelectRoute('exp-multi-bots')}
-          onReturnToFreeplay={() => {
-            onChangeLayer1ContextMode?.('freeplay');
-            showToast('Returned Free Play Base Menu (MENU)');
-          }}
-          onLeaveRoom={() => {
-            onChangeLayer1ContextMode?.('freeplay');
-            showToast('Left Room/Match and Return Free Play (MENU)');
-          }}
-          stateOverride={{
-            onExitEditMode: () => {
-              handleSelectRoute('static-training-pack');
-              showToast('Exited Edit Training Pack Return to training pack browser');
+        <StoreSnapshotScope
+          overrides={{
+            appStore: {
+              touchMode,
+              touchInputAgent,
+              setTouchInputAgent,
+              menuPowerSave: bgRenderPaused ? 'extreme' : '30',
             },
           }}
-          menuPowerSave={bgRenderPaused ? 'extreme' : '30'}
-        />
+        >
+          <Layer1MainMenuRecipe
+            isLight={isLight}
+            activeTab={layer1ContextMode}
+            onBack={() => {
+              handleSelectRoute('layer-0');
+              showToast('Enter Level Zero Match (Layer 0 · No Menu State)');
+            }}
+            onTabChange={(target) => {
+              if (target === 'play') handleSelectRoute('play');
+              else if (target === 'garage') handleSelectRoute('garage');
+              else if (target.startsWith('settings')) {
+                const tab = target.split(':')[1];
+                if (tab) setSettingsTab(tab);
+                handleSelectRoute('settings');
+              } else if (target === 'manage-room') handleSelectRoute('manage-room');
+              else if (target === 'exp-multi-bots') handleSelectRoute('exp-multi-bots');
+              else if (target === 'return-freeplay') {
+                onChangeLayer1ContextMode?.('freeplay');
+                showToast('Returned Free Play Base Menu (MENU)');
+              } else if (target === 'leave-room') {
+                onChangeLayer1ContextMode?.('freeplay');
+                showToast('Left Room/Match and Return Free Play (MENU)');
+              } else if (target === 'exit-edit-mode') {
+                handleSelectRoute('static-training-pack');
+                showToast('Exited Edit Training Pack Return to training pack browser');
+              }
+            }}
+          />
+        </StoreSnapshotScope>
       )}
 
       {displayedRoute === 'play' && (
         <Layer2PlayRecipe
           isLight={isLight}
           onBack={goBack}
-          onSelectMode={(m) => {
+          onTabChange={(m) => {
             setLastParentRoute('play');
             if (m === 'exhibition') handleSelectRoute('exhibition');
             else if (m === 'host-match' || m === 'multiplayer-match') handleSelectRoute('host-match');
@@ -178,7 +184,6 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
       {displayedRoute === 'garage' && (
         <Layer2GarageRecipe
           isLight={isLight}
-          initialTab={garageTab}
           activeTab={garageTab}
           onTabChange={setGarageTab}
           onBack={goBack}
@@ -186,37 +191,33 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
       )}
 
       {displayedRoute === 'settings' && (
-        <Layer2SettingsRecipe
-          isLight={isLight}
-          onBack={goBack}
-          activeTab={settingsTab}
-          onTabChange={(tab) => setSettingsTab(tab)}
-          developerMode={visibilityTier === 'developer'}
-          stateOverride={{
-            initialTab: settingsTab,
-            onDeveloperModeChange: (enabled) => {
-              onSwitchTier?.(enabled ? 'developer' : 'user');
-              if (enabled) {
-                setSettingsTab('developer');
-                showToast('Enabled Developer Mode, Switch To Developer Exclusive View');
-              } else {
-                setSettingsTab('advanced');
-                showToast('Closed Developer Mode, Back User Exclusive View');
-              }
-            },
-            onSpawnDiagnosticWindow: (win) => floatingStore.spawnWindow(win),
-            onNavigateRoute: (route) => {
-              setLastParentRoute('settings');
-              if (route === 'trajectory') {
-                setLiveAnimPhase('expanded');
-                handleSelectRoute('trajectory');
-                showToast('Enter Submenu: Ball Trajectory Predictor (support TAB Side collapsed real-time preview)');
-              } else {
-                handleSelectRoute(route as ActiveMenuRoute);
-              }
+        <StoreSnapshotScope
+          overrides={{
+            appStore: {
+              settingsTargetTab: settingsTab,
+              developerMode: visibilityTier === 'developer',
+              navigate: (route: string) => {
+                setLastParentRoute('settings');
+                if (route === 'trajectory') {
+                  setLiveAnimPhase('expanded');
+                  handleSelectRoute('trajectory');
+                  showToast(
+                    'Enter Submenu: Ball Trajectory Predictor (support TAB Side collapsed real-time preview)'
+                  );
+                } else {
+                  handleSelectRoute(route as ActiveMenuRoute);
+                }
+              },
             },
           }}
-        />
+        >
+          <Layer2SettingsRecipe
+            isLight={isLight}
+            onBack={goBack}
+            activeTab={settingsTab}
+            onTabChange={(tab) => setSettingsTab(tab as typeof settingsTab)}
+          />
+        </StoreSnapshotScope>
       )}
 
       {displayedRoute === 'manage-room' && (
@@ -243,11 +244,11 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
       )}
 
       {displayedRoute === 'audio-eq' && (
-        <Layer3AcousticsEqualizerRecipe
-          isLight={isLight}
-          developerMode={visibilityTier === 'developer'}
-          onBack={goBack}
-        />
+        <StoreSnapshotScope
+          overrides={{ appStore: { developerMode: visibilityTier === 'developer' } }}
+        >
+          <Layer3AcousticsEqualizerRecipe isLight={isLight} onBack={goBack} />
+        </StoreSnapshotScope>
       )}
 
       {displayedRoute === 'dev-quick-actions' && (
@@ -322,10 +323,6 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
         <Layer3ExhibitionRecipe
           isLight={isLight}
           onBack={goBack}
-          onNavigateAdvancedMutators={() => {
-            setLastParentRoute('exhibition');
-            handleSelectRoute('exp-multi-bots');
-          }}
         />
       )}
 
@@ -333,7 +330,7 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
         <Layer3SelfTrainingRecipe
           isLight={isLight}
           onBack={goBack}
-          onSelectMode={(mode) => {
+          onTabChange={(mode) => {
             setLastParentRoute('self-training');
             if (mode === 'static-training-pack') {
               handleSelectRoute('static-training-pack');
@@ -365,44 +362,48 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
         <Layer3TrainingConfigRecipe
           isLight={isLight}
           onBack={goBack}
-          onNavigateTrajectory={() => {
-            setLastParentRoute('training-config');
-            handleSelectRoute('trajectory');
-          }}
-          onAddPresetWindow={handleAddPresetWindow}
-          activeWindows={windows}
-          onClosePresetWindow={closeWindow}
         />
       )}
 
       {displayedRoute === 'camera' && (
-        <Layer3CameraRecipe
-          isLight={isLight}
-          developerMode={visibilityTier === 'developer'}
-          onBack={() => {
-            setLiveAnimPhase('expanded');
-            goBack();
+        <StoreSnapshotScope
+          overrides={{
+            appStore: {
+              developerMode: visibilityTier === 'developer',
+              setLivePreviewCollapsed: handleTriggerCollapse,
+            },
           }}
-          onCollapsePreview={handleTriggerCollapse}
-        />
+        >
+          <Layer3CameraRecipe
+            isLight={isLight}
+            onBack={() => {
+              setLiveAnimPhase('expanded');
+              goBack();
+            }}
+          />
+        </StoreSnapshotScope>
       )}
 
       {displayedRoute === 'keybindings' && (
-        <Layer3KeybindingsRecipe
-          standalone
-          isLight={isLight}
-          onBack={goBack}
-          onNavigateAdvancedController={() => {
-            setLastParentRoute('keybindings');
-            handleSelectRoute('controller-settings');
+        <StoreSnapshotScope
+          overrides={{
+            appStore: {
+              navigate: (route: string) => {
+                if (route === 'controller-settings') {
+                  setLastParentRoute('keybindings');
+                  handleSelectRoute('controller-settings');
+                }
+              },
+            },
           }}
-        />
+        >
+          <Layer3KeybindingsRecipe isLight={isLight} onBack={goBack} />
+        </StoreSnapshotScope>
       )}
 
       {displayedRoute === 'exp-multi-bots' && (
         <Layer3ExpMultiBotsRecipe
           isLight={isLight}
-          onLaunchFloatingControl={() => spawnPresetById('experimental-multi-bots')}
           onBack={goBack}
         />
       )}
@@ -410,7 +411,6 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
       {displayedRoute === 'exp-botpack-9700488' && (
         <Layer3ExpBotPackRecipe
           isLight={isLight}
-          onLaunchFloatingControl={() => spawnPresetById('experimental-multi-bots')}
           onBack={goBack}
         />
       )}
@@ -419,25 +419,6 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
         <Layer3DevSandboxesRecipe
           isLight={isLight}
           onBack={goBack}
-          onNavigateExpMultiBots={() => {
-            setLastParentRoute('dev-sandboxes');
-            handleSelectRoute('exp-multi-bots');
-          }}
-          onNavigateExpBotpack9700488={() => {
-            setLastParentRoute('dev-sandboxes');
-            handleSelectRoute('exp-botpack-9700488');
-          }}
-          onNavigateTemPackConverter={() => {
-            setLastParentRoute('dev-sandboxes');
-            handleSelectRoute('dev-tem-pack-converter');
-          }}
-          onEnterBench={(tabId) => {
-            if (tabId === 'exp-multi-bots') handleSelectRoute('exp-multi-bots');
-            else if (tabId === 'exp-botpack-9700488') handleSelectRoute('exp-botpack-9700488');
-            else if (tabId === 'tem-pack-converter') handleSelectRoute('dev-tem-pack-converter');
-            else if (tabId === 'replay-to-rcs-importer') spawnPresetById('replay-to-rcs-importer');
-            else spawnPresetById('subsystem-isolation-lab', tabId);
-          }}
         />
       )}
 
@@ -445,11 +426,6 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
         <Layer3DevActiveTunersRecipe
           isLight={isLight}
           onBack={goBack}
-          onNavigateAdvancedAudio={() => handleSelectRoute('advanced-audio')}
-          onNavigateEventTriggerRules={() => handleSelectRoute('event-trigger-rules')}
-          onAddPresetWindow={handleAddPresetWindow}
-          activeWindows={windows}
-          onClosePresetWindow={closeWindow}
         />
       )}
 
@@ -457,9 +433,6 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
         <Layer3DevCalibratedPresetsRecipe
           isLight={isLight}
           onBack={goBack}
-          onAddPresetWindow={handleAddPresetWindow}
-          activeWindows={windows}
-          onClosePresetWindow={closeWindow}
         />
       )}
 
@@ -467,10 +440,6 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
         <Layer3DevSelfTestRecipe
           isLight={isLight}
           onBack={goBack}
-          onNavigateSignalingLab={() => {
-            setLastParentRoute('dev-self-test');
-            handleSelectRoute('dev-signaling-lab');
-          }}
         />
       )}
 
@@ -533,16 +502,22 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
       )}
 
       {displayedRoute === 'trajectory' && (
-        <Layer3BallTrajectoryRecipe
-          isLight={isLight}
-          transparent={true}
-          developerMode={visibilityTier === 'developer'}
-          onBack={() => {
-            setLiveAnimPhase('expanded');
-            goBack();
+        <StoreSnapshotScope
+          overrides={{
+            appStore: {
+              developerMode: visibilityTier === 'developer',
+              setLivePreviewCollapsed: handleTriggerCollapse,
+            },
           }}
-          onCollapsePreview={handleTriggerCollapse}
-        />
+        >
+          <Layer3BallTrajectoryRecipe
+            isLight={isLight}
+            onBack={() => {
+              setLiveAnimPhase('expanded');
+              goBack();
+            }}
+          />
+        </StoreSnapshotScope>
       )}
     </>
   );

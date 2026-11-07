@@ -321,21 +321,7 @@ export const TakeoverPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }
           channel={channelRef.current}
         />
 
-        <TakeoverStageBackdropBar
-          isLight={isLight}
-          stageBgMode={stageBgMode}
-          setStageBgMode={setStageBgMode}
-          arenaPreset={arenaPreset}
-          setArenaPreset={setArenaPreset}
-          stageBgColor={stageBgColor}
-          setStageBgColor={setStageBgColor}
-          stageBgSecondaryColor={stageBgSecondaryColor}
-          setStageBgSecondaryColor={setStageBgSecondaryColor}
-          stageBrightness={stageBrightness}
-          setStageBrightness={setStageBrightness}
-          showPitchLines={showPitchLines}
-          setShowPitchLines={setShowPitchLines}
-        />
+        <TakeoverStageBackdropBar isLight={isLight} />
 
         <TakeoverSignalControlDeck
           isLight={isLight}

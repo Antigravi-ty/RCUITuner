@@ -22,16 +22,20 @@ import { CodeBlock } from '../../CodeBlock';
 
 export type SlotLayoutPreset = 'classic-triad' | 'bottom-cluster' | 'edge-flush';
 
+export interface HudStageBallCamConfig {
+  active: boolean;
+  subscribeFn?: (listener: HudBallCamListener) => () => void;
+  shortcut: string | null;
+  label: string;
+  onToggle: () => void;
+}
+
 export interface HudStageAndFollowupSectionProps {
   isLight: boolean;
   is120HzLive: boolean;
   slotPreset: SlotLayoutPreset;
   setSlotPreset: (preset: SlotLayoutPreset) => void;
-  ballCamActive: boolean;
-  subscribeBallCamFn?: (listener: HudBallCamListener) => () => void;
-  ballCamShortcut: string | null;
-  ballCamLabel: string;
-  handleToggleBallCam: () => void;
+  ballCam: HudStageBallCamConfig;
   speed: number;
   subscribeSpeedFn?: (listener: HudSpeedListener) => () => void;
   boostAmount: number;
@@ -45,11 +49,7 @@ export const HudStageAndFollowupSection = React.memo<HudStageAndFollowupSectionP
   is120HzLive,
   slotPreset,
   setSlotPreset,
-  ballCamActive,
-  subscribeBallCamFn,
-  ballCamShortcut,
-  ballCamLabel,
-  handleToggleBallCam,
+  ballCam,
   speed,
   subscribeSpeedFn,
   boostAmount,
@@ -57,6 +57,13 @@ export const HudStageAndFollowupSection = React.memo<HudStageAndFollowupSectionP
   subscribeBoostFn,
   transientChannel,
 }) => {
+  const {
+    active: ballCamActive,
+    subscribeFn: subscribeBallCamFn,
+    shortcut: ballCamShortcut,
+    label: ballCamLabel,
+    onToggle: handleToggleBallCam,
+  } = ballCam;
   return (
     <>
       {/* SECTION 5A.5S: DECOUPLED 3-WIDGET STAGE SANDBOX */}
@@ -104,7 +111,12 @@ export const HudStageAndFollowupSection = React.memo<HudStageAndFollowupSectionP
           </div>
 
           <p className={`text-xs ${isLight ? 'text-neutral-600' : 'text-neutral-400'}`}>
-            Mount only the finalized version in this sandbox 3 Components (low frequency <code className="font-mono">BallCameraIndicator</code> + 120Hz high frequency <code className="font-mono">VelocityProgressBar</code> + 120Hz high frequency <code className="font-mono">CircularBoostGauge</code>) . When switching top-right layout presets, <strong>No changes needed to internal component code</strong>, Position determined entirely by outer slot: 
+            Mount only the finalized version in this sandbox 3 Components (low frequency{' '}
+            <code className="font-mono">BallCameraIndicator</code> + 120Hz high frequency{' '}
+            <code className="font-mono">VelocityProgressBar</code> + 120Hz high frequency{' '}
+            <code className="font-mono">CircularBoostGauge</code>). When switching top-right layout
+            presets, <strong>No changes needed to internal component code</strong>, Position
+            determined entirely by outer slot:
           </p>
 
           <div className="relative w-full h-[380px] rounded-3xl border border-neutral-300 dark:border-neutral-800 overflow-hidden shadow-xl bg-black">

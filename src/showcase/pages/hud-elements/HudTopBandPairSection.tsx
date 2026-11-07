@@ -100,7 +100,9 @@ export const HudTopBandPairSection: React.FC<HudTopBandPairSectionProps> = ({
             </Badge>
           </div>
           <p className="text-xs opacity-75">
-            Left-pinned right-rounded corner (<code className="font-mono">rounded-r-[9px]</code>), Right-aligned left-rounded corner (<code className="font-mono">rounded-l-[9px]</code>), with under-card tucked Skip Replay drawer (slides out from beneath player card · see{' '}
+            Left-pinned right-rounded corner (<code className="font-mono">rounded-r-[9px]</code>),
+            Right-aligned left-rounded corner (<code className="font-mono">rounded-l-[9px]</code>),
+            with under-card tucked Skip Replay drawer (slides out from beneath player card · see{' '}
             <a href="#hud-5a-2-skip-inspector" className="text-emerald-500 underline">
               5A.2++ Workbench
             </a>{' '}

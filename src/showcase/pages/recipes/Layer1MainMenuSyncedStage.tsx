@@ -57,7 +57,7 @@ export const Layer1MainMenuSyncedStage: React.FC<Layer1MainMenuSyncedStageProps>
         >
           <Suspense fallback={suspenseFallback}>
             <div className="flex flex-col gap-2 items-center w-full max-w-[460px]">
-              <Layer1MainMenuRecipe isLight={isLight} contextVariation={activeCtx} />
+              <Layer1MainMenuRecipe isLight={isLight} activeTab={activeCtx} />
               <AuditTicketHeader
                 label={`${activeCtxMeta.shortLabel} (${activeCtxMeta.headerTitle})`}
                 description={activeCtxMeta.description}
@@ -66,7 +66,7 @@ export const Layer1MainMenuSyncedStage: React.FC<Layer1MainMenuSyncedStageProps>
                 sourceFile="src/ui-core/recipes/Layer1MainMenuRecipe.tsx"
                 subViewFile="src/ui-core/recipes/layer1MenuContextSpecs.ts"
                 stateId={activeCtx}
-                activeProps={{ contextVariation: activeCtx }}
+                activeProps={{ activeTab: activeCtx }}
                 badgeColor="amber"
                 isLight={isLight}
               />

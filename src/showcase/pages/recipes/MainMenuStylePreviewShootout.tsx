@@ -3,6 +3,7 @@ import { Image as ImageIcon, Eye } from 'lucide-react';
 import { Badge } from '../../../ui-core/primitives/Badge';
 import { Button } from '../../../ui-core/primitives/Button';
 import { Layer1MainMenuRecipe } from '../../../ui-core/recipes/Layer1MainMenuRecipe';
+import { StoreSnapshotScope } from '../../../ui-core/stores/storeSnapshotScope';
 import { Layer1ContextGroupedSelector } from './Layer1ContextGroupedSelector';
 import type {
   Layer1ContextVariation,
@@ -99,7 +100,7 @@ export const MainMenuStylePreviewShootout: React.FC<
             }}
             className="flex justify-center py-2"
           >
-            <Layer1MainMenuRecipe isLight={isLight} contextVariation={activeCtx} />
+            <Layer1MainMenuRecipe isLight={isLight} activeTab={activeCtx} />
           </div>
         </div>
       )}
@@ -174,18 +175,18 @@ export const MainMenuStylePreviewShootout: React.FC<
                 }}
                 className="flex justify-center"
               >
-                <Layer1MainMenuRecipe
-                  isLight={isLight}
-                  contextVariation={activeCtx}
-                  styleVariant="large-clean-row"
-                  styleParams={{
-                    ...store,
-                    variant: 'large-clean-row',
-                    conciseResumeLabel: true,
-                    showDescription: false,
-                    showIconBox: false,
+                <StoreSnapshotScope
+                  overrides={{
+                    mainMenuStyleStore: {
+                      variant: 'large-clean-row',
+                      conciseResumeLabel: true,
+                      showDescription: false,
+                      showIconBox: false,
+                    },
                   }}
-                />
+                >
+                  <Layer1MainMenuRecipe isLight={isLight} activeTab={activeCtx} />
+                </StoreSnapshotScope>
               </div>
             </div>
 
@@ -237,18 +238,18 @@ export const MainMenuStylePreviewShootout: React.FC<
                 }}
                 className="flex justify-center"
               >
-                <Layer1MainMenuRecipe
-                  isLight={isLight}
-                  contextVariation={activeCtx}
-                  styleVariant="large-clean-row"
-                  styleParams={{
-                    ...store,
-                    variant: 'large-clean-row',
-                    conciseResumeLabel: true,
-                    showDescription: false,
-                    showIconBox: true,
+                <StoreSnapshotScope
+                  overrides={{
+                    mainMenuStyleStore: {
+                      variant: 'large-clean-row',
+                      conciseResumeLabel: true,
+                      showDescription: false,
+                      showIconBox: true,
+                    },
                   }}
-                />
+                >
+                  <Layer1MainMenuRecipe isLight={isLight} activeTab={activeCtx} />
+                </StoreSnapshotScope>
               </div>
             </div>
 
@@ -297,19 +298,19 @@ export const MainMenuStylePreviewShootout: React.FC<
                 }}
                 className="flex justify-center"
               >
-                <Layer1MainMenuRecipe
-                  isLight={isLight}
-                  contextVariation={activeCtx}
-                  styleVariant="classic-descriptive-row"
-                  styleParams={{
-                    ...store,
-                    variant: 'classic-descriptive-row',
-                    conciseResumeLabel: false,
-                    showDescription: true,
-                    showIconBox: true,
-                    titleFontSizePx: 14,
+                <StoreSnapshotScope
+                  overrides={{
+                    mainMenuStyleStore: {
+                      variant: 'classic-descriptive-row',
+                      conciseResumeLabel: false,
+                      showDescription: true,
+                      showIconBox: true,
+                      titleFontSizePx: 14,
+                    },
                   }}
-                />
+                >
+                  <Layer1MainMenuRecipe isLight={isLight} activeTab={activeCtx} />
+                </StoreSnapshotScope>
               </div>
             </div>
           </div>

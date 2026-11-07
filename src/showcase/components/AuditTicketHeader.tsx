@@ -1,6 +1,21 @@
-import React, { useState } from 'react';
-import { Flag, Check, Copy } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import {
+  Check,
+  CheckCircle2,
+  Clock,
+  Copy,
+  Flag,
+  Target,
+  XCircle,
+} from 'lucide-react';
+import { UI_APPROVAL_LEDGER } from '../../ui-core/manifest/surfaceCalibration';
 import { quickNotification } from '../../ui-core/stores/quickNotificationStore';
+import {
+  buildUnitKey,
+  classifySurfaceBucket,
+  resolveCanonicalSurfaceId,
+} from './review/reviewLedgerAdapter';
+import { useReviewLedgerStore } from './review/reviewLedgerStore';
 
 export interface AuditTicketHeaderProps {
   index?: number;
@@ -37,8 +52,8 @@ export function formatHostSourcePath(rawPath?: string): string {
 
 /**
  * Compact header bar rendered above audit stages and flat matrix cards.
- * Displays the state index/title, source path, tuner coverage status, and
- * one-click "Copy Path" / "Copy Ticket" buttons for rapid issue reporting.
+ * Displays the state index/title, source path, 3-Bucket approval status,
+ * quick Approve/Reject/Defer triage buttons, and one-click "Copy Path" / "Copy Ticket".
  */
 export const AuditTicketHeader: React.FC<AuditTicketHeaderProps> = React.memo(
   ({
@@ -60,6 +75,60 @@ export const AuditTicketHeader: React.FC<AuditTicketHeaderProps> = React.memo(
     const [copiedTicket, setCopiedTicket] = useState(false);
     const [copiedPath, setCopiedPath] = useState(false);
 
+    const surfaceId = resolveCanonicalSurfaceId({
+      sourceFile,
+      componentName,
+      stateId,
+    });
+    const variantId = stateId.includes(':')
+      ? stateId.split(':').slice(1).join(':')
+      : stateId || 'default';
+    const unitKey = buildUnitKey(surfaceId, variantId);
+
+    const {
+      decisionsMap,
+      activeUnitKey,
+      simulateTemplateStale,
+      setActiveUnit,
+      selectUnitByKey,
+      setDecision,
+    } = useReviewLedgerStore();
+
+    // Auto-register single-stage audit headers as the active review unit
+    useEffect(() => {
+      if (index === undefined || index === 1) {
+        setActiveUnit({
+          surfaceId,
+          variantId,
+          label,
+          referenceCode,
+          componentName,
+          sourceFile,
+          subViewFile,
+        });
+      }
+    }, [
+      index,
+      surfaceId,
+      variantId,
+      label,
+      referenceCode,
+      componentName,
+      sourceFile,
+      subViewFile,
+      setActiveUnit,
+    ]);
+
+    const ledgerRecord = UI_APPROVAL_LEDGER.surfaces[surfaceId];
+    const runtimeDecision = decisionsMap[unitKey];
+    const { status, bucket, staleReason } = classifySurfaceBucket({
+      surfaceId,
+      ledgerRecord,
+      runtimeDecision,
+      globalTemplateStaleOverride: simulateTemplateStale,
+    });
+    const isFocusedUnit = activeUnitKey === unitKey;
+
     const handleCopyPath = (e: React.MouseEvent) => {
       e.stopPropagation();
       const targetPath = subViewFile
@@ -78,6 +147,7 @@ export const AuditTicketHeader: React.FC<AuditTicketHeaderProps> = React.memo(
       const lines = [
         '### [UI Audit Ticket]',
         `- **Reference Code**: \`[${referenceCode}]\``,
+        `- **Review Unit Key**: \`${unitKey}\` (Status: \`${status}\` · Bucket: \`${bucket}\`)`,
         `- **Target Component**: \`${componentName}\``,
         `- **Source File**: \`${sourceFile}\``,
         ...(subViewFile ? [`- **Sub-View File**: \`${subViewFile}\``] : []),
@@ -86,7 +156,7 @@ export const AuditTicketHeader: React.FC<AuditTicketHeaderProps> = React.memo(
         ...(description ? [`- **State Condition**: ${description}`] : []),
         `- **Active Props / Override**: \`${JSON.stringify(activeProps ?? {})}\``,
         `- **Theme Mode**: \`${isLight ? 'light' : 'dark'}\``,
-        '- **Issue Description**: ',
+        `- **Issue Description**: ${runtimeDecision?.note || ''}`,
         '',
       ];
       const text = lines.join('\n');
@@ -100,8 +170,45 @@ export const AuditTicketHeader: React.FC<AuditTicketHeaderProps> = React.memo(
       );
     };
 
+    const handleQuickDecision = (
+      e: React.MouseEvent,
+      nextStatus: 'approved' | 'rejected' | 'deferred'
+    ) => {
+      e.stopPropagation();
+      setActiveUnit({
+        surfaceId,
+        variantId,
+        label,
+        referenceCode,
+        componentName,
+        sourceFile,
+        subViewFile,
+      });
+      setDecision({
+        unitKey,
+        status: nextStatus,
+      });
+      quickNotification.info(
+        `Marked [${referenceCode}] ${label} as ${nextStatus.toUpperCase()}`
+      );
+    };
+
     return (
-      <div className="flex flex-wrap items-center justify-between gap-2 w-full">
+      <div
+        onClick={() => {
+          setActiveUnit({
+            surfaceId,
+            variantId,
+            label,
+            referenceCode,
+            componentName,
+            sourceFile,
+            subViewFile,
+          });
+          selectUnitByKey(unitKey);
+        }}
+        className="flex flex-wrap items-center justify-between gap-2 w-full"
+      >
         <div className="flex items-center gap-2 min-w-0 flex-wrap">
           <span
             className={`text-xs font-mono font-bold px-2 py-0.5 rounded border truncate ${COLOR_STYLES[badgeColor]}`}
@@ -111,7 +218,7 @@ export const AuditTicketHeader: React.FC<AuditTicketHeaderProps> = React.memo(
             [{referenceCode}] {label}
           </span>
           <span
-            className={`text-[10px] font-mono px-1.5 py-0.5 rounded border truncate max-w-[320px] ${
+            className={`text-[10px] font-mono px-1.5 py-0.5 rounded border truncate max-w-[300px] ${
               isLight
                 ? 'bg-neutral-100 border-neutral-200 text-neutral-600'
                 : 'bg-neutral-900 border-neutral-800 text-neutral-400'
@@ -120,6 +227,29 @@ export const AuditTicketHeader: React.FC<AuditTicketHeaderProps> = React.memo(
           >
             {subViewFile || sourceFile}
           </span>
+
+          {/* 3-Layer Approval & Bucket Badge */}
+          <span
+            className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border ${
+              status === 'rejected'
+                ? 'text-rose-500 bg-rose-500/15 border-rose-500/35'
+                : status === 'deferred'
+                ? 'text-amber-500 bg-amber-500/15 border-amber-500/35'
+                : bucket === 'bucket-3-template'
+                ? 'text-purple-400 bg-purple-500/15 border-purple-500/35'
+                : 'text-emerald-500 bg-emerald-500/10 border-emerald-500/25'
+            }`}
+            title={`Unit: ${unitKey} | Bucket: ${bucket} (${staleReason})`}
+          >
+            {status === 'rejected'
+              ? '🔴 REJECTED'
+              : status === 'deferred'
+              ? '🟡 DEFERRED'
+              : bucket === 'bucket-3-template'
+              ? '🟣 TEMPLATE-STALE'
+              : '🟢 APPROVED'}
+          </span>
+
           {tunerStatus && (
             <span
               className={`text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded border ${
@@ -135,7 +265,64 @@ export const AuditTicketHeader: React.FC<AuditTicketHeaderProps> = React.memo(
           )}
         </div>
 
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
+          {/* Quick Inline Triage Buttons (A / R / D) */}
+          <div
+            className={`inline-flex items-center rounded-md border p-0.5 gap-0.5 ${
+              isFocusedUnit
+                ? 'border-amber-500/60 bg-amber-500/10'
+                : isLight
+                ? 'border-neutral-200 bg-neutral-50'
+                : 'border-neutral-800 bg-neutral-900'
+            }`}
+            title="Quick Triage for this SurfaceVariantUnit (Click to focus for keyboard A/R/D)"
+          >
+            <button
+              type="button"
+              onClick={(e) => handleQuickDecision(e, 'approved')}
+              title="Approve this unit (A)"
+              className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold cursor-pointer transition-colors ${
+                status === 'approved'
+                  ? 'bg-emerald-500 text-neutral-950'
+                  : 'text-emerald-500 hover:bg-emerald-500/15'
+              }`}
+            >
+              <CheckCircle2 className="h-3 w-3 inline mr-0.5" />A
+            </button>
+            <button
+              type="button"
+              onClick={(e) => handleQuickDecision(e, 'rejected')}
+              title="Instant Reject this unit without mandatory reason (R)"
+              className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold cursor-pointer transition-colors ${
+                status === 'rejected'
+                  ? 'bg-rose-500 text-white'
+                  : 'text-rose-500 hover:bg-rose-500/15'
+              }`}
+            >
+              <XCircle className="h-3 w-3 inline mr-0.5" />R
+            </button>
+            <button
+              type="button"
+              onClick={(e) => handleQuickDecision(e, 'deferred')}
+              title="Defer this unit (D)"
+              className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold cursor-pointer transition-colors ${
+                status === 'deferred'
+                  ? 'bg-amber-500 text-neutral-950'
+                  : 'text-amber-500 hover:bg-amber-500/15'
+              }`}
+            >
+              <Clock className="h-3 w-3 inline mr-0.5" />D
+            </button>
+            {isFocusedUnit && (
+              <span
+                className="px-1 text-[9px] font-mono font-bold text-amber-500"
+                title="Currently focused in bottom Rapid Review & Triage Bar"
+              >
+                <Target className="h-2.5 w-2.5 inline" />
+              </span>
+            )}
+          </div>
+
           <button
             type="button"
             onClick={handleCopyPath}
@@ -192,4 +379,3 @@ export const AuditTicketHeader: React.FC<AuditTicketHeaderProps> = React.memo(
 );
 
 AuditTicketHeader.displayName = 'AuditTicketHeader';
-
