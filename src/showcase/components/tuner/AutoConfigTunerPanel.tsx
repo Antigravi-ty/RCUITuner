@@ -9,7 +9,6 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { SliderControl } from '../../../ui-core/primitives/SliderControl';
-import { ToggleSwitch } from '../../../ui-core/primitives/ToggleSwitch';
 import { SegmentedSwitch } from '../../../ui-core/primitives/SegmentedSwitch';
 import { quickNotification } from '../../../ui-core/stores/quickNotificationStore';
 import {
@@ -22,6 +21,7 @@ import {
   subscribeSurfaceCalibration,
 } from '../../../ui-core/manifest/surfaceCalibration';
 import type { SurfaceSizingSpec } from '../../../ui-core/manifest/surfaceMetaTypes';
+import { AutoConfigFieldControlRow } from './AutoConfigFieldControlRow';
 
 type ImportMetaGlobFn = <T = unknown>(
   pattern: string,
@@ -46,11 +46,7 @@ export interface DiscoveredDefaultConfigEntry {
 function collectDiscoveredDefaultConfigs(): DiscoveredDefaultConfigEntry[] {
   const entries: DiscoveredDefaultConfigEntry[] = [];
   for (const [modPath, mod] of Object.entries(CONFIG_MODULES)) {
-    const fileStem =
-      modPath
-        .split('/')
-        .pop()
-        ?.replace(/\.ts$/, '') || modPath;
+    const fileStem = modPath.split('/').pop()?.replace(/\.ts$/, '') || modPath;
     for (const [expName, expVal] of Object.entries(mod ?? {})) {
       if (
         expName.startsWith('DEFAULT_') &&
@@ -79,32 +75,6 @@ function collectDiscoveredDefaultConfigs(): DiscoveredDefaultConfigEntry[] {
 }
 
 const DISCOVERED_CONFIGS = collectDiscoveredDefaultConfigs();
-
-function inferNumericRange(key: string, defaultVal: number): {
-  min: number;
-  max: number;
-  step: number;
-} {
-  const lower = key.toLowerCase();
-  if (lower.includes('opacity') || lower.includes('alpha') || (defaultVal >= 0 && defaultVal <= 1 && !Number.isInteger(defaultVal))) {
-    return { min: 0, max: 1, step: 0.01 };
-  }
-  if (lower.includes('deg') || lower.includes('angle') || lower.includes('hue')) {
-    return { min: -180, max: 360, step: 1 };
-  }
-  if (lower.includes('pct') || lower.includes('percent')) {
-    return { min: 0, max: 100, step: 1 };
-  }
-  if (defaultVal === 0) {
-    return { min: 0, max: 100, step: 1 };
-  }
-  const abs = Math.abs(defaultVal);
-  const isFloat = !Number.isInteger(defaultVal);
-  const min = defaultVal < 0 ? Math.floor(defaultVal * 2) : 0;
-  const max = Math.max(1, Math.ceil(abs * 3));
-  const step = isFloat ? Number((abs / 50).toFixed(3)) || 0.01 : 1;
-  return { min, max, step };
-}
 
 export interface AutoConfigTunerPanelProps {
   surfaceId: string;
@@ -136,13 +106,8 @@ export const AutoConfigTunerPanel: React.FC<AutoConfigTunerPanelProps> = React.m
     const [showJsonPreview, setShowJsonPreview] = useState(false);
     const [, setTick] = useState(0);
 
-    useEffect(() => {
-      return subscribeSurfaceCalibration(() => {
-        setTick((t) => t + 1);
-      });
-    }, []);
+    useEffect(() => subscribeSurfaceCalibration(() => setTick((t) => t + 1)), []);
 
-    // Auto-match best default config for this surfaceId
     const defaultMatchedConfigName = useMemo(() => {
       const cleanId = surfaceId
         .replace(/^(floating:|recipe:)/, '')
@@ -156,20 +121,14 @@ export const AutoConfigTunerPanel: React.FC<AutoConfigTunerPanelProps> = React.m
       return matched?.exportName ?? DISCOVERED_CONFIGS[0]?.exportName ?? '';
     }, [surfaceId]);
 
-    const [selectedConfigName, setSelectedConfigName] = useState<string>(
-      defaultMatchedConfigName
-    );
+    const [selectedConfigName, setSelectedConfigName] = useState<string>(defaultMatchedConfigName);
 
     useEffect(() => {
-      if (defaultMatchedConfigName) {
-        setSelectedConfigName(defaultMatchedConfigName);
-      }
+      if (defaultMatchedConfigName) setSelectedConfigName(defaultMatchedConfigName);
     }, [defaultMatchedConfigName]);
 
     const activeConfigEntry = useMemo(
-      () =>
-        DISCOVERED_CONFIGS.find((c) => c.exportName === selectedConfigName) ??
-        DISCOVERED_CONFIGS[0],
+      () => DISCOVERED_CONFIGS.find((c) => c.exportName === selectedConfigName) ?? DISCOVERED_CONFIGS[0],
       [selectedConfigName]
     );
 
@@ -185,9 +144,7 @@ export const AutoConfigTunerPanel: React.FC<AutoConfigTunerPanelProps> = React.m
 
     const handleConfigFieldChange = (fieldKey: string, nextValue: unknown) => {
       setRuntimeSurfaceCalibrationOverride(surfaceId, {
-        defaultConfigOverrides: {
-          [fieldKey]: nextValue,
-        },
+        defaultConfigOverrides: { [fieldKey]: nextValue },
       });
     };
 
@@ -197,9 +154,7 @@ export const AutoConfigTunerPanel: React.FC<AutoConfigTunerPanelProps> = React.m
         navigator.clipboard.writeText(json).catch(() => {});
       }
       setCopiedJson(true);
-      quickNotification.success(
-        'Copied surfaceCalibrationOverrides.json to clipboard!'
-      );
+      quickNotification.success('Copied surfaceCalibrationOverrides.json to clipboard!');
       window.setTimeout(() => setCopiedJson(false), 1800);
     };
 
@@ -219,6 +174,9 @@ export const AutoConfigTunerPanel: React.FC<AutoConfigTunerPanelProps> = React.m
     }, [activeConfigEntry]);
 
     const hasSurfaceOverride = Boolean(getSurfaceCalibrationOverride(surfaceId));
+    const btnSecondaryClass = isLight
+      ? 'bg-white hover:bg-neutral-100 border-neutral-200 text-neutral-700'
+      : 'bg-neutral-950 hover:bg-neutral-800 border-neutral-800 text-neutral-300';
 
     return (
       <section
@@ -240,9 +198,7 @@ export const AutoConfigTunerPanel: React.FC<AutoConfigTunerPanelProps> = React.m
             <span className="px-2 py-0.5 rounded bg-amber-500/15 text-amber-500 border border-amber-500/30 text-[10px] font-bold">
               {surfaceId}
             </span>
-            {surfaceLabel && (
-              <span className="text-[11px] opacity-75">· {surfaceLabel}</span>
-            )}
+            {surfaceLabel && <span className="text-[11px] opacity-75">· {surfaceLabel}</span>}
             {hasSurfaceOverride && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-500 border border-emerald-500/30 text-[10px] font-bold">
                 <Sparkles className="h-3 w-3" />
@@ -255,11 +211,7 @@ export const AutoConfigTunerPanel: React.FC<AutoConfigTunerPanelProps> = React.m
             <button
               type="button"
               onClick={() => setShowJsonPreview((v) => !v)}
-              className={`px-2.5 py-1 rounded-lg border text-[11px] cursor-pointer transition-colors ${
-                isLight
-                  ? 'bg-white hover:bg-neutral-100 border-neutral-200 text-neutral-700'
-                  : 'bg-neutral-950 hover:bg-neutral-800 border-neutral-800 text-neutral-300'
-              }`}
+              className={`px-2.5 py-1 rounded-lg border text-[11px] cursor-pointer transition-colors ${btnSecondaryClass}`}
             >
               {showJsonPreview ? 'Hide Ledger JSON' : 'Preview Ledger JSON'}
             </button>
@@ -274,21 +226,13 @@ export const AutoConfigTunerPanel: React.FC<AutoConfigTunerPanelProps> = React.m
               }`}
             >
               {copiedJson ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-              <span>
-                {copiedJson
-                  ? 'Copied Overrides JSON!'
-                  : 'Export surfaceCalibrationOverrides.json'}
-              </span>
+              <span>{copiedJson ? 'Copied Overrides JSON!' : 'Export surfaceCalibrationOverrides.json'}</span>
             </button>
 
             <button
               type="button"
               onClick={handleResetSurface}
-              className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg border text-[11px] cursor-pointer transition-colors ${
-                isLight
-                  ? 'bg-white hover:bg-neutral-100 border-neutral-200 text-neutral-600'
-                  : 'bg-neutral-950 hover:bg-neutral-800 border-neutral-800 text-neutral-400'
-              }`}
+              className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg border text-[11px] cursor-pointer transition-colors ${btnSecondaryClass}`}
               title="Reset runtime calibration overrides for this surface"
             >
               <RotateCcw className="h-3 w-3" />
@@ -298,11 +242,7 @@ export const AutoConfigTunerPanel: React.FC<AutoConfigTunerPanelProps> = React.m
             <button
               type="button"
               onClick={() => setIsCollapsed((v) => !v)}
-              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[11px] cursor-pointer ${
-                isLight
-                  ? 'bg-white hover:bg-neutral-100 border-neutral-200 text-neutral-700'
-                  : 'bg-neutral-950 hover:bg-neutral-800 border-neutral-800 text-neutral-300'
-              }`}
+              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[11px] cursor-pointer ${btnSecondaryClass}`}
             >
               {isCollapsed ? (
                 <>
@@ -320,20 +260,13 @@ export const AutoConfigTunerPanel: React.FC<AutoConfigTunerPanelProps> = React.m
         </div>
 
         {showJsonPreview && (
-          <pre
-            className={`mt-3 p-3 rounded-xl border text-[11px] overflow-x-auto max-h-60 overflow-y-auto select-text ${
-              isLight
-                ? 'bg-neutral-900 text-emerald-300 border-neutral-800'
-                : 'bg-black/85 text-emerald-300 border-neutral-800'
-            }`}
-          >
+          <pre className={`mt-3 p-3 rounded-xl border text-[11px] overflow-x-auto max-h-60 overflow-y-auto select-text ${isLight ? 'bg-neutral-900 text-emerald-300 border-neutral-800' : 'bg-black/85 text-emerald-300 border-neutral-800'}`}>
             {exportSurfaceCalibrationOverridesJson()}
           </pre>
         )}
 
         {!isCollapsed && (
           <div className="mt-4 pt-3 border-t border-neutral-200/80 dark:border-neutral-800 grid grid-cols-1 lg:grid-cols-12 gap-4">
-            {/* Left Column: Surface Sizing & Mode Calibration */}
             <div className="lg:col-span-5 flex flex-col gap-3 p-3 rounded-xl border bg-white/60 dark:bg-neutral-950/60 border-neutral-200/80 dark:border-neutral-800">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-amber-500">
@@ -343,11 +276,7 @@ export const AutoConfigTunerPanel: React.FC<AutoConfigTunerPanelProps> = React.m
                   size="sm"
                   isLight={isLight}
                   value={calibratedSizing.mode ?? 'fixed'}
-                  onChange={(val) =>
-                    handleSizingChange({
-                      mode: val as SurfaceSizingSpec['mode'],
-                    })
-                  }
+                  onChange={(val) => handleSizingChange({ mode: val as SurfaceSizingSpec['mode'] })}
                   options={[
                     { value: 'fixed', label: 'Fixed' },
                     { value: 'adaptive', label: 'Adaptive' },
@@ -402,7 +331,6 @@ export const AutoConfigTunerPanel: React.FC<AutoConfigTunerPanelProps> = React.m
               />
             </div>
 
-            {/* Right Column: Auto-Discovered DEFAULT_*_CONFIG Inspector */}
             <div className="lg:col-span-7 flex flex-col gap-3 p-3 rounded-xl border bg-white/60 dark:bg-neutral-950/60 border-neutral-200/80 dark:border-neutral-800">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-sky-500">
@@ -413,9 +341,7 @@ export const AutoConfigTunerPanel: React.FC<AutoConfigTunerPanelProps> = React.m
                   value={selectedConfigName}
                   onChange={(e) => setSelectedConfigName(e.target.value)}
                   className={`px-2.5 py-1 rounded-lg border text-[11px] font-mono outline-none cursor-pointer ${
-                    isLight
-                      ? 'bg-white border-neutral-200 text-neutral-800'
-                      : 'bg-neutral-900 border-neutral-700 text-neutral-200'
+                    isLight ? 'bg-white border-neutral-200 text-neutral-800' : 'bg-neutral-900 border-neutral-700 text-neutral-200'
                   }`}
                 >
                   {DISCOVERED_CONFIGS.map((cfg) => (
@@ -429,63 +355,17 @@ export const AutoConfigTunerPanel: React.FC<AutoConfigTunerPanelProps> = React.m
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-80 overflow-y-auto pr-1">
                 {scalarEntries.map(([fieldKey, rawDefaultVal]) => {
                   const currentVal =
-                    (calibratedConfig as Record<string, unknown>)[fieldKey] ??
-                    rawDefaultVal;
-
-                  if (typeof rawDefaultVal === 'number') {
-                    const range = inferNumericRange(fieldKey, rawDefaultVal);
-                    return (
-                      <SliderControl
-                        key={fieldKey}
-                        label={fieldKey}
-                        value={Number(currentVal)}
-                        min={range.min}
-                        max={range.max}
-                        step={range.step}
-                        isLight={isLight}
-                        onChange={(val) => handleConfigFieldChange(fieldKey, val)}
-                      />
-                    );
-                  }
-
-                  if (typeof rawDefaultVal === 'boolean') {
-                    return (
-                      <div
-                        key={fieldKey}
-                        className="flex items-center justify-between px-2.5 py-2 rounded-lg border border-neutral-200/70 dark:border-neutral-800"
-                      >
-                        <span className="text-[11px] truncate">{fieldKey}</span>
-                        <ToggleSwitch
-                          checked={Boolean(currentVal)}
-                          isLight={isLight}
-                          onChange={(checked) =>
-                            handleConfigFieldChange(fieldKey, checked)
-                          }
-                        />
-                      </div>
-                    );
-                  }
-
-                  if (typeof rawDefaultVal === 'string') {
-                    return (
-                      <label
-                        key={fieldKey}
-                        className="flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg border border-neutral-200/70 dark:border-neutral-800"
-                      >
-                        <span className="text-[11px] truncate">{fieldKey}</span>
-                        <input
-                          type="color"
-                          value={String(currentVal)}
-                          onChange={(e) =>
-                            handleConfigFieldChange(fieldKey, e.target.value)
-                          }
-                          className="h-6 w-10 rounded cursor-pointer border-0 bg-transparent"
-                        />
-                      </label>
-                    );
-                  }
-
-                  return null;
+                    (calibratedConfig as Record<string, unknown>)[fieldKey] ?? rawDefaultVal;
+                  return (
+                    <AutoConfigFieldControlRow
+                      key={fieldKey}
+                      fieldKey={fieldKey}
+                      rawDefaultVal={rawDefaultVal}
+                      currentVal={currentVal}
+                      onChange={handleConfigFieldChange}
+                      isLight={isLight}
+                    />
+                  );
                 })}
               </div>
             </div>

@@ -9,79 +9,22 @@ import {
   type PresetConfig,
   type FloatingWindowVisibilityTier,
 } from '../../ui-core/stores/floatingPresets';
-import {
-  DEV_PRESET_WINDOWS,
-  PRESET_WINDOWS,
-} from '../../ui-core/stores/devFloatingPresets';
-import { getDiscoveredFloatingSurfaces } from '../../ui-core/manifest/floatingSurfaceRegistry';
-import {
-  resolveCalibratedSurfaceSizing,
-  subscribeSurfaceCalibration,
-} from '../../ui-core/manifest/surfaceCalibration';
+import { PRESET_WINDOWS } from '../../ui-core/stores/devFloatingPresets';
+import { subscribeSurfaceCalibration } from '../../ui-core/manifest/surfaceCalibration';
 import { FloatingWindowsCanvasStage } from './floating-windows/FloatingWindowsCanvasStage';
 import { FloatingWindowsFlatMatrixWall } from './floating-windows/FloatingWindowsFlatMatrixWall';
 import { FloatingWindowsScannerControlBar } from './floating-windows/FloatingWindowsScannerControlBar';
 import { FloatingWindowsStageToolbar } from './floating-windows/FloatingWindowsStageToolbar';
 import { FloatingWindowsAuditSection } from './floating-windows/FloatingWindowsAuditSection';
-import { useFloatingWindowsCalibration } from './floating-windows/useFloatingWindowsCalibration';
+import {
+  buildMergedFloatingPresets,
+  useFloatingWindowsCalibration,
+} from './floating-windows/useFloatingWindowsCalibration';
 import { RapidReviewTriageBar } from '../components/review/RapidReviewTriageBar';
 import { useReviewLedgerStore } from '../components/review/reviewLedgerStore';
 import { AutoConfigTunerPanel } from '../components/tuner/AutoConfigTunerPanel';
 
 const useState = createScopedSyncedState('page:floating-windows-v2');
-
-function buildMergedFloatingPresets(tier: FloatingWindowVisibilityTier): PresetConfig[] {
-  const staticList = tier === 'user' ? USER_PRESET_WINDOWS : DEV_PRESET_WINDOWS;
-  const byId = new Map<string, PresetConfig>();
-
-  for (const preset of staticList) {
-    const calibrated = resolveCalibratedSurfaceSizing(`floating:${preset.id}`, {
-      width: preset.width,
-      height: preset.height,
-      minWidth: preset.minWidth,
-      minHeight: preset.minHeight,
-      maxHeight: preset.maxHeight,
-      mode: preset.autoFitHeight ? 'adaptive' : 'fixed',
-    });
-    byId.set(preset.id, {
-      ...preset,
-      width: calibrated.width,
-      height: typeof calibrated.height === 'number' ? calibrated.height : preset.height,
-      minWidth: calibrated.minWidth,
-      minHeight: calibrated.minHeight ?? preset.minHeight,
-      maxHeight: calibrated.maxHeight,
-      autoFitHeight: calibrated.mode === 'adaptive' ? true : preset.autoFitHeight,
-    });
-  }
-
-  for (const entry of getDiscoveredFloatingSurfaces()) {
-    const entryTier: FloatingWindowVisibilityTier =
-      entry.meta.layer === 'floating-user' ? 'user' : 'developer';
-    if (entryTier !== tier || byId.has(entry.meta.id)) continue;
-    const calibrated = resolveCalibratedSurfaceSizing(
-      `floating:${entry.meta.id}`,
-      entry.meta.defaultSizing
-    );
-    byId.set(entry.meta.id, {
-      id: entry.meta.id,
-      title: entry.meta.title,
-      category: entry.meta.menuGroup ?? 'Developer',
-      width: calibrated.width,
-      height: typeof calibrated.height === 'number' ? calibrated.height : 580,
-      minWidth: calibrated.minWidth,
-      minHeight: calibrated.minHeight ?? 200,
-      maxHeight: calibrated.maxHeight,
-      autoFitHeight: calibrated.mode === 'adaptive',
-      resizable: true,
-      singleton: true,
-      tier: entryTier,
-      summary: entry.meta.subtitle,
-      tabs: entry.meta.variants?.map((v) => ({ id: v.variantId, label: v.label })),
-    });
-  }
-
-  return Array.from(byId.values());
-}
 
 export interface FloatingWindowsSimulationPageProps {
   isLight?: boolean;
@@ -90,11 +33,7 @@ export interface FloatingWindowsSimulationPageProps {
 export const FloatingWindowsSimulationPage: React.FC<FloatingWindowsSimulationPageProps> = ({
   isLight = false,
 }) => {
-  const {
-    totalCount,
-    spawnWithFlight,
-    clearAll,
-  } = useFloatingStore(floatingSandboxStore);
+  const { totalCount, spawnWithFlight, clearAll } = useFloatingStore(floatingSandboxStore);
 
   const [calibrationVersion, setCalibrationVersion] = React.useState(0);
   useEffect(() => {
@@ -145,10 +84,7 @@ export const FloatingWindowsSimulationPage: React.FC<FloatingWindowsSimulationPa
     'full',
     'containerPreset'
   );
-  const [boundaryLocked, setBoundaryLocked] = useState<boolean>(
-    false,
-    'boundaryLocked'
-  );
+  const [boundaryLocked, setBoundaryLocked] = useState<boolean>(false, 'boundaryLocked');
   const [manualBoundarySize, setManualBoundarySize] = useState<{
     width: number;
     height: number;
@@ -210,7 +146,6 @@ export const FloatingWindowsSimulationPage: React.FC<FloatingWindowsSimulationPa
     }
   }, [navigationSeq]);
 
-  // 2) Continuously synchronize active floating window state to URL address bar
   useEffect(() => {
     updateUrlParams({
       tier,
@@ -223,39 +158,42 @@ export const FloatingWindowsSimulationPage: React.FC<FloatingWindowsSimulationPa
     });
   }, [tier, currentPreset, activeSubTab, fwMode]);
 
-  // 3) In 'inspector' mode, automatically keep the currently selected preset window open in the isolated 6D canvas stage
-  useEffect(() => {
-    if (fwMode !== 'inspector' || !currentPreset) return;
+  const spawnPresetIntoSandbox = (preset: PresetConfig, singletonOverride?: boolean) => {
     const savedManualMinW =
-      typeof manualMinWidths[currentPreset.id] === 'number'
-        ? Math.round(manualMinWidths[currentPreset.id])
+      typeof manualMinWidths[preset.id] === 'number'
+        ? Math.round(manualMinWidths[preset.id])
         : undefined;
     const savedManualMinH =
-      typeof manualMinHeights[currentPreset.id] === 'number'
-        ? Math.round(manualMinHeights[currentPreset.id])
+      typeof manualMinHeights[preset.id] === 'number'
+        ? Math.round(manualMinHeights[preset.id])
         : undefined;
-    floatingSandboxStore.clearAll();
     floatingSandboxStore.spawnWindow({
-      id: currentPreset.id,
-      title: currentPreset.title,
-      subtitle: currentPreset.summary,
-      category: currentPreset.category,
-      width: savedManualMinW ?? currentPreset.minWidth ?? currentPreset.width,
+      id: preset.id,
+      title: preset.title,
+      subtitle: preset.summary,
+      category: preset.category,
+      width: savedManualMinW ?? preset.minWidth ?? preset.width,
       height:
         savedManualMinH !== undefined
-          ? Math.max(savedManualMinH, currentPreset.height)
-          : currentPreset.height,
-      minWidth: currentPreset.minWidth,
+          ? Math.max(savedManualMinH, preset.height)
+          : preset.height,
+      minWidth: preset.minWidth,
       manualMinWidth: savedManualMinW,
-      minHeight: currentPreset.minHeight,
+      minHeight: preset.minHeight,
       manualMinHeight: savedManualMinH,
-      maxWidth: currentPreset.maxWidth,
-      maxHeight: currentPreset.maxHeight,
-      autoFitHeight: currentPreset.autoFitHeight,
-      resizable: currentPreset.resizable,
-      singleton: true,
+      maxWidth: preset.maxWidth,
+      maxHeight: preset.maxHeight,
+      autoFitHeight: preset.autoFitHeight,
+      resizable: preset.resizable,
+      singleton: singletonOverride ?? preset.singleton,
       startMinimized: false,
     });
+  };
+
+  useEffect(() => {
+    if (fwMode !== 'inspector' || !currentPreset) return;
+    floatingSandboxStore.clearAll();
+    spawnPresetIntoSandbox(currentPreset, true);
   }, [fwMode, currentPreset?.id, currentPreset?.width, currentPreset?.height]);
 
   const handleSwitchTier = (nextTier: FloatingWindowVisibilityTier) => {
@@ -272,35 +210,7 @@ export const FloatingWindowsSimulationPage: React.FC<FloatingWindowsSimulationPa
     setSelectedWindowId(preset.id);
     setActiveSubTab(preset.tabs?.[0]?.id || '');
     if (fwMode === 'stack') {
-      const savedManualMinW =
-        typeof manualMinWidths[preset.id] === 'number'
-          ? Math.round(manualMinWidths[preset.id])
-          : undefined;
-      const savedManualMinH =
-        typeof manualMinHeights[preset.id] === 'number'
-          ? Math.round(manualMinHeights[preset.id])
-          : undefined;
-      floatingSandboxStore.spawnWindow({
-        id: preset.id,
-        title: preset.title,
-        subtitle: preset.summary,
-        category: preset.category,
-        width: savedManualMinW ?? preset.minWidth ?? preset.width,
-        height:
-          savedManualMinH !== undefined
-            ? Math.max(savedManualMinH, preset.height)
-            : preset.height,
-        minWidth: preset.minWidth,
-        manualMinWidth: savedManualMinW,
-        minHeight: preset.minHeight,
-        manualMinHeight: savedManualMinH,
-        maxWidth: preset.maxWidth,
-        maxHeight: preset.maxHeight,
-        autoFitHeight: preset.autoFitHeight,
-        resizable: preset.resizable,
-        singleton: preset.singleton,
-        startMinimized: false,
-      });
+      spawnPresetIntoSandbox(preset);
     }
   };
 
@@ -382,7 +292,6 @@ export const FloatingWindowsSimulationPage: React.FC<FloatingWindowsSimulationPa
 
   return (
     <div className="flex flex-col gap-5 w-full relative">
-      {/* Static Page Header (Nothing above the View Box ever changes) */}
       <div className="flex items-center justify-between gap-4 pb-2 border-b border-neutral-200/80 dark:border-neutral-800">
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 rounded-lg bg-amber-500/15 text-amber-500 flex items-center justify-center shrink-0">
@@ -399,7 +308,6 @@ export const FloatingWindowsSimulationPage: React.FC<FloatingWindowsSimulationPa
         </div>
       </div>
 
-      {/* 1. TOP-PINNED VIEW BOX STAGE (Directly below static page header so nothing above it ever changes vertically or horizontally) */}
       {fwMode === 'matrix' ? (
         <FloatingWindowsFlatMatrixWall
           isLight={isLight}
@@ -425,7 +333,6 @@ export const FloatingWindowsSimulationPage: React.FC<FloatingWindowsSimulationPa
         />
       )}
 
-      {/* 2. LINEAR SCANNER, BOUNDARY LOCK, MODE SWITCHER & CLEAR ALL WINDOWS (Placed BELOW the View Box) */}
       <FloatingWindowsStageToolbar
         isLight={isLight}
         tier={tier}
@@ -460,7 +367,6 @@ export const FloatingWindowsSimulationPage: React.FC<FloatingWindowsSimulationPa
         activeSubTab={activeSubTab}
       />
 
-      {/* Strict User vs Developer Control Bar + Window Pill Grid & Calibration (Below the preview stage) */}
       <FloatingWindowsScannerControlBar
         isLight={isLight}
         tier={tier}

@@ -18,8 +18,7 @@ import {
 import { useReviewLedgerStore } from './review/reviewLedgerStore';
 
 export interface AuditTicketHeaderProps {
-  index?: number;
-  label: string;
+  index?: number; label: string;
   description?: string;
   referenceCode: string;
   componentName: string;
@@ -50,26 +49,22 @@ export function formatHostSourcePath(rawPath?: string): string {
   return `src/ui-core/${rawPath.replace(/^\.?\//, '')}`;
 }
 
-/**
- * Compact header bar rendered above audit stages and flat matrix cards.
- * Displays the state index/title, source path, 3-Bucket approval status,
- * quick Approve/Reject/Defer triage buttons, and one-click "Copy Path" / "Copy Ticket".
- */
 export const AuditTicketHeader: React.FC<AuditTicketHeaderProps> = React.memo(
-  ({
-    index,
-    label,
-    description,
-    referenceCode,
-    componentName,
-    sourceFile: rawSourceFile,
-    subViewFile: rawSubViewFile,
-    stateId,
-    activeProps,
-    badgeColor = 'amber',
-    tunerStatus,
-    isLight = false,
-  }) => {
+  (props) => {
+    const {
+      index,
+      label,
+      description,
+      referenceCode,
+      componentName,
+      sourceFile: rawSourceFile,
+      subViewFile: rawSubViewFile,
+      stateId,
+      activeProps,
+      badgeColor = 'amber',
+      tunerStatus,
+      isLight = false,
+    } = props;
     const sourceFile = formatHostSourcePath(rawSourceFile);
     const subViewFile = rawSubViewFile ? formatHostSourcePath(rawSubViewFile) : undefined;
     const [copiedTicket, setCopiedTicket] = useState(false);

@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LoadingStep, LoadingError } from './types';
-import { AlertCircle, RefreshCw, AlertTriangle, ShieldAlert, Check, Copy } from 'lucide-react';
+import { AlertCircle, RefreshCw, ShieldAlert } from 'lucide-react';
 
 export interface DualProgressBarProps {
   steps: LoadingStep[];
@@ -16,10 +16,6 @@ export interface DualProgressBarProps {
   className?: string;
 }
 
-/**
- * Standard overall progress calculation algorithm.
- * Integrates determinate ratios with stable indeterminate anchors to prevent erratic jumping.
- */
 export const calculateOverallProgress = (
   steps: LoadingStep[],
   currentStepIndex: number
@@ -29,13 +25,8 @@ export const calculateOverallProgress = (
   steps.forEach((step, idx) => {
     if (idx < currentStepIndex || step.status === 'completed') {
       completedRatio += 1.0;
-    } else if (idx === currentStepIndex && step.status === 'active') {
-      if (step.type === 'determinate') {
-        const subFraction = Math.max(0, Math.min(1, (step.progressPct || 0) / 100));
-        completedRatio += subFraction;
-      } else {
-        completedRatio += 0;
-      }
+    } else if (idx === currentStepIndex && step.status === 'active' && step.type === 'determinate') {
+      completedRatio += Math.max(0, Math.min(1, (step.progressPct || 0) / 100));
     }
   });
   return Math.min(100, Math.max(0, (completedRatio / steps.length) * 100));
@@ -49,16 +40,11 @@ export const formatBytes = (bytes?: number): string => {
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
 };
 
-export const formatSpeed = (bps?: number): string => {
-  if (!bps || bps <= 0) return '';
-  return `${formatBytes(bps)}/s`;
-};
+export const formatSpeed = (bps?: number): string => (!bps || bps <= 0 ? '' : `${formatBytes(bps)}/s`);
 
 export const formatTimeRemaining = (seconds?: number): string => {
   if (seconds === undefined || seconds === null || seconds <= 0) return '';
-  if (seconds < 60) {
-    return `About ${Math.ceil(seconds)} seconds remaining`;
-  }
+  if (seconds < 60) return `About ${Math.ceil(seconds)} seconds remaining`;
   const mins = Math.ceil(seconds / 60);
   return `About ${mins} minute${mins > 1 ? 's' : ''} remaining`;
 };
@@ -94,10 +80,8 @@ export const DualProgressBar: React.FC<DualProgressBarProps> = React.memo(({
   };
 
   const hasError = !!error || currentStep.status === 'error';
-  const isIndeterminate = currentStep.type === 'indeterminate' && !hasError;
   const isDeterminate = currentStep.type === 'determinate' && !hasError;
 
-  // Sub-step progress calculation (0 - 100)
   const subStepProgress = Math.max(
     0,
     Math.min(
@@ -115,17 +99,12 @@ export const DualProgressBar: React.FC<DualProgressBarProps> = React.memo(({
       data-ui-element="dual-progress-bar"
       className={`flex flex-col gap-5 w-full max-w-[560px] mx-auto select-none transition-colors ${className}`}
     >
-      {/* 1. LAYER ONE: Overall Pipeline Progress () */}
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center justify-between text-xs font-mono font-medium tracking-tight">
           <div className="flex items-center gap-1.5">
             <span
               className={`font-bold uppercase tracking-wider text-[11px] ${
-                hasError
-                  ? 'text-red-500'
-                  : resolvedIsLight
-                  ? 'text-neutral-500'
-                  : 'text-neutral-400'
+                hasError ? 'text-red-500' : resolvedIsLight ? 'text-neutral-500' : 'text-neutral-400'
               }`}
             >
               Step {Math.min(currentStepIndex + 1, steps.length)} of {steps.length}
@@ -142,18 +121,13 @@ export const DualProgressBar: React.FC<DualProgressBarProps> = React.memo(({
 
           <span
             className={`font-black tabular-nums text-xs ${
-              hasError
-                ? 'text-red-500'
-                : resolvedIsLight
-                ? 'text-neutral-800'
-                : 'text-neutral-200'
+              hasError ? 'text-red-500' : resolvedIsLight ? 'text-neutral-800' : 'text-neutral-200'
             }`}
           >
             {Math.round(effectiveOverallProgressPct)}%
           </span>
         </div>
 
-        {/* Overall Progress Bar Track */}
         <div
           className={`h-1.5 w-full rounded-full overflow-hidden relative transition-colors ${
             hasError
@@ -180,22 +154,16 @@ export const DualProgressBar: React.FC<DualProgressBarProps> = React.memo(({
         </div>
       </div>
 
-      {/* 2. LAYER TWO: Current Micro-Step Progress () */}
       <div className="flex flex-col gap-1.5">
         <div className="flex items-baseline justify-between text-xs">
           <span
             className={`font-semibold tracking-tight text-sm truncate max-w-[360px] ${
-              hasError
-                ? 'text-red-500'
-                : resolvedIsLight
-                ? 'text-neutral-900'
-                : 'text-white'
+              hasError ? 'text-red-500' : resolvedIsLight ? 'text-neutral-900' : 'text-white'
             }`}
           >
             {currentStep.title}
           </span>
 
-          {/* Micro metrics header badge */}
           <div className="font-mono text-xs tabular-nums text-right shrink-0">
             {hasError ? (
               <span className="text-red-500 font-bold flex items-center gap-1">
@@ -220,7 +188,6 @@ export const DualProgressBar: React.FC<DualProgressBarProps> = React.memo(({
           </div>
         </div>
 
-        {/* Micro Step Track (Height 8px / Apple rounded-full) */}
         <div
           className={`h-2 w-full rounded-full overflow-hidden relative transition-colors ${
             hasError
@@ -231,10 +198,8 @@ export const DualProgressBar: React.FC<DualProgressBarProps> = React.memo(({
           }`}
         >
           {hasError ? (
-            /* Error red fill */
             <div key="micro-error" className="h-full w-full bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.7)]" />
           ) : isDeterminate ? (
-            /* Determinate fill: Strictly anchored left-to-right */
             <motion.div
               key={`micro-determinate-${currentStep.id}`}
               className={`h-full rounded-full absolute top-0 bottom-0 left-0 ${
@@ -246,9 +211,7 @@ export const DualProgressBar: React.FC<DualProgressBarProps> = React.memo(({
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             />
           ) : (
-            /* Indeterminate Apple-style shimmering wave */
             <div key="micro-indeterminate" className="relative w-full h-full overflow-hidden">
-              {/* Subtle ambient pulse background to indicate active processing without freezing */}
               <div
                 className={`absolute inset-0 rounded-full animate-pulse opacity-40 ${
                   resolvedIsLight ? 'bg-amber-500/30' : 'bg-amber-400/25'
@@ -261,20 +224,13 @@ export const DualProgressBar: React.FC<DualProgressBarProps> = React.memo(({
                     ? 'bg-gradient-to-r from-transparent via-amber-500/80 to-transparent'
                     : 'bg-gradient-to-r from-transparent via-amber-300/80 to-transparent'
                 }`}
-                animate={{
-                  x: ['-100%', '300%'],
-                }}
-                transition={{
-                  repeat: Infinity,
-                  duration: 1.6,
-                  ease: 'easeInOut',
-                }}
+                animate={{ x: ['-100%', '300%'] }}
+                transition={{ repeat: Infinity, duration: 1.6, ease: 'easeInOut' }}
               />
             </div>
           )}
         </div>
 
-        {/* Lower Info & Metrics (Apple download style / compile status) */}
         <div className="flex items-center justify-between text-[11px] font-mono min-h-[18px]">
           {hasError ? (
             <span className="text-red-500 font-medium">
@@ -284,8 +240,7 @@ export const DualProgressBar: React.FC<DualProgressBarProps> = React.memo(({
             <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400">
               {currentStep.bytesLoaded && currentStep.bytesTotal && (
                 <span>
-                  {formatBytes(currentStep.bytesLoaded)} of {formatBytes(currentStep.bytesTotal)} (
-                  {Math.round(subStepProgress)}%)
+                  {formatBytes(currentStep.bytesLoaded)} of {formatBytes(currentStep.bytesTotal)} ({Math.round(subStepProgress)}%)
                 </span>
               )}
               {currentStep.speedBps && currentStep.speedBps > 0 && (
@@ -302,7 +257,6 @@ export const DualProgressBar: React.FC<DualProgressBarProps> = React.memo(({
               )}
             </div>
           ) : (
-            /* Indeterminate info: "" */
             <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400">
               <span className="inline-block animate-pulse">●</span>
               <span>
@@ -314,7 +268,6 @@ export const DualProgressBar: React.FC<DualProgressBarProps> = React.memo(({
         </div>
       </div>
 
-      {/* 3. ERROR BANNER & POPUP () */}
       <AnimatePresence>
         {hasError && (
           <motion.div
@@ -360,7 +313,6 @@ export const DualProgressBar: React.FC<DualProgressBarProps> = React.memo(({
               </div>
             </div>
 
-            {/* Error Action Buttons */}
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-red-200/60 dark:border-red-900/40">
               {onReset && (
                 <button

@@ -2,9 +2,69 @@ import React, { useEffect } from 'react';
 import { quickNotification } from '../../../ui-core/stores/quickNotificationStore';
 import { floatingSandboxStore, useFloatingStore } from '../../../ui-core/stores/floatingStore';
 import { createScopedSyncedState } from '../../stores/crossClientSync';
-import type { PresetConfig } from '../../../ui-core/stores/floatingPresets';
+import {
+  USER_PRESET_WINDOWS,
+  type FloatingWindowVisibilityTier,
+  type PresetConfig,
+} from '../../../ui-core/stores/floatingPresets';
+import { DEV_PRESET_WINDOWS } from '../../../ui-core/stores/devFloatingPresets';
+import { getDiscoveredFloatingSurfaces } from '../../../ui-core/manifest/floatingSurfaceRegistry';
+import { resolveCalibratedSurfaceSizing } from '../../../ui-core/manifest/surfaceCalibration';
 
 const useSyncedState = createScopedSyncedState('page:floating-windows-v2');
+
+export function buildMergedFloatingPresets(tier: FloatingWindowVisibilityTier): PresetConfig[] {
+  const staticList = tier === 'user' ? USER_PRESET_WINDOWS : DEV_PRESET_WINDOWS;
+  const byId = new Map<string, PresetConfig>();
+
+  for (const preset of staticList) {
+    const calibrated = resolveCalibratedSurfaceSizing(`floating:${preset.id}`, {
+      width: preset.width,
+      height: preset.height,
+      minWidth: preset.minWidth,
+      minHeight: preset.minHeight,
+      maxHeight: preset.maxHeight,
+      mode: preset.autoFitHeight ? 'adaptive' : 'fixed',
+    });
+    byId.set(preset.id, {
+      ...preset,
+      width: calibrated.width,
+      height: typeof calibrated.height === 'number' ? calibrated.height : preset.height,
+      minWidth: calibrated.minWidth,
+      minHeight: calibrated.minHeight ?? preset.minHeight,
+      maxHeight: calibrated.maxHeight,
+      autoFitHeight: calibrated.mode === 'adaptive' ? true : preset.autoFitHeight,
+    });
+  }
+
+  for (const entry of getDiscoveredFloatingSurfaces()) {
+    const entryTier: FloatingWindowVisibilityTier =
+      entry.meta.layer === 'floating-user' ? 'user' : 'developer';
+    if (entryTier !== tier || byId.has(entry.meta.id)) continue;
+    const calibrated = resolveCalibratedSurfaceSizing(
+      `floating:${entry.meta.id}`,
+      entry.meta.defaultSizing
+    );
+    byId.set(entry.meta.id, {
+      id: entry.meta.id,
+      title: entry.meta.title,
+      category: entry.meta.menuGroup ?? 'Developer',
+      width: calibrated.width,
+      height: typeof calibrated.height === 'number' ? calibrated.height : 580,
+      minWidth: calibrated.minWidth,
+      minHeight: calibrated.minHeight ?? 200,
+      maxHeight: calibrated.maxHeight,
+      autoFitHeight: calibrated.mode === 'adaptive',
+      resizable: true,
+      singleton: true,
+      tier: entryTier,
+      summary: entry.meta.subtitle,
+      tabs: entry.meta.variants?.map((v) => ({ id: v.variantId, label: v.label })),
+    });
+  }
+
+  return Array.from(byId.values());
+}
 
 export function useFloatingWindowsCalibration(currentPreset?: PresetConfig) {
   const { windows, updateSize, updateMinWidth, updateMinHeight } =

@@ -19,10 +19,73 @@ export interface OverviewPageProps {
   onSelectTab?: (tab: ShowcaseTab) => void;
 }
 
+const DECOUPLING_AUDIT_CARDS = [
+  {
+    title: '1. zero Barrel Forwarding and direct module addressing',
+    body: 'Full-warehouse redundancy elimination index.ts Barrel Forward File. All imports point directly to specific physical files (e.g. src/ui-core/tokens/spacing, src/ui-core/compounds/Dialogue), eliminating implicit circular dependencies and full-project recompilation.',
+  },
+  {
+    title: '2. Zero lateral coupling between same-layer primitives and layout',
+    body: 'L1 DualGrabberSlider and SliderControl are completely independent; L2 Panel, MenuContainer, and HudAnchorStage individually consume L1 tokens with no cross-referencing.',
+  },
+  {
+    title: '3. L5 Four major professional domains 100% Orthogonal Isolation',
+    body: '5A (src/ui-core/hud), 5B (src/ui-core/charts), and 5C (src/ui-core/viewport) have zero cross-module imports; 5B chart library has zero dependencies on L1–L4 for single-file portability.',
+  },
+  {
+    title: '4. L6 Recipes and L5 Zero-reverse type coupling',
+    body: 'src/ui-core/recipes/* top-level menu panels co-locate SURFACE_META and communicate via narrow Store-First props so each Recipe remains independently portable.',
+  },
+];
+
+const NPM_DRAWBACKS = [
+  [
+    'Agent Become a black-box blind',
+    'Components packed inside node_modules prevent AI Agents from inspecting source code and DOM structure for fine-tuning.',
+  ],
+  [
+    'Heavy release cycle',
+    'Modifying one padding or adding a slot requires rebundling, publishing, version bumping, and dependency installation.',
+  ],
+  [
+    'Tailwind Conflict with bundler styles',
+    'Cross-package style bundling easily leads to CSS conflicts or specificity drift.',
+  ],
+  [
+    'Game Binding Barrier',
+    'Game UI requires binding Three.js animation and WASM data flows that external black-box libraries cannot easily debug.',
+  ],
+] as const;
+
+const REGISTRY_ADVANTAGES = [
+  [
+    'Zero Black-box Transparency (Zero Black-Box)',
+    'Each component code is clean and clear, directly understandable by AI Agents.',
+  ],
+  [
+    '100% Tailwind Native',
+    'Uses semantically clear utility classes with no proprietary CSS-in-JS locks.',
+  ],
+  [
+    'Prompt Instruction Standardization',
+    'Declare "Use L1 UnderlineTabs + L2 3-Stage Panel" and Agents have direct access to canonical implementations.',
+  ],
+  [
+    'L7 Interactive validation sandbox',
+    'Provides full-featured scenario practice and automated regression matrices.',
+  ],
+] as const;
+
 export const OverviewPage: React.FC<OverviewPageProps> = ({ isLight = true, onSelectTab }) => {
+  const sectionClass = `flex flex-col gap-4 p-6 rounded-2xl border transition-colors ${
+    isLight
+      ? 'bg-white border-neutral-200/90 shadow-xs'
+      : 'bg-neutral-900/60 border-neutral-800 shadow-sm'
+  }`;
+  const mutedText = isLight ? 'text-neutral-600' : 'text-neutral-400';
+
   return (
     <div className="flex flex-col gap-8 max-w-5xl">
-      {/* Hero header */}
       <div className="flex flex-col gap-2">
         <div className="inline-flex items-center gap-2 text-xs font-mono text-amber-500 font-semibold uppercase tracking-wider">
           <Sparkles className="h-4 w-4" />
@@ -34,7 +97,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ isLight = true, onSe
         <p className={`text-base font-semibold ${isLight ? 'text-amber-700' : 'text-amber-400'}`}>
           Strict Adherence"Unidirectional Dependency, point and act"· Binary Choice, Unambiguous
         </p>
-        <p className={`text-sm leading-relaxed ${isLight ? 'text-neutral-600' : 'text-neutral-400'}`}>
+        <p className={`text-sm leading-relaxed ${mutedText}`}>
           For RocketSim WASM / Three.js Game And Modern Web Apply tailored standardized component
           reference library. Repository converged and upgraded to strictly follow unidirectional
           dependency flow (<code className="font-mono">L0 ← L1 ← L2 ← L3 ← L4 ← L5 ← L6 ← L7</code>
@@ -43,13 +106,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ isLight = true, onSe
       </div>
 
       {/* Section 1: L0–L7 Pyramid Matrix */}
-      <div
-        className={`flex flex-col gap-5 p-6 rounded-2xl border transition-colors ${
-          isLight
-            ? 'bg-white border-neutral-200/90 shadow-xs'
-            : 'bg-neutral-900/60 border-neutral-800 shadow-sm'
-        }`}
-      >
+      <div className={sectionClass}>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-lg font-bold flex items-center gap-2">
             <Layers className="h-5 w-5 text-amber-500" />
@@ -60,7 +117,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ isLight = true, onSe
           </span>
         </div>
 
-        <p className={`text-xs leading-relaxed ${isLight ? 'text-neutral-600' : 'text-neutral-400'}`}>
+        <p className={`text-xs leading-relaxed ${mutedText}`}>
           <strong>L0 ~ L6 Responsible for"Define standards and reusable recipes"</strong>,{' '}
           <strong>L7 Responsible for"High-order permutation and combination simulation and stress test"</strong>
           . Click any module card below to jump directly to its corresponding specification or
@@ -97,11 +154,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ isLight = true, onSe
                 </code>
               </div>
 
-              <p
-                className={`text-xs leading-relaxed ${
-                  isLight ? 'text-neutral-600' : 'text-neutral-400'
-                }`}
-              >
+              <p className={`text-xs leading-relaxed ${mutedText}`}>
                 <strong>Positioning and access rules: </strong>
                 {row.rule}
               </p>
@@ -139,14 +192,8 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ isLight = true, onSe
         </div>
       </div>
 
-      {/* Section 2: Decoupling Audit ("point and act" Architectural Guarantee) */}
-      <div
-        className={`flex flex-col gap-4 p-6 rounded-2xl border transition-colors ${
-          isLight
-            ? 'bg-white border-neutral-200/90 shadow-xs'
-            : 'bg-neutral-900/60 border-neutral-800 shadow-sm'
-        }`}
-      >
+      {/* Section 2: Decoupling Audit */}
+      <div className={sectionClass}>
         <h2 className="text-lg font-bold flex items-center gap-2">
           <ShieldCheck className="h-5 w-5 text-emerald-500" />
           <span>
@@ -155,94 +202,29 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ isLight = true, onSe
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-          <div
-            className={`p-4 rounded-xl border flex flex-col gap-2 ${
-              isLight
-                ? 'bg-emerald-50/50 border-emerald-200'
-                : 'bg-emerald-950/20 border-emerald-800/60'
-            }`}
-          >
-            <div className="flex items-center gap-2 font-bold text-emerald-600 dark:text-emerald-400">
-              <GitBranch className="h-4 w-4" />
-              <span>1. zero Barrel Forwarding and direct module addressing</span>
+          {DECOUPLING_AUDIT_CARDS.map((card) => (
+            <div
+              key={card.title}
+              className={`p-4 rounded-xl border flex flex-col gap-2 ${
+                isLight
+                  ? 'bg-emerald-50/50 border-emerald-200'
+                  : 'bg-emerald-950/20 border-emerald-800/60'
+              }`}
+            >
+              <div className="flex items-center gap-2 font-bold text-emerald-600 dark:text-emerald-400">
+                <GitBranch className="h-4 w-4" />
+                <span>{card.title}</span>
+              </div>
+              <p className={`leading-relaxed ${isLight ? 'text-neutral-700' : 'text-neutral-300'}`}>
+                {card.body}
+              </p>
             </div>
-            <p className={`leading-relaxed ${isLight ? 'text-neutral-700' : 'text-neutral-300'}`}>
-              Full-warehouse redundancy elimination <code className="font-mono">index.ts</code>{' '}
-              Barrel Forward File. All imports point directly to specific physical files (e.g.{' '}
-              <code className="font-mono">src/ui-core/tokens/spacing</code>,{' '}
-              <code className="font-mono">src/ui-core/compounds/Dialogue</code>), eliminating
-              implicit circular dependencies and full-project recompilation.
-            </p>
-          </div>
-
-          <div
-            className={`p-4 rounded-xl border flex flex-col gap-2 ${
-              isLight
-                ? 'bg-emerald-50/50 border-emerald-200'
-                : 'bg-emerald-950/20 border-emerald-800/60'
-            }`}
-          >
-            <div className="flex items-center gap-2 font-bold text-emerald-600 dark:text-emerald-400">
-              <GitBranch className="h-4 w-4" />
-              <span>2. Zero lateral coupling between same-layer primitives and layout</span>
-            </div>
-            <p className={`leading-relaxed ${isLight ? 'text-neutral-700' : 'text-neutral-300'}`}>
-              L1 <code className="font-mono">DualGrabberSlider</code> and{' '}
-              <code className="font-mono">SliderControl</code> are completely independent; L2{' '}
-              <code className="font-mono">Panel</code>,{' '}
-              <code className="font-mono">MenuContainer</code>, and{' '}
-              <code className="font-mono">HudAnchorStage</code> individually consume L1 tokens with
-              no cross-referencing.
-            </p>
-          </div>
-
-          <div
-            className={`p-4 rounded-xl border flex flex-col gap-2 ${
-              isLight
-                ? 'bg-emerald-50/50 border-emerald-200'
-                : 'bg-emerald-950/20 border-emerald-800/60'
-            }`}
-          >
-            <div className="flex items-center gap-2 font-bold text-emerald-600 dark:text-emerald-400">
-              <GitBranch className="h-4 w-4" />
-              <span>3. L5 Four major professional domains 100% Orthogonal Isolation</span>
-            </div>
-            <p className={`leading-relaxed ${isLight ? 'text-neutral-700' : 'text-neutral-300'}`}>
-              5A (<code className="font-mono">src/ui-core/hud</code>), 5B (
-              <code className="font-mono">src/ui-core/charts</code>), and 5C (
-              <code className="font-mono">src/ui-core/viewport</code>) have zero cross-module
-              imports; 5B chart library has zero dependencies on L1–L4 for single-file portability.
-            </p>
-          </div>
-
-          <div
-            className={`p-4 rounded-xl border flex flex-col gap-2 ${
-              isLight
-                ? 'bg-emerald-50/50 border-emerald-200'
-                : 'bg-emerald-950/40 border-emerald-800/60'
-            }`}
-          >
-            <div className="flex items-center gap-2 font-bold text-emerald-600 dark:text-emerald-400">
-              <GitBranch className="h-4 w-4" />
-              <span>4. L6 Recipes and L5 Zero-reverse type coupling</span>
-            </div>
-            <p className={`leading-relaxed ${isLight ? 'text-neutral-700' : 'text-neutral-300'}`}>
-              <code className="font-mono">src/ui-core/recipes/*</code> top-level menu panels
-              co-locate <code className="font-mono">SURFACE_META</code> and communicate via narrow
-              Store-First props so each Recipe remains independently portable.
-            </p>
-          </div>
+          ))}
         </div>
       </div>
 
       {/* Core Question 1: Package vs Recipe Registry */}
-      <div
-        className={`flex flex-col gap-4 p-6 rounded-2xl border transition-colors ${
-          isLight
-            ? 'bg-white border-neutral-200/90 shadow-xs'
-            : 'bg-neutral-900/60 border-neutral-800 shadow-sm'
-        }`}
-      >
+      <div className={sectionClass}>
         <h2 className="text-lg font-bold flex items-center gap-2">
           <Box className="h-5 w-5 text-amber-500" />
           <span>
@@ -250,19 +232,16 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ isLight = true, onSe
             Package"?
           </span>
         </h2>
-        <p className={`text-xs leading-relaxed ${isLight ? 'text-neutral-600' : 'text-neutral-400'}`}>
+        <p className={`text-xs leading-relaxed ${mutedText}`}>
           In game frontend and AI Agent collaboration scenarios, traditional NPM package mechanisms
           have critical pain points. We use a <strong>shadcn/ui</strong> style "Code Reference
           Registry + Co-Located Glob Discovery" model:
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-          {/* Why NOT NPM package */}
           <div
             className={`p-4 rounded-xl border flex flex-col gap-2.5 ${
-              isLight
-                ? 'bg-red-50/70 border-red-200'
-                : 'bg-red-950/40 border-red-800/80'
+              isLight ? 'bg-red-50/70 border-red-200' : 'bg-red-950/40 border-red-800/80'
             }`}
           >
             <div className="flex items-center gap-2 font-bold text-sm text-red-500">
@@ -274,27 +253,14 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ isLight = true, onSe
                 isLight ? 'text-neutral-700' : 'text-neutral-200'
               }`}
             >
-              <li>
-                <strong>Agent Become a black-box blind</strong>: Components packed inside{' '}
-                <code className="font-mono">node_modules</code> prevent AI Agents from inspecting
-                source code and DOM structure for fine-tuning.
-              </li>
-              <li>
-                <strong>Heavy release cycle</strong>: Modifying one padding or adding a slot
-                requires rebundling, publishing, version bumping, and dependency installation.
-              </li>
-              <li>
-                <strong>Tailwind Conflict with bundler styles</strong>: Cross-package style bundling
-                easily leads to CSS conflicts or specificity drift.
-              </li>
-              <li>
-                <strong>Game Binding Barrier</strong>: Game UI requires binding Three.js animation
-                and WASM data flows that external black-box libraries cannot easily debug.
-              </li>
+              {NPM_DRAWBACKS.map(([label, desc]) => (
+                <li key={label}>
+                  <strong>{label}</strong>: {desc}
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Why Recipe Registry */}
           <div
             className={`p-4 rounded-xl border flex flex-col gap-2.5 ${
               isLight
@@ -311,35 +277,18 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ isLight = true, onSe
                 isLight ? 'text-neutral-700' : 'text-neutral-200'
               }`}
             >
-              <li>
-                <strong>Zero Black-box Transparency (Zero Black-Box)</strong>: Each component code
-                is clean and clear, directly understandable by AI Agents.
-              </li>
-              <li>
-                <strong>100% Tailwind Native</strong>: Uses semantically clear utility classes with
-                no proprietary CSS-in-JS locks.
-              </li>
-              <li>
-                <strong>Prompt Instruction Standardization</strong>: Declare "Use L1 UnderlineTabs +
-                L2 3-Stage Panel" and Agents have direct access to canonical implementations.
-              </li>
-              <li>
-                <strong>L7 Interactive validation sandbox</strong>: Provides full-featured scenario
-                practice and automated regression matrices.
-              </li>
+              {REGISTRY_ADVANTAGES.map(([label, desc]) => (
+                <li key={label}>
+                  <strong>{label}</strong>: {desc}
+                </li>
+              ))}
             </ul>
           </div>
         </div>
       </div>
 
       {/* Core Question 2: Decoupling Logic & Presentation */}
-      <div
-        className={`flex flex-col gap-4 p-6 rounded-2xl border transition-colors ${
-          isLight
-            ? 'bg-white border-neutral-200/90 shadow-xs'
-            : 'bg-neutral-900/60 border-neutral-800 shadow-sm'
-        }`}
-      >
+      <div className={sectionClass}>
         <h2 className="text-lg font-bold flex items-center gap-2">
           <Cpu className="h-5 w-5 text-indigo-500" />
           <span>Decoupled Architecture: "Logic Separation, Style Separation"</span>
@@ -350,10 +299,8 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ isLight = true, onSe
           title="Example: Import by physical hierarchy, Pure presentation layer component passed Props driver"
           code={`// src/ui-core/recipes/Layer3AudioEqRecipe.tsx
 import React, { useState } from 'react';
-// L2 Layout: 3-Stage Panel Shell
 import { PanelContainer, PanelHeader, PanelContent } from '../../ui-core/layout/Panel';
 import { PanelFooter } from '../../ui-core/layout/PanelFooter';
-// L3 Compounds & L1 Primitives: Import required atomic sliders and tabs
 import { UnderlineTabs } from '../../ui-core/primitives/UnderlineTabs';
 import { SliderControl } from '../../ui-core/primitives/SliderControl';
 

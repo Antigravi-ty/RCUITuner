@@ -59,9 +59,7 @@ export const TopWorkspaceHeaderBar: React.FC<TopWorkspaceHeaderBarProps> = ({
         <span className="font-bold tracking-tight shrink-0">RCUITuner</span>
         <span className="text-neutral-400 shrink-0">/</span>
         {activeSectionMeta && (
-          <span
-            className={`hidden lg:inline-flex px-1.5 py-0.5 rounded text-[10px] font-mono font-extrabold border shrink-0 ${activeSectionMeta.badgeColor}`}
-          >
+          <span className={`hidden lg:inline-flex px-1.5 py-0.5 rounded text-[10px] font-mono font-extrabold border shrink-0 ${activeSectionMeta.badgeColor}`}>
             {activeSectionMeta.code}
           </span>
         )}
@@ -70,34 +68,28 @@ export const TopWorkspaceHeaderBar: React.FC<TopWorkspaceHeaderBarProps> = ({
         </span>
       </div>
 
-      <div
-        className={`flex items-center gap-1 p-1 rounded-xl border shrink-0 ${
-          isLight ? 'bg-neutral-100/90 border-neutral-200/90' : 'bg-neutral-900/90 border-neutral-800'
-        }`}
-      >
+      <div className={`flex items-center gap-1 p-1 rounded-xl border shrink-0 ${isLight ? 'bg-neutral-100/90 border-neutral-200/90' : 'bg-neutral-900/90 border-neutral-800'}`}>
         {(['alpha', 'bravo'] as const).map((wsId) => {
           const isSelected = activeWorkspace === wsId;
           const isAlpha = wsId === 'alpha';
+          const selectedClass = isLight
+            ? isAlpha
+              ? 'bg-white text-amber-800 font-bold shadow-xs border border-amber-400/60'
+              : 'bg-white text-sky-800 font-bold shadow-xs border border-sky-400/60'
+            : isAlpha
+            ? 'bg-neutral-800 text-amber-300 font-bold shadow-xs border border-amber-500/50'
+            : 'bg-neutral-800 text-sky-300 font-bold shadow-xs border border-sky-500/50';
+          const idleClass = isLight
+            ? 'text-neutral-600 hover:text-neutral-900 hover:bg-white/50'
+            : 'text-neutral-400 hover:text-neutral-100 hover:bg-neutral-800/50';
           return (
             <button
               key={wsId}
               type="button"
               onClick={() => onSelectWorkspace(wsId)}
               data-top-workspace={wsId}
-              title={`${WORKSPACE_SPECS[wsId].title} · ${WORKSPACE_SPECS[wsId].subtitle} (Alt+${isAlpha ? '1' : '2'})`}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer ${
-                isSelected
-                  ? isLight
-                    ? isAlpha
-                      ? 'bg-white text-amber-800 font-bold shadow-xs border border-amber-400/60'
-                      : 'bg-white text-sky-800 font-bold shadow-xs border border-sky-400/60'
-                    : isAlpha
-                    ? 'bg-neutral-800 text-amber-300 font-bold shadow-xs border border-amber-500/50'
-                    : 'bg-neutral-800 text-sky-300 font-bold shadow-xs border border-sky-500/50'
-                  : isLight
-                  ? 'text-neutral-600 hover:text-neutral-900 hover:bg-white/50'
-                  : 'text-neutral-400 hover:text-neutral-100 hover:bg-neutral-800/50'
-              }`}
+              title={`${WORKSPACE_SPECS[wsId].title} (Alt+${isAlpha ? '1' : '2'})`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer ${isSelected ? selectedClass : idleClass}`}
             >
               {isAlpha ? (
                 <FlaskConical className="h-3.5 w-3.5 text-amber-500 shrink-0" />
@@ -111,9 +103,7 @@ export const TopWorkspaceHeaderBar: React.FC<TopWorkspaceHeaderBarProps> = ({
               {!isAlpha && (
                 <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
                   <CheckCircle2 className="h-2.5 w-2.5" />
-                  <span>
-                    {ledgerSummary.approvedCount}/{ledgerSummary.totalSurfaces}
-                  </span>
+                  <span>{ledgerSummary.approvedCount}/{ledgerSummary.totalSurfaces}</span>
                 </span>
               )}
             </button>
@@ -186,14 +176,10 @@ export interface SidebarWorkspaceHeaderProps {
   isLight: boolean;
 }
 
-const ACCENT_OPTIONS: { key: AccentColor; label: string; dotClass: string }[] = [
-  { key: 'amber', label: 'warm orange', dotClass: 'bg-amber-500' },
-  {
-    key: 'neutral',
-    label: 'Neutral Monochrome (default)',
-    dotClass: 'bg-neutral-900 dark:bg-neutral-100',
-  },
-  { key: 'sky', label: 'Classic Blue', dotClass: 'bg-sky-500' },
+const ACCENT_OPTIONS: { key: AccentColor; label: string; shortLabel: string; dotClass: string }[] = [
+  { key: 'amber', label: 'warm orange', shortLabel: 'warm orange', dotClass: 'bg-amber-500' },
+  { key: 'neutral', label: 'Neutral Monochrome (default)', shortLabel: 'Neutral', dotClass: 'bg-neutral-900 dark:bg-neutral-100' },
+  { key: 'sky', label: 'Classic Blue', shortLabel: 'Classic', dotClass: 'bg-sky-500' },
 ];
 
 export const SidebarWorkspaceHeader: React.FC<SidebarWorkspaceHeaderProps> = ({
@@ -209,32 +195,18 @@ export const SidebarWorkspaceHeader: React.FC<SidebarWorkspaceHeaderProps> = ({
 }) => {
   const { accent, tokens, setAccent } = useAccentStore();
   const activeWsSpec = WORKSPACE_SPECS[activeWorkspace];
+  const mutedText = isLight ? 'text-neutral-500' : 'text-neutral-400';
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Brand Header + Collapse Button */}
-      <div
-        className={`flex items-center justify-between gap-2 pb-3 border-b transition-colors ${
-          isLight ? 'border-neutral-200/80' : 'border-neutral-800/60'
-        }`}
-      >
+      <div className={`flex items-center justify-between gap-2 pb-3 border-b transition-colors ${isLight ? 'border-neutral-200/80' : 'border-neutral-800/60'}`}>
         <div className="flex items-center gap-2.5 min-w-0">
-          <div
-            className={`h-8 w-8 shrink-0 rounded-lg ${tokens.badge} flex items-center justify-center font-bold text-base shadow-sm transition-colors`}
-          >
+          <div className={`h-8 w-8 shrink-0 rounded-lg ${tokens.badge} flex items-center justify-center font-bold text-base shadow-sm transition-colors`}>
             UI
           </div>
           <div className="flex flex-col min-w-0">
-            <span className="font-bold text-sm tracking-tight truncate">
-              RCUITuner
-            </span>
-            <span
-              className={`text-[10px] font-mono truncate ${
-                isLight ? 'text-neutral-500' : 'text-neutral-400'
-              }`}
-            >
-              Dual-Workspace SPA v3.0
-            </span>
+            <span className="font-bold text-sm tracking-tight truncate">RCUITuner</span>
+            <span className={`text-[10px] font-mono truncate ${mutedText}`}>Dual-Workspace SPA v3.0</span>
           </div>
         </div>
 
@@ -253,101 +225,66 @@ export const SidebarWorkspaceHeader: React.FC<SidebarWorkspaceHeaderProps> = ({
         </button>
       </div>
 
-      {/* Dual-Workspace Switcher Card (Alpha ⇄ Bravo) */}
-      <div
-        className={`p-2 rounded-xl border flex flex-col gap-2 ${
-          isLight
-            ? 'bg-white border-neutral-200/90 shadow-2xs'
-            : 'bg-neutral-900/70 border-neutral-800'
-        }`}
-      >
+      <div className={`p-2 rounded-xl border flex flex-col gap-2 ${isLight ? 'bg-white border-neutral-200/90 shadow-2xs' : 'bg-neutral-900/70 border-neutral-800'}`}>
         <div className="grid grid-cols-2 gap-1 bg-neutral-200/60 dark:bg-neutral-950 p-1 rounded-lg border border-neutral-300/40 dark:border-neutral-800">
-          <button
-            type="button"
-            onClick={() => onSelectWorkspace('alpha')}
-            data-workspace-switch="alpha"
-            className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md text-[11px] font-mono transition-all cursor-pointer ${
-              activeWorkspace === 'alpha' && !showAllPyramidLayers
-                ? isLight
-                  ? 'bg-white text-amber-700 font-bold shadow-xs border border-amber-400/50'
-                  : 'bg-neutral-800 text-amber-300 font-bold shadow-xs border border-amber-500/40'
-                : 'text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200'
-            }`}
-            title="Switch to Workspace Alpha: L0–L5 Foundations, Universal 3-Stage Shells & HUD/Spatial Labs (Alt+1)"
-          >
-            <FlaskConical className="h-3.5 w-3.5 shrink-0 text-amber-500" />
-            <span className="truncate">Alpha · Primitives</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => onSelectWorkspace('bravo')}
-            data-workspace-switch="bravo"
-            className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md text-[11px] font-mono transition-all cursor-pointer ${
-              activeWorkspace === 'bravo' && !showAllPyramidLayers
-                ? isLight
-                  ? 'bg-white text-sky-700 font-bold shadow-xs border border-sky-400/50'
-                  : 'bg-neutral-800 text-sky-300 font-bold shadow-xs border border-sky-500/40'
-                : 'text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200'
-            }`}
-            title="Switch to Workspace Bravo: L6–L7 Menu Recipes, 29 Floating Windows & 3-Layer Approval Pipeline (Alt+2)"
-          >
-            <ClipboardCheck className="h-3.5 w-3.5 shrink-0 text-sky-500" />
-            <span className="truncate">Bravo · Approval</span>
-          </button>
+          {(['alpha', 'bravo'] as const).map((wsId) => {
+            const isAlpha = wsId === 'alpha';
+            const isActive = activeWorkspace === wsId && !showAllPyramidLayers;
+            return (
+              <button
+                key={wsId}
+                type="button"
+                onClick={() => onSelectWorkspace(wsId)}
+                data-workspace-switch={wsId}
+                className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md text-[11px] font-mono transition-all cursor-pointer ${
+                  isActive
+                    ? isLight
+                      ? isAlpha
+                        ? 'bg-white text-amber-700 font-bold shadow-xs border border-amber-400/50'
+                        : 'bg-white text-sky-700 font-bold shadow-xs border border-sky-400/50'
+                      : isAlpha
+                      ? 'bg-neutral-800 text-amber-300 font-bold shadow-xs border border-amber-500/40'
+                      : 'bg-neutral-800 text-sky-300 font-bold shadow-xs border border-sky-500/40'
+                    : 'text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200'
+                }`}
+                title={`Switch to Workspace ${isAlpha ? 'Alpha (Alt+1)' : 'Bravo (Alt+2)'}`}
+              >
+                {isAlpha ? (
+                  <FlaskConical className="h-3.5 w-3.5 shrink-0 text-amber-500" />
+                ) : (
+                  <ClipboardCheck className="h-3.5 w-3.5 shrink-0 text-sky-500" />
+                )}
+                <span className="truncate">{isAlpha ? 'Alpha · Primitives' : 'Bravo · Approval'}</span>
+              </button>
+            );
+          })}
         </div>
 
         <div className="px-1 flex flex-col gap-1">
           <div className="flex items-center justify-between gap-1.5">
-            <span
-              className={`px-1.5 py-0.5 rounded text-[9px] font-mono font-extrabold border ${activeWsSpec.badgeColor}`}
-            >
+            <span className={`px-1.5 py-0.5 rounded text-[9px] font-mono font-extrabold border ${activeWsSpec.badgeColor}`}>
               {activeWsSpec.code}
             </span>
             {activeWorkspace === 'bravo' ? (
               <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400">
                 <CheckCircle2 className="h-3 w-3 shrink-0" />
-                <span>
-                  {ledgerSummary.approvedCount}/{ledgerSummary.totalSurfaces}{' '}
-                  Approved
-                </span>
+                <span>{ledgerSummary.approvedCount}/{ledgerSummary.totalSurfaces} Approved</span>
               </span>
             ) : (
-              <span
-                className={`text-[10px] font-mono ${
-                  isLight ? 'text-neutral-500' : 'text-neutral-400'
-                }`}
-              >
+              <span className={`text-[10px] font-mono ${mutedText}`}>
                 Shell #{ledgerSummary.templateHash.slice(0, 6)}
               </span>
             )}
           </div>
-          <p
-            className={`text-[11px] font-semibold truncate ${
-              isLight ? 'text-neutral-800' : 'text-neutral-200'
-            }`}
-          >
+          <p className={`text-[11px] font-semibold truncate ${isLight ? 'text-neutral-800' : 'text-neutral-200'}`}>
             {activeWsSpec.title}
           </p>
-          <p
-            className={`text-[10px] leading-snug ${
-              isLight ? 'text-neutral-500' : 'text-neutral-400'
-            }`}
-          >
-            {activeWsSpec.subtitle}
-          </p>
+          <p className={`text-[10px] leading-snug ${mutedText}`}>{activeWsSpec.subtitle}</p>
         </div>
       </div>
 
-      {/* Search & Pyramid Mode Filter Bar */}
       <div className="flex items-center gap-1.5">
-        <div
-          className={`flex-1 flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs ${
-            isLight
-              ? 'bg-white border-neutral-200/90 text-neutral-800'
-              : 'bg-neutral-900/90 border-neutral-800 text-neutral-200'
-          }`}
-        >
+        <div className={`flex-1 flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs ${isLight ? 'bg-white border-neutral-200/90 text-neutral-800' : 'bg-neutral-900/90 border-neutral-800 text-neutral-200'}`}>
           <Search className="h-3 w-3 text-neutral-400 shrink-0" />
           <input
             type="text"
@@ -385,7 +322,6 @@ export const SidebarWorkspaceHeader: React.FC<SidebarWorkspaceHeaderProps> = ({
         </button>
       </div>
 
-      {/* Global Accent Theme Selector */}
       <div className="pb-2.5 border-b border-neutral-200/60 dark:border-neutral-800/60 flex flex-col gap-1.5">
         <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-neutral-400">
           <Palette className="h-3 w-3" />
@@ -409,13 +345,7 @@ export const SidebarWorkspaceHeader: React.FC<SidebarWorkspaceHeaderProps> = ({
                 title={opt.label}
               >
                 <span className={`h-2 w-2 rounded-full ${opt.dotClass} shrink-0`} />
-                <span className="truncate">
-                  {opt.key === 'amber'
-                    ? 'warm orange'
-                    : opt.key === 'neutral'
-                    ? 'Neutral'
-                    : 'Classic'}
-                </span>
+                <span className="truncate">{opt.shortLabel}</span>
               </button>
             );
           })}

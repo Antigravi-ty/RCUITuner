@@ -37,6 +37,27 @@ export const FloatingWindowsMinWidthCalibrationBar: React.FC<
     handleCopyCalibratedParams,
   } = useFloatingWindowsCalibration(currentPreset);
 
+  const stepBtnClass = `flex items-center gap-0.5 px-2 py-1 rounded-lg border text-[11px] font-mono font-bold cursor-pointer transition-colors active:scale-95 ${
+    isLight
+      ? 'bg-white hover:bg-neutral-100 border-neutral-300 text-neutral-800'
+      : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-700 text-neutral-100'
+  }`;
+  const actionBtnClass = `px-2 py-1 rounded-lg border text-[10px] font-mono font-semibold cursor-pointer transition-colors ${
+    isLight
+      ? 'bg-white hover:bg-neutral-100 border-neutral-200 text-neutral-700'
+      : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-800 text-neutral-300'
+  }`;
+  const restoreBtnClass = `flex items-center gap-1 px-2 py-1 rounded-lg border text-[10px] font-mono font-semibold cursor-pointer transition-colors ${
+    isLight
+      ? 'bg-amber-50 hover:bg-amber-100 border-amber-300 text-amber-800'
+      : 'bg-amber-950/40 hover:bg-amber-900/50 border-amber-700/60 text-amber-300'
+  }`;
+  const inputWrapClass = `flex items-center rounded-lg border px-2 py-0.5 ${
+    isLight
+      ? 'bg-white border-neutral-300 text-neutral-900'
+      : 'bg-neutral-900 border-neutral-700 text-neutral-100'
+  }`;
+
   return (
     <div
       className={`pt-2.5 border-t flex flex-col gap-2.5 ${
@@ -76,23 +97,13 @@ export const FloatingWindowsMinWidthCalibrationBar: React.FC<
             type="button"
             title="Decrease MinWidth 1px (Base Unit -1px)"
             onClick={() => applyManualMinWidth(resolvedEffectiveMinW - 1)}
-            className={`flex items-center gap-0.5 px-2 py-1 rounded-lg border text-[11px] font-mono font-bold cursor-pointer transition-colors active:scale-95 ${
-              isLight
-                ? 'bg-white hover:bg-neutral-100 border-neutral-300 text-neutral-800'
-                : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-700 text-neutral-100'
-            }`}
+            className={stepBtnClass}
           >
             <Minus className="h-3 w-3" />
             <span>1px</span>
           </button>
 
-          <div
-            className={`flex items-center rounded-lg border px-2 py-0.5 ${
-              isLight
-                ? 'bg-white border-neutral-300 text-neutral-900'
-                : 'bg-neutral-900 border-neutral-700 text-neutral-100'
-            }`}
-          >
+          <div className={inputWrapClass}>
             <input
               type="number"
               step={1}
@@ -138,11 +149,7 @@ export const FloatingWindowsMinWidthCalibrationBar: React.FC<
             type="button"
             title="Increase MinWidth 1px (Base Unit +1px)"
             onClick={() => applyManualMinWidth(resolvedEffectiveMinW + 1)}
-            className={`flex items-center gap-0.5 px-2 py-1 rounded-lg border text-[11px] font-mono font-bold cursor-pointer transition-colors active:scale-95 ${
-              isLight
-                ? 'bg-white hover:bg-neutral-100 border-neutral-300 text-neutral-800'
-                : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-700 text-neutral-100'
-            }`}
+            className={stepBtnClass}
           >
             <Plus className="h-3 w-3" />
             <span>1px</span>
@@ -151,11 +158,7 @@ export const FloatingWindowsMinWidthCalibrationBar: React.FC<
           <button
             type="button"
             onClick={() => handleSnapToMinWidth(false)}
-            className={`px-2 py-1 rounded-lg border text-[10px] font-mono font-semibold cursor-pointer transition-colors ${
-              isLight
-                ? 'bg-white hover:bg-neutral-100 border-neutral-200 text-neutral-700'
-                : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-800 text-neutral-300'
-            }`}
+            className={actionBtnClass}
           >
             Collapse to Min Width ({resolvedEffectiveMinW}px)
           </button>
@@ -164,11 +167,7 @@ export const FloatingWindowsMinWidthCalibrationBar: React.FC<
             <button
               type="button"
               onClick={() => handleSnapToMinWidth(true)}
-              className={`px-2 py-1 rounded-lg border text-[10px] font-mono font-semibold cursor-pointer transition-colors ${
-                isLight
-                  ? 'bg-white hover:bg-neutral-100 border-neutral-200 text-neutral-700'
-                  : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-800 text-neutral-300'
-              }`}
+              className={actionBtnClass}
             >
               Min Width+Min Height ({resolvedEffectiveMinW}×{resolvedEffectiveMinH}px)
             </button>
@@ -178,11 +177,7 @@ export const FloatingWindowsMinWidthCalibrationBar: React.FC<
             <button
               type="button"
               onClick={handleResetAutoMinWidth}
-              className={`flex items-center gap-1 px-2 py-1 rounded-lg border text-[10px] font-mono font-semibold cursor-pointer transition-colors ${
-                isLight
-                  ? 'bg-amber-50 hover:bg-amber-100 border-amber-300 text-amber-800'
-                  : 'bg-amber-950/40 hover:bg-amber-900/50 border-amber-700/60 text-amber-300'
-              }`}
+              className={restoreBtnClass}
             >
               <RotateCcw className="h-3 w-3" />
               <span>Restore Auto ({resolvedAutoMinW}px)</span>
@@ -234,11 +229,7 @@ export const FloatingWindowsMinWidthCalibrationBar: React.FC<
             type="button"
             title="Decrease MinHeight 10px (-10px)"
             onClick={() => applyManualMinHeight(resolvedEffectiveMinH - 10)}
-            className={`flex items-center gap-0.5 px-2 py-1 rounded-lg border text-[11px] font-mono font-bold cursor-pointer transition-colors active:scale-95 ${
-              isLight
-                ? 'bg-white hover:bg-neutral-100 border-neutral-300 text-neutral-800'
-                : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-700 text-neutral-100'
-            }`}
+            className={stepBtnClass}
           >
             <Minus className="h-3 w-3" />
             <span>10px</span>
@@ -248,23 +239,13 @@ export const FloatingWindowsMinWidthCalibrationBar: React.FC<
             type="button"
             title="Decrease MinHeight 1px (-1px)"
             onClick={() => applyManualMinHeight(resolvedEffectiveMinH - 1)}
-            className={`flex items-center gap-0.5 px-2 py-1 rounded-lg border text-[11px] font-mono font-bold cursor-pointer transition-colors active:scale-95 ${
-              isLight
-                ? 'bg-white hover:bg-neutral-100 border-neutral-300 text-neutral-800'
-                : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-700 text-neutral-100'
-            }`}
+            className={stepBtnClass}
           >
             <Minus className="h-3 w-3" />
             <span>1px</span>
           </button>
 
-          <div
-            className={`flex items-center rounded-lg border px-2 py-0.5 ${
-              isLight
-                ? 'bg-white border-neutral-300 text-neutral-900'
-                : 'bg-neutral-900 border-neutral-700 text-neutral-100'
-            }`}
-          >
+          <div className={inputWrapClass}>
             <input
               type="number"
               step={1}
