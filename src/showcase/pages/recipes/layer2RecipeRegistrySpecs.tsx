@@ -1,8 +1,8 @@
 import React, { Suspense, lazy } from 'react';
 import { Badge } from '../../../ui-core/primitives/Badge';
 import { StoreSnapshotScope } from '../../../ui-core/stores/storeSnapshotScope';
-import { AuditTicketHeader } from '../../components/AuditTicketHeader';
 import { LocalPanelSizingTuner } from './LocalPanelSizingTuner';
+import { MultiStateRecipeShootoutStage } from './MultiStateRecipeShootoutStage';
 import {
   LAYER2_GARAGE_STATES,
   LAYER2_SETTINGS_STATES,
@@ -63,26 +63,15 @@ export function renderLayer2RecipeStage(
         <div id="recipe-6a-3-garage" className="scroll-mt-6 flex flex-col gap-4">
           <div className={previewWrapClass}>
             <Suspense fallback={suspenseFallback}>
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 w-full items-start">
-                {LAYER2_GARAGE_STATES.map((st, idx) => (
-                  <div key={st.id} className="flex flex-col gap-2 items-center w-full">
-                    <Layer2GarageRecipe isLight={isLight} {...st.props} onBack={noop} />
-                    <AuditTicketHeader
-                      index={idx + 1}
-                      label={st.label}
-                      description={st.description}
-                      referenceCode="6A.3"
-                      componentName={st.componentName || 'Layer2GarageRecipe'}
-                      sourceFile={st.sourceFile || 'src/ui-core/recipes/Layer2GarageRecipe.tsx'}
-                      subViewFile={st.subViewFile}
-                      stateId={st.id}
-                      activeProps={st.props}
-                      badgeColor="amber"
-                      isLight={isLight}
-                    />
-                  </div>
-                ))}
-              </div>
+              <MultiStateRecipeShootoutStage
+                referenceCode="6A.3"
+                states={LAYER2_GARAGE_STATES}
+                badgeColor="amber"
+                isLight={isLight}
+                renderStateCard={(st) => (
+                  <Layer2GarageRecipe isLight={isLight} activeTab={st.props.activeTab} onBack={noop} />
+                )}
+              />
             </Suspense>
           </div>
           <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -91,18 +80,18 @@ export function renderLayer2RecipeStage(
                 6A.3
               </span>
               <h2 className="text-base font-bold">
-                Layer 2 Garage Loadout (Flat 5-Tab Audit Matrix · Car / Paint / Loadout / Anthem / Sync)
+                Layer 2 Garage Loadout (5-Tab Audit Matrix &amp; Single Stage · Car / Paint / Loadout / Anthem / Sync)
               </h2>
             </div>
             <Badge variant="amber" size="sm" isLight={isLight}>
-              5-Tab Flat Matrix · CSS Grid 0px Jump Locked
+              5-Tab Matrix ⇄ Single Stage · CSS Grid 0px Jump Locked
             </Badge>
           </div>
           <LocalPanelSizingTuner
             code="6A.3"
             panelId="layer2-garage"
             label="Layer 2 Garage Loadout Config"
-            recommendation="Flat 5-Tab Matrix: Renders Car, Paint, Loadout, Anthem, and Sync tabs side by side with locked 417px envelope height."
+            recommendation="5-Tab Matrix or Single Stage: Renders Car, Paint, Loadout, Anthem, and Sync tabs with locked envelope height."
             isLight={isLight}
           />
         </div>
@@ -113,39 +102,28 @@ export function renderLayer2RecipeStage(
         <div id={itemId} className="scroll-mt-6 flex flex-col gap-4">
           <div id="recipe-6a-5-settings-preview" className={previewWrapClass}>
             <Suspense fallback={suspenseFallback}>
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 w-full items-start">
-                {LAYER2_SETTINGS_STATES.map((st, idx) => (
-                  <div key={st.id} className="flex flex-col gap-2 items-center w-full">
-                    <StoreSnapshotScope
-                      overrides={{
-                        appStore: {
-                          settingsTargetTab: st.props.activeTab,
-                          developerMode: true,
-                        },
-                      }}
-                    >
-                      <Layer2SettingsRecipe
-                        isLight={isLight}
-                        activeTab={st.props.activeTab}
-                        onBack={noop}
-                      />
-                    </StoreSnapshotScope>
-                    <AuditTicketHeader
-                      index={idx + 1}
-                      label={st.label}
-                      description={st.description}
-                      referenceCode="6A.4"
-                      componentName={st.componentName || 'Layer2SettingsRecipe'}
-                      sourceFile={st.sourceFile || 'src/ui-core/recipes/Layer2SettingsRecipe.tsx'}
-                      subViewFile={st.subViewFile}
-                      stateId={st.id}
-                      activeProps={st.props}
-                      badgeColor="indigo"
+              <MultiStateRecipeShootoutStage
+                referenceCode="6A.4"
+                states={LAYER2_SETTINGS_STATES}
+                badgeColor="indigo"
+                isLight={isLight}
+                renderStateCard={(st) => (
+                  <StoreSnapshotScope
+                    overrides={{
+                      appStore: {
+                        settingsTargetTab: st.props.activeTab,
+                        developerMode: true,
+                      },
+                    }}
+                  >
+                    <Layer2SettingsRecipe
                       isLight={isLight}
+                      activeTab={st.props.activeTab}
+                      onBack={noop}
                     />
-                  </div>
-                ))}
-              </div>
+                  </StoreSnapshotScope>
+                )}
+              />
             </Suspense>
           </div>
           <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -154,18 +132,18 @@ export function renderLayer2RecipeStage(
                 {itemId === 'recipe-6a-5-settings-preview' ? '6A.5' : '6A.4'}
               </span>
               <h2 className="text-base font-bold">
-                Layer 2 System Settings (Flat 5-Tab Audit Matrix · Gameplay / Audio / Display / Advanced / Developer)
+                Layer 2 System Settings (5-Tab Audit Matrix &amp; Single Stage · Gameplay / Audio / Display / Advanced / Developer)
               </h2>
             </div>
             <Badge variant="neutral" size="sm" isLight={isLight}>
-              5-Tab Flat Matrix · CSS Grid 0px Jump Locked
+              5-Tab Matrix ⇄ Single Stage · CSS Grid 0px Jump Locked
             </Badge>
           </div>
           <LocalPanelSizingTuner
             code="6A.4"
             panelId="layer2-settings"
             label="Layer 2 System Settings"
-            recommendation="Flat 5-Tab Matrix: Renders Gameplay, Audio, Display, Advanced, and Developer tabs side by side with locked 457px envelope height."
+            recommendation="5-Tab Matrix or Single Stage: Renders Gameplay, Audio, Display, Advanced, and Developer tabs with locked envelope height."
             isLight={isLight}
           />
         </div>

@@ -6,6 +6,11 @@ const Layer3ExpMultiBotsRecipe = lazy(() =>
     default: m.Layer3ExpMultiBotsRecipe,
   }))
 );
+const Layer3ExpBotPackRecipe = lazy(() =>
+  import('../../../ui-core/recipes/Layer3ExpBotPackRecipe').then((m) => ({
+    default: m.Layer3ExpBotPackRecipe,
+  }))
+);
 const Layer3DevSandboxesRecipe = lazy(() =>
   import('../../../ui-core/recipes/Layer3DevSandboxesRecipe').then((m) => ({
     default: m.Layer3DevSandboxesRecipe,
@@ -31,9 +36,24 @@ const Layer3DevUnderDevelopmentRecipe = lazy(() =>
     default: m.Layer3DevUnderDevelopmentRecipe,
   }))
 );
+const Layer3DevRemoteProfileRecipe = lazy(() =>
+  import('../../../ui-core/recipes/Layer3DevRemoteProfileRecipe').then((m) => ({
+    default: m.Layer3DevRemoteProfileRecipe,
+  }))
+);
+const Layer3DevQuickActionsRecipe = lazy(() =>
+  import('../../../ui-core/recipes/Layer3DevQuickActionsRecipe').then((m) => ({
+    default: m.Layer3DevQuickActionsRecipe,
+  }))
+);
 const Layer4StaticTrainingPackBrowseRecipe = lazy(() =>
   import('../../../ui-core/recipes/Layer4StaticTrainingPackBrowseRecipe').then((m) => ({
     default: m.Layer4StaticTrainingPackBrowseRecipe,
+  }))
+);
+const StaticTrainingShotInspectorDrawer = lazy(() =>
+  import('../../../ui-core/recipes/StaticTrainingShotInspectorDrawer').then((m) => ({
+    default: m.StaticTrainingShotInspectorDrawer,
   }))
 );
 const Layer4AdvancedAudioRecipe = lazy(() =>
@@ -71,6 +91,16 @@ export const DEEP_LAYER_DEV_AND_L4_RECIPE_SPECS: DeepLayerRecipeSpec[] = [
     renderPreview: (isLight) => <Layer3ExpMultiBotsRecipe isLight={isLight} onBack={noop} />,
   },
   {
+    id: 'recipe-6a-13b-botpack',
+    code: '6A.13B',
+    badgeColor: 'amber',
+    title: 'Layer 3 Experimental Bot Pack #9700488 (8 Native SafeTensors RLBot Models Showcase)',
+    panelId: 'layer3-exp-botpack',
+    tunerLabel: 'Layer 3 Experimental Bot Pack #9700488',
+    recommendation: 'Spectate the 8 native SafeTensors models from RLBot Pack #9700488 in recommended match formats.',
+    renderPreview: (isLight) => <Layer3ExpBotPackRecipe isLight={isLight} onBack={noop} />,
+  },
+  {
     id: 'recipe-6a-14-rcspack',
     code: '6A.14',
     badgeColor: 'sky',
@@ -79,6 +109,16 @@ export const DEEP_LAYER_DEV_AND_L4_RECIPE_SPECS: DeepLayerRecipeSpec[] = [
     tunerLabel: 'Layer 4 Static Training Pack Browser (.RCSPack)',
     recommendation: 'Dual-column training pack browser and metadata inspector',
     renderPreview: (isLight) => <Layer4StaticTrainingPackBrowseRecipe isLight={isLight} onBack={noop} />,
+  },
+  {
+    id: 'recipe-6a-14b-shot-inspector',
+    code: '6A.14B',
+    badgeColor: 'sky',
+    title: 'Layer 4 Static Training Shot Inspector Drawer (Per-shot initial state, trajectory & variable editor)',
+    panelId: 'layer4-static-training-pack',
+    tunerLabel: 'Layer 4 Static Training Shot Inspector Drawer',
+    recommendation: 'Fixed height 680px side-docked inspector drawer for editing individual training shots.',
+    renderPreview: (isLight) => <StaticTrainingShotInspectorDrawer isLight={isLight} onBack={noop} />,
   },
   {
     id: 'recipe-6a-15-adv-audio',
@@ -169,5 +209,25 @@ export const DEEP_LAYER_DEV_AND_L4_RECIPE_SPECS: DeepLayerRecipeSpec[] = [
     tunerLabel: 'Layer 4 4-Server Signaling & Dual Bridge Lab',
     recommendation: '4-Server Full-Mesh, Dual Edge Function fanout, 5-layer anti-loop guards, and One-Click Full Diagnostic',
     renderPreview: (isLight) => <Layer4DevSignalingLabRecipe isLight={isLight} onBack={noop} />,
+  },
+  {
+    id: 'recipe-6a-27-dev-remote-profile',
+    code: '6A.27',
+    badgeColor: 'amber',
+    title: 'Layer 3 Remote Profile Management (Cloud Account Directory & Live Remote Profile Tuning)',
+    panelId: 'layer3-dev-remote-profile',
+    tunerLabel: 'Layer 3 Remote Profile Management',
+    recommendation: '2-Tab cloud user account directory and live remote profile tuning.',
+    renderPreview: (isLight) => <Layer3DevRemoteProfileRecipe isLight={isLight} onBack={noop} />,
+  },
+  {
+    id: 'recipe-6a-28-dev-quick-actions',
+    code: '6A.28',
+    badgeColor: 'amber',
+    title: 'Layer 3 Developer Quick Actions (Developer Mode Auto-Activated Quick Toggles)',
+    panelId: 'layer3-dev-quick-actions',
+    tunerLabel: 'Layer 3 Developer Quick Actions',
+    recommendation: 'Developer quick actions auto-activated in Developer Mode and deployable to remote profiles.',
+    renderPreview: (isLight) => <Layer3DevQuickActionsRecipe isLight={isLight} onBack={noop} />,
   },
 ];

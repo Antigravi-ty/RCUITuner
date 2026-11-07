@@ -28,26 +28,29 @@ export interface FloatingWindowsBoundaryControls {
   handleToggleBoundaryLock: () => void;
 }
 
+export interface FloatingStageToolbarActions {
+  setFwMode: (mode: 'inspector' | 'matrix' | 'stack') => void;
+  handleSwitchTier: (tier: FloatingWindowVisibilityTier) => void;
+  handleStepWindow: (delta: number) => void;
+  clearAll: () => void;
+}
+
 export interface FloatingWindowsStageToolbarProps {
   isLight: boolean;
   tier: FloatingWindowVisibilityTier;
   fwMode: 'inspector' | 'matrix' | 'stack';
-  setFwMode: (mode: 'inspector' | 'matrix' | 'stack') => void;
   currentIndex: number;
   activeTierWindows: PresetConfig[];
   currentPreset: PresetConfig | undefined;
   boundary: FloatingWindowsBoundaryControls;
-  handleSwitchTier: (tier: FloatingWindowVisibilityTier) => void;
-  handleStepWindow: (delta: number) => void;
   totalCount: number;
-  clearAll: () => void;
+  actions: FloatingStageToolbarActions;
 }
 
 export const FloatingWindowsStageToolbar: React.FC<FloatingWindowsStageToolbarProps> = ({
   isLight,
   tier,
   fwMode,
-  setFwMode,
   currentIndex,
   activeTierWindows,
   currentPreset,
@@ -61,10 +64,13 @@ export const FloatingWindowsStageToolbar: React.FC<FloatingWindowsStageToolbarPr
     handleChangeManualBoundarySize,
     handleToggleBoundaryLock,
   },
-  handleSwitchTier,
-  handleStepWindow,
   totalCount,
-  clearAll,
+  actions: {
+    setFwMode,
+    handleSwitchTier,
+    handleStepWindow,
+    clearAll,
+  },
 }) => {
   return (
       <div

@@ -15,12 +15,16 @@ import { FloatingWindowManager } from '../../../ui-core/navigation/FloatingWindo
 import { FloatingWindowIcon } from '../../../ui-core/navigation/FloatingWindowIcon';
 import { renderFloatingWindowPanel } from '../../../ui-core/panels/floatingWindowRegistry';
 
-export interface FloatingWindowsCanvasStageProps {
-  isLight: boolean;
-  canvasRef: React.RefObject<HTMLDivElement | null>;
+export interface FloatingCanvasBoundaryState {
   containerPreset: 'full' | '1080p-compact' | 'small-squeeze';
   boundaryLocked?: boolean;
   manualBoundarySize?: { width: number; height: number };
+}
+
+export interface FloatingWindowsCanvasStageProps {
+  isLight: boolean;
+  canvasRef: React.RefObject<HTMLDivElement | null>;
+  boundary: FloatingCanvasBoundaryState;
   currentPreset: PresetConfig | undefined;
   activeSubTab: string;
   setActiveSubTab: (tab: string) => void;
@@ -33,9 +37,7 @@ export interface FloatingWindowsCanvasStageProps {
 export const FloatingWindowsCanvasStage: React.FC<FloatingWindowsCanvasStageProps> = ({
   isLight,
   canvasRef,
-  containerPreset,
-  boundaryLocked = false,
-  manualBoundarySize,
+  boundary: { containerPreset, boundaryLocked = false, manualBoundarySize },
   currentPreset,
   activeSubTab,
   setActiveSubTab,

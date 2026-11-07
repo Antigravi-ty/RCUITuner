@@ -85,6 +85,7 @@ export interface ReviewLedgerStoreState {
     >
   >;
   activeUnitKey: string;
+  navigationSeq: number;
   activeBucketFilter: 'all' | ReviewTriageBucketId;
   simulateTemplateStale: boolean;
   isExporterModalOpen: boolean;
@@ -113,6 +114,7 @@ export const useReviewLedgerStore = create<ReviewLedgerStoreState>((set, get) =>
   decisionsMap: initialPersisted.decisionsMap,
   registeredUnitsMap: {},
   activeUnitKey: 'floating:atmosphere-fx-tuner::default',
+  navigationSeq: 0,
   activeBucketFilter: initialPersisted.activeBucketFilter,
   simulateTemplateStale: initialPersisted.simulateTemplateStale,
   isExporterModalOpen: false,
@@ -157,7 +159,10 @@ export const useReviewLedgerStore = create<ReviewLedgerStoreState>((set, get) =>
   },
 
   selectUnitByKey: (unitKey) => {
-    set({ activeUnitKey: unitKey });
+    set((state) => ({
+      activeUnitKey: unitKey,
+      navigationSeq: state.navigationSeq + 1,
+    }));
   },
 
   setBucketFilter: (bucket) => {
@@ -241,10 +246,11 @@ export const useReviewLedgerStore = create<ReviewLedgerStoreState>((set, get) =>
       }
     }
 
-    set({
+    set((s) => ({
       decisionsMap: nextDecisionsMap,
       activeUnitKey: nextActiveKey,
-    });
+      navigationSeq: advanceToNext ? s.navigationSeq + 1 : s.navigationSeq,
+    }));
 
     return nextUnit;
   },
@@ -305,7 +311,10 @@ export const useReviewLedgerStore = create<ReviewLedgerStoreState>((set, get) =>
         ? (currIdx + delta + list.length) % list.length
         : 0;
     const nextUnit = list[nextIdx];
-    set({ activeUnitKey: nextUnit.unitKey });
+    set((s) => ({
+      activeUnitKey: nextUnit.unitKey,
+      navigationSeq: s.navigationSeq + 1,
+    }));
     return nextUnit;
   },
 

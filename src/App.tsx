@@ -287,49 +287,48 @@ export const App: React.FC = () => {
               isLight ? 'bg-neutral-100/90 border-neutral-200/90' : 'bg-neutral-900/90 border-neutral-800'
             }`}
           >
-            <button
-              type="button"
-              onClick={() => handleSelectWorkspace('alpha')}
-              data-top-workspace="alpha"
-              title={`${WORKSPACE_SPECS.alpha.title} · ${WORKSPACE_SPECS.alpha.subtitle} (Shortcut: Alt+1)`}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer ${
-                activeWorkspace === 'alpha'
-                  ? isLight
-                    ? 'bg-white text-amber-800 font-bold shadow-xs border border-amber-400/60'
-                    : 'bg-neutral-800 text-amber-300 font-bold shadow-xs border border-amber-500/50'
-                  : isLight
-                  ? 'text-neutral-600 hover:text-neutral-900 hover:bg-white/50'
-                  : 'text-neutral-400 hover:text-neutral-100 hover:bg-neutral-800/50'
-              }`}
-            >
-              <FlaskConical className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-              <span>Workspace Alpha</span>
-              <span className="hidden xl:inline text-[10px] opacity-75">· 母版与独立实验室</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleSelectWorkspace('bravo')}
-              data-top-workspace="bravo"
-              title={`${WORKSPACE_SPECS.bravo.title} · ${WORKSPACE_SPECS.bravo.subtitle} (Shortcut: Alt+2)`}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer ${
-                activeWorkspace === 'bravo'
-                  ? isLight
-                    ? 'bg-white text-sky-800 font-bold shadow-xs border border-sky-400/60'
-                    : 'bg-neutral-800 text-sky-300 font-bold shadow-xs border border-sky-500/50'
-                  : isLight
-                  ? 'text-neutral-600 hover:text-neutral-900 hover:bg-white/50'
-                  : 'text-neutral-400 hover:text-neutral-100 hover:bg-neutral-800/50'
-              }`}
-            >
-              <ClipboardCheck className="h-3.5 w-3.5 text-sky-500 shrink-0" />
-              <span>Workspace Bravo</span>
-              <span className="hidden xl:inline text-[10px] opacity-75">· 面板审批与精调</span>
-              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-                <CheckCircle2 className="h-2.5 w-2.5" />
-                <span>{ledgerSummary.approvedCount}/{ledgerSummary.totalSurfaces}</span>
-              </span>
-            </button>
+            {(['alpha', 'bravo'] as const).map((wsId) => {
+              const isSelected = activeWorkspace === wsId;
+              const isAlpha = wsId === 'alpha';
+              return (
+                <button
+                  key={wsId}
+                  type="button"
+                  onClick={() => handleSelectWorkspace(wsId)}
+                  data-top-workspace={wsId}
+                  title={`${WORKSPACE_SPECS[wsId].title} · ${WORKSPACE_SPECS[wsId].subtitle} (Alt+${isAlpha ? '1' : '2'})`}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer ${
+                    isSelected
+                      ? isLight
+                        ? isAlpha
+                          ? 'bg-white text-amber-800 font-bold shadow-xs border border-amber-400/60'
+                          : 'bg-white text-sky-800 font-bold shadow-xs border border-sky-400/60'
+                        : isAlpha
+                        ? 'bg-neutral-800 text-amber-300 font-bold shadow-xs border border-amber-500/50'
+                        : 'bg-neutral-800 text-sky-300 font-bold shadow-xs border border-sky-500/50'
+                      : isLight
+                      ? 'text-neutral-600 hover:text-neutral-900 hover:bg-white/50'
+                      : 'text-neutral-400 hover:text-neutral-100 hover:bg-neutral-800/50'
+                  }`}
+                >
+                  {isAlpha ? (
+                    <FlaskConical className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                  ) : (
+                    <ClipboardCheck className="h-3.5 w-3.5 text-sky-500 shrink-0" />
+                  )}
+                  <span>{isAlpha ? 'Workspace Alpha' : 'Workspace Bravo'}</span>
+                  <span className="hidden xl:inline text-[10px] opacity-75">
+                    {isAlpha ? '· 母版与独立实验室' : '· 面板审批与精调'}
+                  </span>
+                  {!isAlpha && (
+                    <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                      <CheckCircle2 className="h-2.5 w-2.5" />
+                      <span>{ledgerSummary.approvedCount}/{ledgerSummary.totalSurfaces}</span>
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
@@ -366,10 +365,10 @@ export const App: React.FC = () => {
                     className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-bold bg-amber-500 hover:bg-amber-400 text-neutral-950 transition-all cursor-pointer active:scale-95 shadow-2xs"
                   >
                     <ArrowLeft className="h-3.5 w-3.5" />
-                    <span>Return to previous page ({lastJumpOrigin.fromDesc})</span>
+                    <span>Return ({lastJumpOrigin.fromDesc})</span>
                   </button>
                   <span className="opacity-80">
-                    Jump recorded in browser History stack{lastJumpOrigin.targetId ? ` · Anchor: #${lastJumpOrigin.targetId}` : ''}
+                    History stack{lastJumpOrigin.targetId ? ` · #${lastJumpOrigin.targetId}` : ''}
                   </span>
                 </div>
                 <button

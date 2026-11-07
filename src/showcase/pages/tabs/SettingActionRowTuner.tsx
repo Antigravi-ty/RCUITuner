@@ -1,22 +1,17 @@
 import React, { useState } from 'react';
 import {
-  Sliders, RotateCcw, Copy, Check,
-  Code2, Sparkles, NotebookPen, Video,
-  Crosshair, Volume2, SmilePlus, Palette,
+  Sliders,
+  RotateCcw,
+  Copy,
+  Check,
+  Code2,
+  Sparkles,
+  Palette,
 } from 'lucide-react';
-import { BounceSolidSvg } from '../../../ui-core/primitives/packagedSvgIcons';
 import { SliderControl } from '../../../ui-core/primitives/SliderControl';
 import { ToggleSwitch } from '../../../ui-core/primitives/ToggleSwitch';
 import { Badge } from '../../../ui-core/primitives/Badge';
 import { Button } from '../../../ui-core/primitives/Button';
-import { SettingActionRow } from '../../../ui-core/compounds/SettingActionRow';
-import { SettingToggleRow } from '../../../ui-core/compounds/SettingToggleRow';
-import { SettingSliderRow } from '../../../ui-core/compounds/SettingSliderRow';
-import { SettingSegmentedRow } from '../../../ui-core/compounds/SettingSegmentedRow';
-import { SettingPresetCustomRow } from '../../../ui-core/compounds/SettingPresetCustomRow';
-import { SettingDeveloperStatusRow } from '../../../ui-core/compounds/SettingDeveloperStatusRow';
-import { TelemetryConfigCard } from '../../../ui-core/compounds/TelemetryConfigCard';
-import { CodeBlock } from '../../CodeBlock';
 import { useSettingActionRowStore } from '../../../ui-core/stores/settingRowStore';
 import { SettingActionRowArchetypeSections } from './SettingActionRowArchetypeSections';
 
@@ -70,26 +65,8 @@ export const SettingActionRowTuner: React.FC<SettingActionRowTunerProps> = React
     buttonRadius,
     showButtonArrow,
     defaultIconColor,
-    trajectoryRowLayout,
     sliderLayout,
     sliderTrackWidth,
-    sliderShowStepper,
-    sliderEditableInUserMode,
-    sliderEditableInDevMode,
-    sliderValueFontSize,
-    segmentedLayout,
-    pacingPriorityControl,
-    advancedBordered,
-    advancedShowBadges,
-    presetCustomVariation,
-    presetCustomSliderWidth,
-    presetCustomAnimDuration,
-    devStatusAccentColor,
-    devStatusInteractiveToggle,
-    telemetryVariation,
-    telemetryTriggerPosition,
-    telemetryDefaultCollapsed,
-    floatingOpacityOrder,
     underDevelopmentTopMargin,
     setToken,
     updateTokens,
@@ -99,13 +76,6 @@ export const SettingActionRowTuner: React.FC<SettingActionRowTunerProps> = React
 
   const [copied, setCopied] = useState(false);
   const [showCode, setShowCode] = useState(false);
-  const [perRowColorDemo, setPerRowColorDemo] = useState<string>('');
-  const [demoBallCam, setDemoBallCam] = useState(true);
-  const [demoTrajectory, setDemoTrajectory] = useState(true);
-  const [demoVolume, setDemoVolume] = useState(80);
-  const [demoPacing, setDemoPacing] = useState<'competitive' | 'balanced' | 'motion' | 'input-consistency'>('balanced');
-  const [demoUiScaleVal, setDemoUiScaleVal] = useState(115);
-  const [demoDevMode, setDemoDevMode] = useState(false);
 
   const handleCopy = async () => {
     const code = exportConfigCode();
@@ -229,8 +199,10 @@ export const SettingActionRowTuner: React.FC<SettingActionRowTunerProps> = React
           <Badge variant="amber" size="sm" isLight={isLight}>
             4 Global sub-page consistency · L1 ⇄ L6 ⇄ L7 Real-time Sync
           </Badge>
-          <span className={`text-[11px] font-mono ${ isLight ? 'text-neutral-500' : 'text-neutral-400' }`}>
-            {bordered ? 'Has Border' : 'No Border(Apple Hover)'} · {showDescription ? 'With Subtitle' : 'Hide Inline Description(Hover Footer Tip)'} · Title {titleFontSize}px · Slider {sliderLayout}({sliderTrackWidth}px) · Pad {paddingX}×{paddingY}px
+          <span className={`text-[11px] font-mono ${isLight ? 'text-neutral-500' : 'text-neutral-400'}`}>
+            {bordered ? 'Has Border' : 'No Border(Apple Hover)'} ·{' '}
+            {showDescription ? 'With Subtitle' : 'Hide Inline Description(Hover Footer Tip)'} · Title{' '}
+            {titleFontSize}px · Slider {sliderLayout}({sliderTrackWidth}px) · Pad {paddingX}×{paddingY}px
           </span>
         </div>
 
@@ -258,10 +230,7 @@ export const SettingActionRowTuner: React.FC<SettingActionRowTunerProps> = React
             variant="ghost"
             isLight={isLight}
             icon={<RotateCcw className="h-3 w-3" />}
-            onClick={() => {
-              resetTokens();
-              setPerRowColorDemo('');
-            }}
+            onClick={() => resetTokens()}
           >
             reset to default
           </Button>

@@ -7,6 +7,7 @@ import { Badge } from '../../ui-core/primitives/Badge';
 import { KeycapBadge } from '../../ui-core/primitives/KeycapBadge';
 import { Button } from '../../ui-core/primitives/Button';
 import { CodeBlock } from '../CodeBlock';
+import { TunerConfigExporterBar } from '../components/tuner/TunerConfigExporterBar';
 
 export const BadgesPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }) => {
   const [activeKey, setActiveKey] = useState<string | null>(null, 'activeKey');
@@ -30,14 +31,39 @@ export const BadgesPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }) 
   const keys = ['ESC', 'TAB', 'W', 'A', 'S', 'D', 'SPACE', 'ENTER', 'SHIFT', 'CTRL', 'F4'];
   const padKeys = ['A', 'B', 'X', 'Y', 'LB', 'RB', 'LT', 'RT', 'START'];
 
+  const buildBadgeSnapshotCode = () =>
+    `export const ALPHA_2_BADGE_KEYCAP_DEFAULTS = ${JSON.stringify(
+      {
+        defaultBadgeShape: 'rounded',
+        pillCounterShape: 'pill',
+        sizes: ['sm', 'md', 'lg'],
+        keycapFlatElevation: true,
+        supportedKeyboardShortcuts: keys,
+        supportedGamepadButtons: padKeys,
+      },
+      null,
+      2
+    )} as const;`;
+
   return (
     <div className="flex flex-col gap-8 max-w-4xl">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Badge & Keycap Badges and Keycaps</h1>
-        <p className={`text-xs mt-1 ${isLight ? 'text-neutral-600' : 'text-neutral-400'}`}>
-          Standardized atomic controls for status badges and shortcut keys. Standardize Two States (rounded rectangle / capsule Capsule) , Three size modifiers (Small / Medium / Large) , Completely remove redundant drop shadows, Clear contrast against gray background. 
+        <p className={`text-xs mt-1 leading-relaxed ${isLight ? 'text-neutral-600' : 'text-neutral-400'}`}>
+          Standardized atomic controls for status badges and shortcut keys. Standardizes two shapes
+          (Rounded Rectangle and Capsule Pill) and three size modifiers (Small / Medium / Large) with
+          flat elevation and high contrast against neutral backgrounds.
         </p>
       </div>
+
+      <TunerConfigExporterBar
+        badge="L1A-EXPORT"
+        title="Alpha-2 · Badge, Keycap & Button Atomic Contract Exporter"
+        subtitle="Exports standardized shape, size, and shortcut badge specifications"
+        isLight={isLight}
+        buildExportCode={buildBadgeSnapshotCode}
+        onResetDefaults={() => setActiveKey(null)}
+      />
 
       {/* 1. Status Badges & Shapes */}
       <div

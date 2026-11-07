@@ -1,25 +1,15 @@
 import React from 'react';
 import { Send, Trash2 } from 'lucide-react';
 import { Button } from '../../../ui-core/primitives/Button';
+import { useQuickNotificationStore } from '../../../ui-core/stores/quickNotificationStore';
 import type { NotificationIconLifecycle } from '../../../ui-core/navigation/QuickNotificationSystem';
-import type {
-  QuickNotificationItem,
-  OngoingConflictPolicy,
-} from '../../../ui-core/stores/notificationTypes';
 
 export interface QuickNotificationTelemetryStatusBarProps {
   isLight: boolean;
   iconLifecycle: NotificationIconLifecycle;
-  activeNotification: QuickNotificationItem | null;
-  activeOngoingTask: QuickNotificationItem | null;
-  ongoingTasksCount: number;
-  ongoingConflictPolicy: OngoingConflictPolicy;
-  setOngoingConflictPolicy: (policy: OngoingConflictPolicy) => void;
-  totalUnreadCount: number;
   showStackIcon: boolean;
   liveMode: boolean;
   handlePushCurrent: () => void;
-  clearAll: () => void;
 }
 
 export const QuickNotificationTelemetryStatusBar: React.FC<
@@ -27,17 +17,22 @@ export const QuickNotificationTelemetryStatusBar: React.FC<
 > = ({
   isLight,
   iconLifecycle,
-  activeNotification,
-  activeOngoingTask,
-  ongoingTasksCount,
-  ongoingConflictPolicy,
-  setOngoingConflictPolicy,
-  totalUnreadCount,
   showStackIcon,
   liveMode,
   handlePushCurrent,
-  clearAll,
 }) => {
+  const {
+    activeNotification,
+    totalUnreadCount,
+    ongoingTasks,
+    activeOngoingTask,
+    ongoingConflictPolicy,
+    setOngoingConflictPolicy,
+    clearAll,
+  } = useQuickNotificationStore();
+
+  const ongoingTasksCount = ongoingTasks.length;
+
   return (
     <div
       className={`px-4 py-2.5 rounded-xl border flex flex-wrap items-center justify-between gap-3 text-xs font-mono transition-colors ${
@@ -105,7 +100,13 @@ export const QuickNotificationTelemetryStatusBar: React.FC<
               </span>
               {typeof activeOngoingTask.progress === 'number' && (
                 <span className="text-neutral-400 font-normal">
-                  ({Math.round(activeOngoingTask.progress > 1 ? activeOngoingTask.progress : activeOngoingTask.progress * 100)}%)
+                  (
+                  {Math.round(
+                    activeOngoingTask.progress > 1
+                      ? activeOngoingTask.progress
+                      : activeOngoingTask.progress * 100
+                  )}
+                  %)
                 </span>
               )}
             </span>
@@ -177,7 +178,8 @@ export const QuickNotificationTelemetryStatusBar: React.FC<
             icon={<Trash2 className="h-3.5 w-3.5" />}
             onClick={clearAll}
           >
-            Clear notifications ({totalUnreadCount + (activeNotification ? 1 : 0) + ongoingTasksCount})
+            Clear notifications (
+            {totalUnreadCount + (activeNotification ? 1 : 0) + ongoingTasksCount})
           </Button>
         )}
 

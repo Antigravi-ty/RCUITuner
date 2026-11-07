@@ -1,5 +1,5 @@
 import React, { lazy } from 'react';
-import { AuditTicketHeader } from '../../components/AuditTicketHeader';
+import { MultiStateRecipeShootoutStage } from './MultiStateRecipeShootoutStage';
 import {
   LAYER2_MANAGE_ROOM_STATES,
   LAYER3_HOST_TRAINING_STATES,
@@ -25,6 +25,11 @@ const Layer2ManageRoomRecipe = lazy(() =>
 const Layer3HostTrainingRecipe = lazy(() =>
   import('../../../ui-core/recipes/Layer3HostTrainingRecipe').then((m) => ({
     default: m.Layer3HostTrainingRecipe,
+  }))
+);
+const Layer3CustomPlayRecipe = lazy(() =>
+  import('../../../ui-core/recipes/Layer3CustomPlayRecipe').then((m) => ({
+    default: m.Layer3CustomPlayRecipe,
   }))
 );
 const Layer3ExhibitionRecipe = lazy(() =>
@@ -70,70 +75,44 @@ export const DEEP_LAYER_ONLINE_AND_USER_RECIPE_SPECS: DeepLayerRecipeSpec[] = [
     id: 'recipe-6a-8-host-ctrl',
     code: '6A.8',
     badgeColor: 'emerald',
-    title: 'Layer 2 Online Room Control Hub (6-State Flat Matrix · Match Lobby / During Match / Online Warmup · Host & Client)',
+    title: 'Layer 2 Online Room Control Hub (6-State Matrix & Single Stage · Match Lobby / During Match / Online Warmup · Host & Client)',
     panelId: 'layer2-manage-room',
     tunerLabel: 'Layer 2 Online Room Control Hub (Online Room Console)',
-    recommendation: 'Flat 6-state matrix rendering Match Lobby, During Match, and Online Warmup for both Host and Client roles simultaneously.',
+    recommendation: '6-state matrix or single stage rendering Match Lobby, During Match, and Online Warmup for both Host and Client roles via StoreSnapshotScope.',
     renderPreview: (isLight) => (
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 w-full items-start">
-        {LAYER2_MANAGE_ROOM_STATES.map((st, idx) => (
-          <div key={st.id} className="flex flex-col gap-2 items-center w-full">
-            <Layer2ManageRoomRecipe
-              isLight={isLight}
-              {...st.props}
-              onBack={noop}
-            />
-            <AuditTicketHeader
-              index={idx + 1}
-              label={st.label}
-              description={st.description}
-              referenceCode="6A.8"
-              componentName={st.componentName || 'Layer2ManageRoomRecipe'}
-              sourceFile={st.sourceFile || 'src/ui-core/recipes/Layer2ManageRoomRecipe.tsx'}
-              subViewFile={st.subViewFile}
-              stateId={st.id}
-              activeProps={st.props}
-              badgeColor="amber"
-              isLight={isLight}
-            />
-          </div>
-        ))}
-      </div>
+      <MultiStateRecipeShootoutStage
+        referenceCode="6A.8"
+        states={LAYER2_MANAGE_ROOM_STATES}
+        badgeColor="amber"
+        isLight={isLight}
+        renderStateCard={(st) => (
+          <Layer2ManageRoomRecipe
+            isLight={isLight}
+            activeTab={st.props.sessionContext}
+            onBack={noop}
+          />
+        )}
+      />
     ),
   },
   {
     id: 'recipe-6a-19-host-train',
     code: '6A.19',
     badgeColor: 'emerald',
-    title: 'Layer 3 Host Training (Flat 4-State Matrix · Idle / Registering Step 3 / Ready Step 5 / Error Step 3)',
+    title: 'Layer 3 Host Training (4-State Matrix & Single Stage · Idle / Registering Step 3 / Ready Step 5 / Error Step 3)',
     panelId: 'layer3-host-training',
     tunerLabel: 'Layer 3 Host Training (Online Shared Training Setup)',
-    recommendation: 'Flat 4-state matrix rendering Host Training room creation lifecycle states side by side.',
+    recommendation: '4-state matrix or single stage rendering Host Training room creation lifecycle states via StoreSnapshotScope.',
     renderPreview: (isLight) => (
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 w-full items-start">
-        {LAYER3_HOST_TRAINING_STATES.map((st, idx) => (
-          <div key={st.id} className="flex flex-col gap-2 items-center w-full">
-            <Layer3HostTrainingRecipe
-              isLight={isLight}
-              {...st.props}
-              onBack={noop}
-            />
-            <AuditTicketHeader
-              index={idx + 1}
-              label={st.label}
-              description={st.description}
-              referenceCode="6A.19"
-              componentName={st.componentName || 'Layer3HostTrainingRecipe'}
-              sourceFile={st.sourceFile || 'src/ui-core/recipes/Layer3HostTrainingRecipe.tsx'}
-              subViewFile={st.subViewFile}
-              stateId={st.id}
-              activeProps={st.props}
-              badgeColor="emerald"
-              isLight={isLight}
-            />
-          </div>
-        ))}
-      </div>
+      <MultiStateRecipeShootoutStage
+        referenceCode="6A.19"
+        states={LAYER3_HOST_TRAINING_STATES}
+        badgeColor="emerald"
+        isLight={isLight}
+        renderStateCard={() => (
+          <Layer3HostTrainingRecipe isLight={isLight} onBack={noop} />
+        )}
+      />
     ),
   },
   {
@@ -205,5 +184,15 @@ export const DEEP_LAYER_ONLINE_AND_USER_RECIPE_SPECS: DeepLayerRecipeSpec[] = [
     tunerLabel: 'Layer 3 Training Configuration',
     recommendation: 'Trajectory Prediction Toggle, Goal Barrier and TAS Rewinder Timeline Access',
     renderPreview: (isLight) => <Layer3TrainingConfigRecipe isLight={isLight} onBack={noop} />,
+  },
+  {
+    id: 'recipe-6a-26-custom-play',
+    code: '6A.26',
+    badgeColor: 'emerald',
+    title: 'Layer 3 Custom Play (Custom Game Modes & Mutator Presets Placeholder)',
+    panelId: 'layer3-custom-play',
+    tunerLabel: 'Layer 3 Custom Play',
+    recommendation: 'Auto-Fit: Under-construction placeholder for custom game modes and mutator rule builders.',
+    renderPreview: (isLight) => <Layer3CustomPlayRecipe isLight={isLight} onBack={noop} />,
   },
 ];

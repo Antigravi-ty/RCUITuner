@@ -19,9 +19,22 @@ import { UI_SPACING } from '../../ui-core/tokens/spacing';
 import { UI_EASING } from '../../ui-core/tokens/easing';
 import { useAccentStore } from '../stores/themeStore';
 import { CodeBlock } from '../CodeBlock';
+import { TunerConfigExporterBar } from '../components/tuner/TunerConfigExporterBar';
 
 export const FoundationsPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }) => {
   const { accent, setAccent, tokens } = useAccentStore();
+
+  const buildFoundationsExportCode = () =>
+    `export const ALPHA_1_FOUNDATIONS_SNAPSHOT = ${JSON.stringify(
+      {
+        activeAccent: accent,
+        radius: UI_RADIUS,
+        spacing: UI_SPACING,
+        easing: UI_EASING,
+      },
+      null,
+      2
+    )} as const;`;
 
   const accentList: { key: AccentColor; name: string; desc: string; previewBg: string }[] = [
     {
@@ -78,8 +91,11 @@ export const FoundationsPage: React.FC<{ isLight?: boolean }> = ({ isLight = tru
           L0. Foundations Cornerstone and design variables
         </h1>
         <p className={`text-xs leading-relaxed ${isLight ? 'text-neutral-600' : 'text-neutral-400'}`}>
-          Pure static constants at the bottom of the pyramid, Geometry Dimensions Token and Lightweight Theme Store (<code className="font-mono">src/ui-core/tokens/</code> &amp; <code className="font-mono">src/ui-core/stores/</code>) . 
-          <strong>Strict Access Rules</strong>: Zero Business Logic JSX Component, Zero Upper-layer (L1~L7) Reverse Dependency. Modify Any Token Precisely control global visual tone, Prevent cross-layer circular coupling. 
+          Pure static constants at the bottom of the pyramid, Geometry Dimensions Token and Lightweight Theme Store (
+          <code className="font-mono">src/ui-core/tokens/</code> &amp;{' '}
+          <code className="font-mono">src/ui-core/stores/</code>). <strong>Strict Access Rules</strong>: Zero Business
+          Logic JSX Component, Zero Upper-layer (L1~L7) Reverse Dependency. Modify Any Token Precisely control global
+          visual tone, Prevent cross-layer circular coupling.
         </p>
 
         {/* Zero-dependency verification strip */}
@@ -101,6 +117,15 @@ export const FoundationsPage: React.FC<{ isLight?: boolean }> = ({ isLight = tru
           </span>
         </div>
       </div>
+
+      <TunerConfigExporterBar
+        badge="L0-EXPORT"
+        title="Alpha-1 · L0 Design Tokens & Accent Theme Snapshot Exporter"
+        subtitle="Exports active accent tone, concentric corner radii, 4px grid spacing, and Apple HIG spring curves"
+        isLight={isLight}
+        buildExportCode={buildFoundationsExportCode}
+        onResetDefaults={() => setAccent('amber')}
+      />
 
       {/* 1. Colors & Theme Store */}
       <div

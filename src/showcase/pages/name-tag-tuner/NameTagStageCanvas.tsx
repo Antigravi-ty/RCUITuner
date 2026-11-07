@@ -3,17 +3,17 @@ import {
   NAME_TAG_FAR_CALIBRATION_DEPTH_UU,
   NAME_TAG_NEAR_CALIBRATION_DEPTH_UU,
   NAME_TAG_REFERENCE_DEPTH_UU,
+  resolveNameTagBoostBorderVisible,
   type NameTagBoostBorderOverride,
   type NameTagCarTelemetry,
   type NameTagConfig,
-} from '../../../ui-core/config/nameTagCalibrationMath';
+} from '../../../ui-core/config/nameTagConfig';
 import {
   renderNameTagOverlayPass2D,
   type NameTagBallOcclusionProjection2D,
   type NameTagPillRenderCard2D,
 } from '../../../ui-core/config/nameTagPillRenderer';
 import {
-  resolveNameTagBoostBorderVisible,
   setNameTagTelemetrySnapshot,
 } from '../../../ui-core/stores/nameTagTunerStore';
 import { ArenaBackdrop, type ArenaLightingPreset } from '../../ArenaBackdrop';

@@ -17,14 +17,9 @@ import { useQuickNotificationDraftState } from './quick-notification/useQuickNot
 
 export const QuickNotificationPage: React.FC<{ isLight?: boolean }> = ({ isLight = false }) => {
   const {
-    activeNotification,
-    totalUnreadCount,
-    ongoingTasks,
     activeOngoingTask,
     ongoingConflictPolicy,
     pushNotification,
-    setOngoingConflictPolicy,
-    clearAll,
   } = useQuickNotificationStore();
 
   const [iconLifecycle, setIconLifecycle] = useState<NotificationIconLifecycle>('hidden');
@@ -45,7 +40,7 @@ export const QuickNotificationPage: React.FC<{ isLight?: boolean }> = ({ isLight
   } = useQuickNotificationDraftState();
 
   // Simulation timer refs for clean lifecycle teardown
-  const simTimersRef = useRef<any[]>([]);
+  const simTimersRef = useRef<Array<ReturnType<typeof setTimeout>>>([]);
   const clearSimTimers = () => {
     simTimersRef.current.forEach((t) => clearTimeout(t));
     simTimersRef.current = [];
@@ -390,16 +385,9 @@ pushQuickNotification({
       <QuickNotificationTelemetryStatusBar
         isLight={isLight}
         iconLifecycle={iconLifecycle}
-        activeNotification={activeNotification}
-        activeOngoingTask={activeOngoingTask}
-        ongoingTasksCount={ongoingTasks.length}
-        ongoingConflictPolicy={ongoingConflictPolicy}
-        setOngoingConflictPolicy={setOngoingConflictPolicy}
-        totalUnreadCount={totalUnreadCount}
         showStackIcon={showStackIcon}
         liveMode={liveMode}
         handlePushCurrent={handlePushCurrent}
-        clearAll={clearAll}
       />
 
       {/* ──────────────────────────────────────────────────────────────────

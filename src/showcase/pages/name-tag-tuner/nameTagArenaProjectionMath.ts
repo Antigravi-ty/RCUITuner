@@ -4,7 +4,7 @@ import {
   resolveNameTagCornerRadiusPx,
   resolveNameTagFontFamilyCss,
   type NameTagConfig,
-} from '../../../ui-core/config/nameTagCalibrationMath';
+} from '../../../ui-core/config/nameTagConfig';
 import type { NameTagPillRenderCard2D } from '../../../ui-core/config/nameTagPillRenderer';
 
 export interface KickoffCarSpawn {

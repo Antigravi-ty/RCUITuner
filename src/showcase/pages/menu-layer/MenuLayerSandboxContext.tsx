@@ -13,8 +13,8 @@ import type {
   LinearPlaylistStep,
   LivePreviewAnimPhase,
   MenuVisibilityTier,
-  resolveRouteAuditInfo,
 } from './menuLayerRouteConfig';
+import type { resolveRouteAuditInfo } from './menuLayerLinearPlaylists';
 import type { Layer3StepOverrideState } from './MenuLayerStageRecipeRouter';
 
 export interface MenuLayerSandboxContextValue {

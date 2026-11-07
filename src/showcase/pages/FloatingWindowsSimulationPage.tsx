@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 import { quickNotification } from '../../ui-core/stores/quickNotificationStore';
 import { createScopedSyncedState } from '../stores/crossClientSync';
 import { readUrlParams, updateUrlParams } from '../stores/urlSync';
@@ -13,6 +13,11 @@ import {
   DEV_PRESET_WINDOWS,
   PRESET_WINDOWS,
 } from '../../ui-core/stores/devFloatingPresets';
+import { getDiscoveredFloatingSurfaces } from '../../ui-core/manifest/surfaceRegistry';
+import {
+  resolveCalibratedSurfaceSizing,
+  subscribeSurfaceCalibration,
+} from '../../ui-core/manifest/surfaceCalibration';
 import { FloatingWindowsCanvasStage } from './floating-windows/FloatingWindowsCanvasStage';
 import { FloatingWindowsFlatMatrixWall } from './floating-windows/FloatingWindowsFlatMatrixWall';
 import { FloatingWindowsScannerControlBar } from './floating-windows/FloatingWindowsScannerControlBar';
@@ -20,8 +25,63 @@ import { FloatingWindowsStageToolbar } from './floating-windows/FloatingWindowsS
 import { FloatingWindowsAuditSection } from './floating-windows/FloatingWindowsAuditSection';
 import { useFloatingWindowsCalibration } from './floating-windows/useFloatingWindowsCalibration';
 import { RapidReviewTriageBar } from '../components/review/RapidReviewTriageBar';
+import { useReviewLedgerStore } from '../components/review/reviewLedgerStore';
+import { AutoConfigTunerPanel } from '../components/tuner/AutoConfigTunerPanel';
 
 const useState = createScopedSyncedState('page:floating-windows-v2');
+
+function buildMergedFloatingPresets(tier: FloatingWindowVisibilityTier): PresetConfig[] {
+  const staticList = tier === 'user' ? USER_PRESET_WINDOWS : DEV_PRESET_WINDOWS;
+  const byId = new Map<string, PresetConfig>();
+
+  for (const preset of staticList) {
+    const calibrated = resolveCalibratedSurfaceSizing(`floating:${preset.id}`, {
+      width: preset.width,
+      height: preset.height,
+      minWidth: preset.minWidth,
+      minHeight: preset.minHeight,
+      maxHeight: preset.maxHeight,
+      mode: preset.autoFitHeight ? 'adaptive' : 'fixed',
+    });
+    byId.set(preset.id, {
+      ...preset,
+      width: calibrated.width,
+      height: typeof calibrated.height === 'number' ? calibrated.height : preset.height,
+      minWidth: calibrated.minWidth,
+      minHeight: calibrated.minHeight ?? preset.minHeight,
+      maxHeight: calibrated.maxHeight,
+      autoFitHeight: calibrated.mode === 'adaptive' ? true : preset.autoFitHeight,
+    });
+  }
+
+  for (const entry of getDiscoveredFloatingSurfaces()) {
+    const entryTier: FloatingWindowVisibilityTier =
+      entry.meta.layer === 'floating-user' ? 'user' : 'developer';
+    if (entryTier !== tier || byId.has(entry.meta.id)) continue;
+    const calibrated = resolveCalibratedSurfaceSizing(
+      `floating:${entry.meta.id}`,
+      entry.meta.defaultSizing
+    );
+    byId.set(entry.meta.id, {
+      id: entry.meta.id,
+      title: entry.meta.title,
+      category: entry.meta.menuGroup ?? 'Developer',
+      width: calibrated.width,
+      height: typeof calibrated.height === 'number' ? calibrated.height : 580,
+      minWidth: calibrated.minWidth,
+      minHeight: calibrated.minHeight ?? 200,
+      maxHeight: calibrated.maxHeight,
+      autoFitHeight: calibrated.mode === 'adaptive',
+      resizable: true,
+      singleton: true,
+      tier: entryTier,
+      summary: entry.meta.subtitle,
+      tabs: entry.meta.variants?.map((v) => ({ id: v.variantId, label: v.label })),
+    });
+  }
+
+  return Array.from(byId.values());
+}
 
 export interface FloatingWindowsSimulationPageProps {
   isLight?: boolean;
@@ -35,6 +95,17 @@ export const FloatingWindowsSimulationPage: React.FC<FloatingWindowsSimulationPa
     spawnWithFlight,
     clearAll,
   } = useFloatingStore(floatingSandboxStore);
+
+  const [calibrationVersion, setCalibrationVersion] = React.useState(0);
+  useEffect(() => {
+    return subscribeSurfaceCalibration(() => {
+      setCalibrationVersion((v) => v + 1);
+    });
+  }, []);
+
+  const userWindows = useMemo(() => buildMergedFloatingPresets('user'), [calibrationVersion]);
+  const devWindows = useMemo(() => buildMergedFloatingPresets('developer'), [calibrationVersion]);
+  const allWindows = useMemo(() => [...userWindows, ...devWindows], [userWindows, devWindows]);
 
   const [rawTier, setTier] = useState<FloatingWindowVisibilityTier>(() => {
     const params = readUrlParams();
@@ -109,7 +180,7 @@ export const FloatingWindowsSimulationPage: React.FC<FloatingWindowsSimulationPa
     };
   }, [fwMode]);
 
-  const activeTierWindows = tier === 'user' ? USER_PRESET_WINDOWS : DEV_PRESET_WINDOWS;
+  const activeTierWindows = tier === 'user' ? userWindows : devWindows;
   const currentIndex = Math.max(
     0,
     activeTierWindows.findIndex((w) => w.id === selectedWindowId)
@@ -117,6 +188,27 @@ export const FloatingWindowsSimulationPage: React.FC<FloatingWindowsSimulationPa
   const currentPreset = activeTierWindows[currentIndex] || activeTierWindows[0];
 
   const { manualMinWidths, manualMinHeights } = useFloatingWindowsCalibration(currentPreset);
+
+  const navigationSeq = useReviewLedgerStore((s) => s.navigationSeq);
+  const activeUnitKey = useReviewLedgerStore((s) => s.activeUnitKey);
+  useEffect(() => {
+    if (navigationSeq === 0 || !activeUnitKey.startsWith('floating:')) return;
+    const [surfaceId, variantId = 'default'] = activeUnitKey.split('::');
+    const fwId = surfaceId.replace(/^floating:/, '');
+    const target = allWindows.find((w) => w.id === fwId);
+    if (!target) return;
+    const targetTier: FloatingWindowVisibilityTier =
+      target.tier === 'developer' ? 'developer' : 'user';
+    if (targetTier !== tier) {
+      setTier(targetTier);
+    }
+    setSelectedWindowId(target.id);
+    if (variantId && variantId !== 'default') {
+      setActiveSubTab(variantId);
+    } else {
+      setActiveSubTab(target.tabs?.[0]?.id || '');
+    }
+  }, [navigationSeq]);
 
   // 2) Continuously synchronize active floating window state to URL address bar
   useEffect(() => {
@@ -164,11 +256,11 @@ export const FloatingWindowsSimulationPage: React.FC<FloatingWindowsSimulationPa
       singleton: true,
       startMinimized: false,
     });
-  }, [fwMode, currentPreset?.id]);
+  }, [fwMode, currentPreset?.id, currentPreset?.width, currentPreset?.height]);
 
   const handleSwitchTier = (nextTier: FloatingWindowVisibilityTier) => {
     setTier(nextTier);
-    const list = nextTier === 'user' ? USER_PRESET_WINDOWS : DEV_PRESET_WINDOWS;
+    const list = nextTier === 'user' ? userWindows : devWindows;
     const first = list[0];
     if (first) {
       setSelectedWindowId(first.id);
@@ -318,9 +410,11 @@ export const FloatingWindowsSimulationPage: React.FC<FloatingWindowsSimulationPa
         <FloatingWindowsCanvasStage
           isLight={isLight}
           canvasRef={canvasRef}
-          containerPreset={containerPreset}
-          boundaryLocked={boundaryLocked}
-          manualBoundarySize={manualBoundarySize}
+          boundary={{
+            containerPreset,
+            boundaryLocked,
+            manualBoundarySize,
+          }}
           currentPreset={currentPreset}
           activeSubTab={activeSubTab}
           setActiveSubTab={setActiveSubTab}
@@ -336,7 +430,6 @@ export const FloatingWindowsSimulationPage: React.FC<FloatingWindowsSimulationPa
         isLight={isLight}
         tier={tier}
         fwMode={fwMode}
-        setFwMode={setFwMode}
         currentIndex={currentIndex}
         activeTierWindows={activeTierWindows}
         currentPreset={currentPreset}
@@ -350,10 +443,13 @@ export const FloatingWindowsSimulationPage: React.FC<FloatingWindowsSimulationPa
           handleChangeManualBoundarySize,
           handleToggleBoundaryLock,
         }}
-        handleSwitchTier={handleSwitchTier}
-        handleStepWindow={handleStepWindow}
         totalCount={totalCount}
-        clearAll={clearAll}
+        actions={{
+          setFwMode,
+          handleSwitchTier,
+          handleStepWindow,
+          clearAll,
+        }}
       />
       <FloatingWindowsAuditSection
         isLight={isLight}
@@ -373,12 +469,28 @@ export const FloatingWindowsSimulationPage: React.FC<FloatingWindowsSimulationPa
         activeTierWindows={activeTierWindows}
         currentPreset={currentPreset}
         containerPreset={containerPreset}
-        setContainerPreset={setContainerPreset}
         activeSubTab={activeSubTab}
-        setActiveSubTab={setActiveSubTab}
-        handleSwitchTier={handleSwitchTier}
-        handleStepWindow={handleStepWindow}
-        handleSelectPreset={handleSelectPreset}
+        actions={{
+          setContainerPreset,
+          setActiveSubTab,
+          handleSwitchTier,
+          handleStepWindow,
+          handleSelectPreset,
+        }}
+      />
+
+      <AutoConfigTunerPanel
+        surfaceId={`floating:${currentPreset?.id ?? 'replay-viewer'}`}
+        surfaceLabel={currentPreset?.title}
+        defaultSizing={{
+          width: currentPreset?.width ?? 480,
+          height: currentPreset?.height ?? 600,
+          minWidth: currentPreset?.minWidth,
+          minHeight: currentPreset?.minHeight,
+          maxHeight: currentPreset?.maxHeight,
+          mode: currentPreset?.autoFitHeight ? 'adaptive' : 'fixed',
+        }}
+        isLight={isLight}
       />
 
       <RapidReviewTriageBar isLight={isLight} />

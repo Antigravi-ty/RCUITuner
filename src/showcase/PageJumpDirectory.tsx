@@ -20,23 +20,14 @@ export interface JumpDirectoryCategory {
 }
 
 export interface JumpDirectoryItem {
-  /** Short reference code for quick communication, e.g. `5A.1`, `T5A.3`, `5B.5`, `6A.6` */
   code: string;
-  /** Canonical exported component or module name, e.g. `StepperScoreboardHUD` */
   componentName?: string;
-  /** Alias for componentName */
   name?: string;
-  /** Human-readable section title */
   label: string;
-  /** DOM element ID to scroll to when clicked */
   targetId?: string;
-  /** Alias for targetId */
   id?: string;
-  /** Optional layer or architecture tag, e.g. `120Hz Ref`, `L5A`, `L3` */
   tag?: string;
-  /** Alias for tag */
   badge?: string;
-  /** Optional grouping category ID for directory filtering */
   category?: string;
 }
 
@@ -46,35 +37,22 @@ export interface PageJumpDirectoryProps {
   subtitle?: string;
   items: JumpDirectoryItem[];
   onSelect?: (item: JumpDirectoryItem) => void;
-  /** Optional currently active item ID or code (used for on-demand single-module rendering mode) */
   activeId?: string;
-  /** When true, clicking an item triggers `onSelect(item)` without forcing default hash scroll */
   preventDefaultJump?: boolean;
-  /** Optional category filter tabs */
   categories?: JumpDirectoryCategory[];
-  /** Optional initial category ID */
   defaultCategory?: string;
-  /** When true, displays a quick search/filter input for large directories */
   searchable?: boolean;
-  /** When true, allows collapsing the card grid into a compact bar */
   collapsible?: boolean;
-  /** Initial collapsed state when collapsible is true */
   defaultCollapsed?: boolean;
-  /** Optional extra control node rendered in the header toolbar */
   headerExtra?: React.ReactNode;
   isLight?: boolean;
   className?: string;
 }
 
-/**
- * PageJumpDirectory
- * Decoupled top-of-page quick jump table of contents & on-demand module selector
- * for fast component lookup and unambiguous reference codes (`[Code] ComponentName · Label`).
- */
 export const PageJumpDirectory: React.FC<PageJumpDirectoryProps> = React.memo(({
   layerTag,
-  title = 'Page component quick jump directory (Quick Jump & Reference Index)',
-  subtitle = 'Click the card to smoothly scroll to the corresponding component section · Click the copy button on the right to copy the standard component reference name, Facilitate Positioning',
+  title = 'Quick Jump & Reference Index',
+  subtitle = 'Click a card to scroll to the component section or copy its reference ID',
   items,
   onSelect,
   activeId,
@@ -277,7 +255,7 @@ export const PageJumpDirectory: React.FC<PageJumpDirectoryProps> = React.memo(({
             title="expand/Collapse real-time view of all adjustable parameters on this page JSON Snapshot"
           >
             <Code2 className="h-3 w-3" />
-            <span>{exportedPreviewJson !== null ? 'Collapse Parameters JSON' : 'View Page Parameters'}</span>
+            <span>{exportedPreviewJson !== null ? 'Collapse JSON' : 'View Parameters'}</span>
           </button>
           <button
             type="button"
@@ -287,10 +265,10 @@ export const PageJumpDirectory: React.FC<PageJumpDirectoryProps> = React.memo(({
                 ? 'bg-emerald-500 text-white border-emerald-500'
                 : 'bg-amber-500 hover:bg-amber-400 text-neutral-950 border-amber-400'
             }`}
-            title="One-click copy of all current adjustable parameters and states on this page, Easy to save as default"
+            title="Copy all adjustable parameters and states on this page"
           >
             {copiedPageParams ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-            <span>{copiedPageParams ? 'Page parameters copied!' : 'Export page parameters (Copy Params)'}</span>
+            <span>{copiedPageParams ? 'Parameters copied!' : 'Copy Page Params'}</span>
           </button>
           <button
             type="button"

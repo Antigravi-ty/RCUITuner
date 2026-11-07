@@ -4,7 +4,8 @@ import {
   ArrowUpRight,
 } from 'lucide-react';
 import { Badge } from '../../../ui-core/primitives/Badge';
-import { type MenuPanelId } from '../../../ui-core/tokens/menuLayoutTokens';
+import { useMenuLayoutStore } from '../../../ui-core/stores/menuLayoutStore';
+import { DEFAULT_PANEL_SIZING, type MenuPanelId } from '../../../ui-core/tokens/menuLayoutTokens';
 import {
   useCameraSettingsStyleStore,
   CAMERA_SETTINGS_STYLE_PRESETS,
@@ -12,45 +13,34 @@ import {
 } from '../../../ui-core/stores/cameraSettingsStyleStore';
 import { useQuickNotificationStore } from '../../../ui-core/stores/quickNotificationStore';
 import { dispatchOnlineRoomErrorNotification } from '../../../ui-core/recipes/online/onlineRoomErrorNotification';
-import type { ShowcaseTab } from '../../sidebarNavConfig';
-import {
-  type ActiveMenuRoute,
-  type MenuVisibilityTier,
-  USER_LINEAR_PLAYLIST,
-} from './menuLayerRouteConfig';
-import type { Layer3StepOverrideState } from './MenuLayerStageRecipeRouter';
+import { USER_LINEAR_PLAYLIST } from './menuLayerLinearPlaylists';
+import { useMenuLayerSandbox } from './MenuLayerSandboxContext';
 
 export interface MenuLayerDeepRouteRendererProps {
   isLight: boolean;
-  visibilityTier: MenuVisibilityTier;
-  currentRoute: ActiveMenuRoute;
-  handleSelectRoute: (route: ActiveMenuRoute) => void;
-  getPanelWidth: (panelId: MenuPanelId) => number;
-  simulateLayer3Error: boolean;
-  setSimulateLayer3Error: (enabled: boolean) => void;
-  showToast: (msg: string) => void;
-  showInlineTuner: boolean;
-  onToggleInlineTuner?: () => void;
-  onNavigateShowcase?: (tab: ShowcaseTab, targetId?: string) => void;
-  layer3StepOverride?: Layer3StepOverrideState;
-  onChangeLayer3StepOverride?: (next: Layer3StepOverrideState) => void;
 }
 
 export const MenuLayerDeepRouteRenderer: React.FC<MenuLayerDeepRouteRendererProps> = ({
   isLight,
-  visibilityTier,
-  currentRoute,
-  handleSelectRoute,
-  getPanelWidth,
-  simulateLayer3Error,
-  setSimulateLayer3Error,
-  showToast,
-  showInlineTuner,
-  onToggleInlineTuner,
-  onNavigateShowcase,
-  layer3StepOverride,
-  onChangeLayer3StepOverride,
 }) => {
+  const {
+    visibilityTier,
+    currentRoute,
+    handleSelectRoute,
+    showToast,
+    showInlineTuner,
+    setShowInlineTuner,
+    onNavigateShowcase,
+    layer3StepOverride,
+    setLayer3StepOverride: onChangeLayer3StepOverride,
+  } = useMenuLayerSandbox();
+  const { panels, simulateLayer3Error, setToken } = useMenuLayoutStore();
+  const getPanelWidth = (panelId: MenuPanelId) =>
+    (panels?.[panelId] ?? DEFAULT_PANEL_SIZING[panelId])?.width ?? 480;
+  const setSimulateLayer3Error = (enabled: boolean) =>
+    setToken('simulateLayer3Error', enabled);
+  const onToggleInlineTuner = () => setShowInlineTuner((prev) => !prev);
+
   const cameraStyle = useCameraSettingsStyleStore();
   const routeProgressSteps = React.useMemo(
     () =>
@@ -254,7 +244,7 @@ export const MenuLayerDeepRouteRenderer: React.FC<MenuLayerDeepRouteRendererProp
                   key={step.id}
                   type="button"
                   onClick={() => {
-                    onChangeLayer3StepOverride?.({
+                    onChangeLayer3StepOverride({
                       progressStatus: step.progressStatus,
                       currentStep: step.currentStep ?? 1,
                       defaultEditingConfig: Boolean(step.defaultEditingConfig),
@@ -287,19 +277,17 @@ export const MenuLayerDeepRouteRenderer: React.FC<MenuLayerDeepRouteRendererProp
               7A.12 Camera Settings Layout Presets (Center-Aligned Slider · Right-Aligned Action Text · Left-Aligned Numeric Box · Checkbox · Destructive Reset Confirm):
             </span>
             <div className="flex items-center gap-3">
-              {onToggleInlineTuner && (
-                <button
-                  type="button"
-                  onClick={onToggleInlineTuner}
-                  className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 hover:underline font-bold cursor-pointer"
-                >
-                  <span>
-                    {showInlineTuner
-                      ? 'Collapse 7A Inline Tuner Drawer ^'
-                      : 'Expand 7A Inline Tuner Drawer (Spine / Spacing / Checkbox) v'}
-                  </span>
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={onToggleInlineTuner}
+                className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 hover:underline font-bold cursor-pointer"
+              >
+                <span>
+                  {showInlineTuner
+                    ? 'Collapse 7A Inline Tuner Drawer ^'
+                    : 'Expand 7A Inline Tuner Drawer (Spine / Spacing / Checkbox) v'}
+                </span>
+              </button>
               {onNavigateShowcase && (
                 <button
                   type="button"

@@ -28,6 +28,8 @@ import {
   getRelatedRecipeItems,
 } from './recipes/recipeRegistry';
 import { RapidReviewTriageBar } from '../components/review/RapidReviewTriageBar';
+import { useReviewLedgerStore } from '../components/review/reviewLedgerStore';
+import { AutoConfigTunerPanel } from '../components/tuner/AutoConfigTunerPanel';
 
 export const RecipesPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }) => {
   const {
@@ -191,6 +193,26 @@ export const RecipesPage: React.FC<{ isLight?: boolean }> = ({ isLight = true })
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [renderMode, prevItem, nextItem, handleSelectRecipeId]);
+
+  const navigationSeq = useReviewLedgerStore((s) => s.navigationSeq);
+  const activeUnitKey = useReviewLedgerStore((s) => s.activeUnitKey);
+  useEffect(() => {
+    if (navigationSeq === 0 || !activeUnitKey.startsWith('recipe:')) return;
+    const [surfaceId] = activeUnitKey.split('::');
+    const recipeStem = surfaceId.replace(/^recipe:/, '');
+    const match = RECIPES_JUMP_ITEMS.find(
+      (it) =>
+        it.name === recipeStem ||
+        it.componentName === recipeStem ||
+        it.id === `recipe-auto-${recipeStem}`
+    );
+    if (match) {
+      const nextId = match.id || match.targetId || match.code;
+      if (nextId !== activeRecipeId) {
+        handleSelectRecipeId(nextId, false);
+      }
+    }
+  }, [navigationSeq]);
 
   return (
     <div className="flex flex-col gap-8 max-w-6xl w-full">
@@ -453,6 +475,12 @@ export const RecipesPage: React.FC<{ isLight?: boolean }> = ({ isLight = true })
           })}
         </div>
       )}
+
+      <AutoConfigTunerPanel
+        surfaceId={`recipe:${(activeItem.name || activeItem.componentName || activeRecipeId).replace(/\s*\(.*\)$/, '')}`}
+        surfaceLabel={`[${activeItem.code}] ${activeItem.label}`}
+        isLight={isLight}
+      />
 
       <RapidReviewTriageBar isLight={isLight} />
     </div>

@@ -13,6 +13,14 @@ import { FloatingWindowIcon } from '../../../ui-core/navigation/FloatingWindowIc
 import { FloatingWindowsMinWidthCalibrationBar } from './FloatingWindowsMinWidthCalibrationBar';
 import { useFloatingWindowsCalibration } from './useFloatingWindowsCalibration';
 
+export interface FloatingScannerActions {
+  setContainerPreset: (next: 'full' | '1080p-compact' | 'small-squeeze') => void;
+  setActiveSubTab: (next: string) => void;
+  handleSwitchTier: (nextTier: FloatingWindowVisibilityTier) => void;
+  handleStepWindow: (delta: number) => void;
+  handleSelectPreset: (preset: PresetConfig) => void;
+}
+
 export interface FloatingWindowsScannerControlBarProps {
   isLight: boolean;
   tier: FloatingWindowVisibilityTier;
@@ -21,12 +29,8 @@ export interface FloatingWindowsScannerControlBarProps {
   activeTierWindows: PresetConfig[];
   currentPreset: PresetConfig | undefined;
   containerPreset: 'full' | '1080p-compact' | 'small-squeeze';
-  setContainerPreset: (next: 'full' | '1080p-compact' | 'small-squeeze') => void;
   activeSubTab: string;
-  setActiveSubTab: (next: string) => void;
-  handleSwitchTier: (nextTier: FloatingWindowVisibilityTier) => void;
-  handleStepWindow: (delta: number) => void;
-  handleSelectPreset: (preset: PresetConfig) => void;
+  actions: FloatingScannerActions;
 }
 
 export const FloatingWindowsScannerControlBar: React.FC<
@@ -39,12 +43,14 @@ export const FloatingWindowsScannerControlBar: React.FC<
   activeTierWindows,
   currentPreset,
   containerPreset,
-  setContainerPreset,
   activeSubTab,
-  setActiveSubTab,
-  handleSwitchTier,
-  handleStepWindow,
-  handleSelectPreset,
+  actions: {
+    setContainerPreset,
+    setActiveSubTab,
+    handleSwitchTier,
+    handleStepWindow,
+    handleSelectPreset,
+  },
 }) => {
   const { windows, opacity, setOpacity } = useFloatingStore(floatingSandboxStore);
   const {

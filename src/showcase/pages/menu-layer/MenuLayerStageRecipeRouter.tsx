@@ -31,18 +31,14 @@ import { Layer4AdvancedAudioRecipe } from '../../../ui-core/recipes/Layer4Advanc
 import { Layer4ControllerSettingsRecipe } from '../../../ui-core/recipes/Layer4ControllerSettingsRecipe';
 import { Layer4EventTriggerRulesRecipe } from '../../../ui-core/recipes/Layer4EventTriggerRulesRecipe';
 import { Layer4DevSignalingLabRecipe } from '../../../ui-core/recipes/Layer4DevSignalingLabRecipe';
-import { floatingStore, type FloatingWindowItem } from '../../../ui-core/stores/floatingStore';
+import { floatingStore } from '../../../ui-core/stores/floatingStore';
 import { StoreSnapshotScope } from '../../../ui-core/stores/storeSnapshotScope';
-import { type PresetConfig } from '../../../ui-core/stores/floatingPresets';
 import { PRESET_WINDOWS } from '../../../ui-core/stores/devFloatingPresets';
 import {
   MENU_ROUTE_CONFIG,
   type ActiveMenuRoute,
   type Layer3StepProgressStatus,
-  type LivePreviewAnimPhase,
-  type MenuVisibilityTier,
 } from './menuLayerRouteConfig';
-
 import { useMenuLayerSandbox } from './MenuLayerSandboxContext';
 
 export interface Layer3StepOverrideState {
@@ -60,7 +56,6 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
 }) => {
   const {
     visibilityTier,
-    handleChangeVisibilityTier: onSwitchTier,
     layer1ContextMode,
     setLayer1ContextMode: onChangeLayer1ContextMode,
     touchMode,
@@ -74,9 +69,6 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
     setGarageTab,
     bgRenderPaused,
     setLastParentRoute,
-    handleAddPresetWindow,
-    windows,
-    closeWindow,
     setLiveAnimPhase,
     handleTriggerCollapse,
     layer3StepOverride,
@@ -102,13 +94,7 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
   const spawnPresetById = (windowId: string, activeTab?: string) => {
     const preset = PRESET_WINDOWS.find((p) => p.id === windowId);
     if (preset) {
-      floatingStore.spawnWindow({
-        id: preset.id, title: preset.title, category: preset.category,
-        width: preset.width, height: preset.height, minWidth: preset.minWidth,
-        minHeight: preset.minHeight, maxWidth: preset.maxWidth, maxHeight: preset.maxHeight,
-        autoFitHeight: preset.autoFitHeight, resizable: preset.resizable,
-        singleton: preset.singleton, startMinimized: false,
-      });
+      floatingStore.spawnWindow({ ...preset, startMinimized: false });
       handleSelectRoute('layer-0');
       showToast(`[ok] Floating window opened: ${preset.title}${activeTab ? ` (${activeTab})` : ''}`);
     } else {
@@ -221,26 +207,36 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
       )}
 
       {displayedRoute === 'manage-room' && (
-        <Layer2ManageRoomRecipe
-          isLight={isLight}
-          developerMode={visibilityTier === 'developer'}
-          sessionContext={resolveOnlineSessionContextId(layer1ContextMode)}
-          onSessionContextChange={(ctx) => {
-            onChangeLayer1ContextMode?.(ctx);
-            showToast(`Room status view switched: ${ctx}`);
+        <StoreSnapshotScope
+          overrides={{
+            appStore: {
+              developerMode: visibilityTier === 'developer',
+            },
+            onlineRoomStore: {
+              sessionContext: resolveOnlineSessionContextId(layer1ContextMode),
+              onSessionContextChange: (ctx: string) => {
+                onChangeLayer1ContextMode?.(ctx as Layer1MenuContextMode);
+                showToast(`Room status view switched: ${ctx}`);
+              },
+              onOpenNetHud: () => spawnPresetById('network-monitor'),
+              onNavigateAdvancedSettings: () => {
+                setLastParentRoute('manage-room');
+                handleSelectRoute('exp-multi-bots');
+              },
+              onCloseRoom: () => {
+                onChangeLayer1ContextMode?.('freeplay');
+                handleSelectRoute('main-menu');
+                showToast('Closed/Leave room and return Free Play');
+              },
+            },
           }}
-          onOpenNetHud={() => spawnPresetById('network-monitor')}
-          onNavigateAdvancedSettings={() => {
-            setLastParentRoute('manage-room');
-            handleSelectRoute('exp-multi-bots');
-          }}
-          onCloseRoom={() => {
-            onChangeLayer1ContextMode?.('freeplay');
-            handleSelectRoute('main-menu');
-            showToast('Closed/Leave room and return Free Play');
-          }}
-          onBack={goBack}
-        />
+        >
+          <Layer2ManageRoomRecipe
+            isLight={isLight}
+            activeTab={resolveOnlineSessionContextId(layer1ContextMode)}
+            onBack={goBack}
+          />
+        </StoreSnapshotScope>
       )}
 
       {displayedRoute === 'audio-eq' && (
@@ -259,41 +255,51 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
       )}
 
       {displayedRoute === 'host-match' && (
-        <Layer3HostMatchRecipe
-          isLight={isLight}
-          developerMode={visibilityTier === 'developer'}
-          progressStatus={layer3StepOverride?.progressStatus}
-          currentStep={layer3StepOverride?.currentStep}
-          defaultEditingConfig={layer3StepOverride?.defaultEditingConfig}
-          onNavigateGarageSync={navigateToGarageSync}
-          onNavigateAdvancedSettings={() => {
-            setLastParentRoute('host-match');
-            handleSelectRoute('exp-multi-bots');
+        <StoreSnapshotScope
+          overrides={{
+            appStore: {
+              developerMode: visibilityTier === 'developer',
+            },
+            onlineRoomStore: {
+              progressStatus: layer3StepOverride?.progressStatus,
+              currentStep: layer3StepOverride?.currentStep,
+              defaultEditingConfig: layer3StepOverride?.defaultEditingConfig,
+              onNavigateGarageSync: navigateToGarageSync,
+              onNavigateAdvancedSettings: () => {
+                setLastParentRoute('host-match');
+                handleSelectRoute('exp-multi-bots');
+              },
+              onStartHost: () => {
+                onChangeLayer1ContextMode?.('match-lobby-host');
+                setLastParentRoute('main-menu');
+                handleSelectRoute('manage-room');
+                showToast('[ok] Completed 5 Step Create and Enter Room Configure Room (Match Lobby · Host)');
+              },
+            },
           }}
-          onStartHost={() => {
-            onChangeLayer1ContextMode?.('match-lobby-host');
-            setLastParentRoute('main-menu');
-            handleSelectRoute('manage-room');
-            showToast('[ok] Completed 5 Step Create and Enter Room Configure Room (Match Lobby · Host)');
-          }}
-          onBack={goBack}
-        />
+        >
+          <Layer3HostMatchRecipe isLight={isLight} onBack={goBack} />
+        </StoreSnapshotScope>
       )}
 
       {displayedRoute === 'host-training' && (
-        <Layer3HostTrainingRecipe
-          isLight={isLight}
-          progressStatus={layer3StepOverride?.progressStatus}
-          currentStep={layer3StepOverride?.currentStep}
-          onNavigateGarageSync={navigateToGarageSync}
-          onStartTraining={() => {
-            onChangeLayer1ContextMode?.('online-warmup-host');
-            setLastParentRoute('main-menu');
-            handleSelectRoute('manage-room');
-            showToast('[ok] Created Online Warmup Room and Enter Configure Room (Warmup · Host)');
+        <StoreSnapshotScope
+          overrides={{
+            onlineRoomStore: {
+              progressStatus: layer3StepOverride?.progressStatus,
+              currentStep: layer3StepOverride?.currentStep,
+              onNavigateGarageSync: navigateToGarageSync,
+              onStartTraining: () => {
+                onChangeLayer1ContextMode?.('online-warmup-host');
+                setLastParentRoute('main-menu');
+                handleSelectRoute('manage-room');
+                showToast('[ok] Created Online Warmup Room and Enter Configure Room (Warmup · Host)');
+              },
+            },
           }}
-          onBack={goBack}
-        />
+        >
+          <Layer3HostTrainingRecipe isLight={isLight} onBack={goBack} />
+        </StoreSnapshotScope>
       )}
 
       {displayedRoute === 'custom-play' && (
@@ -304,19 +310,23 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
       )}
 
       {displayedRoute === 'join-room' && (
-        <Layer3JoinRoomRecipe
-          isLight={isLight}
-          progressStatus={layer3StepOverride?.progressStatus}
-          currentStep={layer3StepOverride?.currentStep}
-          onNavigateGarageSync={navigateToGarageSync}
-          onJoinRoom={() => {
-            onChangeLayer1ContextMode?.('match-lobby-client');
-            setLastParentRoute('main-menu');
-            handleSelectRoute('manage-room');
-            showToast('[ok] Joined room and entered Room Info (Match Lobby · Client)');
+        <StoreSnapshotScope
+          overrides={{
+            onlineRoomStore: {
+              progressStatus: layer3StepOverride?.progressStatus,
+              currentStep: layer3StepOverride?.currentStep,
+              onNavigateGarageSync: navigateToGarageSync,
+              onJoinRoom: () => {
+                onChangeLayer1ContextMode?.('match-lobby-client');
+                setLastParentRoute('main-menu');
+                handleSelectRoute('manage-room');
+                showToast('[ok] Joined room and entered Room Info (Match Lobby · Client)');
+              },
+            },
           }}
-          onBack={goBack}
-        />
+        >
+          <Layer3JoinRoomRecipe isLight={isLight} onBack={goBack} />
+        </StoreSnapshotScope>
       )}
 
       {displayedRoute === 'exhibition' && (

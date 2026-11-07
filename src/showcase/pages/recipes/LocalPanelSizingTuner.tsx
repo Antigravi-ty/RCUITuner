@@ -6,6 +6,7 @@ import { Badge } from '../../../ui-core/primitives/Badge';
 import { Button } from '../../../ui-core/primitives/Button';
 import { useMenuLayoutStore } from '../../../ui-core/stores/menuLayoutStore';
 import { DEFAULT_PANEL_SIZING, type MenuPanelId, type PanelSizingMode } from '../../../ui-core/tokens/menuLayoutTokens';
+import { getDiscoveredRecipeSurfaces } from '../../../ui-core/manifest/surfaceRegistry';
 import type { JumpDirectoryItem, JumpDirectoryCategory } from '../../PageJumpDirectory';
 
 export const RECIPES_CATEGORIES: JumpDirectoryCategory[] = [
@@ -17,7 +18,7 @@ export const RECIPES_CATEGORIES: JumpDirectoryCategory[] = [
   { id: 'layer4', label: 'L4 Level-4 deep page' },
 ];
 
-export const RECIPES_JUMP_ITEMS: JumpDirectoryItem[] = [
+const CURATED_RECIPES_JUMP_ITEMS: JumpDirectoryItem[] = [
   { id: 'recipe-6a-1-main', code: '6A.1', name: 'Layer1MainMenuRecipe', label: 'Main pause root menu', badge: 'Layer 1', category: 'layer1-2' },
   { id: 'main-menu-style-tuner', code: '6A.1M', name: 'MainMenuStyleTuner', label: 'Layer 1 MENU Minimalist large-text menu tuning workbench', badge: 'L2 ⇄ L6', category: 'tuners' },
   { id: 'panel-shell-tuner', code: '6A.2S', name: 'PanelShellTuner', label: 'Layer 2+ Three-part panel shell tuner', badge: 'L2 ⇄ L6', category: 'tuners' },
@@ -31,7 +32,7 @@ export const RECIPES_JUMP_ITEMS: JumpDirectoryItem[] = [
   { id: 'recipe-6a-5-settings-preview', code: '6A.5', name: 'Layer2SettingsRecipe (Preview)', label: '9+1 Tabs Integrated settings real-time preview', badge: 'Layer 2', category: 'layer1-2' },
   { id: 'recipe-6a-6a-host', code: '6A.6A', name: 'Layer3HostMatchRecipe', label: 'Host Room Page (Host)', badge: 'Layer 3', category: 'layer3-user' },
   { id: 'recipe-6a-6b-join', code: '6A.6B', name: 'Layer3JoinRoomRecipe', label: 'Join Room Page (Join)', badge: 'Layer 3', category: 'layer3-user' },
-  { id: 'recipe-6a-7-audio', code: '6A.7', name: 'Layer3AudioEqRecipe', label: 'Audio advanced equalizer', badge: 'Layer 3', category: 'layer3-user' },
+  { id: 'recipe-6a-7-audio', code: '6A.7', name: 'Layer3AcousticsEqualizerRecipe', label: 'Audio advanced equalizer', badge: 'Layer 3', category: 'layer3-user' },
   { id: 'recipe-6a-8-host-ctrl', code: '6A.8', name: 'Layer2ManageRoomRecipe', label: 'Online room control console', badge: 'Layer 2', category: 'layer1-2' },
   { id: 'recipe-6a-9-bot-diff', code: '6A.9', name: 'Layer3ExhibitionRecipe', label: 'Exhibition Offline Match', badge: 'Layer 3', category: 'layer3-user' },
   { id: 'recipe-6a-10-self-train', code: '6A.10', name: 'Layer3SelfTrainingRecipe', label: 'Single-player training grid', badge: 'Layer 3', category: 'layer3-user' },
@@ -41,7 +42,9 @@ export const RECIPES_JUMP_ITEMS: JumpDirectoryItem[] = [
   { id: 'recipe-6a-12b-keybindings', code: '6A.12B', name: 'Layer3KeybindingsRecipe', label: 'Key binding and advanced controller entry', badge: 'Layer 3 · User', category: 'layer3-user' },
   { id: 'recipe-6a-12c-trajectory', code: '6A.12C', name: 'Layer3BallTrajectoryRecipe', label: 'Side-docked trajectory prediction (Live Preview)', badge: 'Layer 3 · User', category: 'layer3-user' },
   { id: 'recipe-6a-13-multibots', code: '6A.13', name: 'Layer3ExpMultiBotsRecipe', label: '3v3 multi Bot orchestration', badge: 'Layer 3', category: 'layer3-user' },
+  { id: 'recipe-6a-13b-botpack', code: '6A.13B', name: 'Layer3ExpBotPackRecipe', label: 'RLBot Pack #9700488 (8 Native Models)', badge: 'Layer 3 · Dev', category: 'layer3-dev' },
   { id: 'recipe-6a-14-rcspack', code: '6A.14', name: 'Layer4StaticTrainingPackBrowseRecipe', label: '.RCSPack Browser', badge: 'Layer 4', category: 'layer4' },
+  { id: 'recipe-6a-14b-shot-inspector', code: '6A.14B', name: 'StaticTrainingShotInspectorDrawer', label: 'Static Training Shot Inspector Drawer', badge: 'Layer 4', category: 'layer4' },
   { id: 'recipe-6a-15-adv-audio', code: '6A.15', name: 'Layer4AdvancedAudioRecipe', label: 'Advanced audio synthesis pool', badge: 'Layer 4', category: 'layer4' },
   { id: 'recipe-6a-16-adv-ctrl', code: '6A.16', name: 'Layer4ControllerSettingsRecipe', label: 'Advanced Stick Curve', badge: 'Layer 4', category: 'layer4' },
   { id: 'recipe-6a-17-triggers', code: '6A.17', name: 'Layer4EventTriggerRulesRecipe', label: 'Trigger rule engine', badge: 'Layer 4', category: 'layer4' },
@@ -53,6 +56,35 @@ export const RECIPES_JUMP_ITEMS: JumpDirectoryItem[] = [
   { id: 'recipe-6a-23-dev-under-dev', code: '6A.23', name: 'Layer3DevUnderDevelopmentRecipe', label: 'Feature in Development (Camera Shake)', badge: 'Layer 3 · Dev', category: 'layer3-dev' },
   { id: 'recipe-6a-24-dev-self-test', code: '6A.24', name: 'Layer3DevSelfTestRecipe', label: 'Developer Self Test Suites', badge: 'Layer 3 · Dev', category: 'layer3-dev' },
   { id: 'recipe-6a-25-dev-signaling-lab', code: '6A.25', name: 'Layer4DevSignalingLabRecipe', label: '4-Server Signaling & Dual Bridge Lab', badge: 'Layer 4 · Dev', category: 'layer4' },
+  { id: 'recipe-6a-26-custom-play', code: '6A.26', name: 'Layer3CustomPlayRecipe', label: 'Custom Play (In Development)', badge: 'Layer 3 · User', category: 'layer3-user' },
+  { id: 'recipe-6a-27-dev-remote-profile', code: '6A.27', name: 'Layer3DevRemoteProfileRecipe', label: 'Remote Profile Management (2-Tab Cloud Sync)', badge: 'Layer 3 · Dev', category: 'layer3-dev' },
+  { id: 'recipe-6a-28-dev-quick-actions', code: '6A.28', name: 'Layer3DevQuickActionsRecipe', label: 'Developer Quick Actions', badge: 'Layer 3 · Dev', category: 'layer3-dev' },
+];
+
+const CURATED_RECIPE_NAMES = new Set(CURATED_RECIPES_JUMP_ITEMS.map((it) => it.name));
+
+const AUTO_DISCOVERED_RECIPE_JUMP_ITEMS: JumpDirectoryItem[] = getDiscoveredRecipeSurfaces()
+  .filter((entry) => {
+    const fileStem = entry.modulePath.split('/').pop()?.replace(/\.tsx$/, '') ?? entry.meta.id;
+    return !CURATED_RECIPE_NAMES.has(fileStem) && !CURATED_RECIPE_NAMES.has(entry.meta.id);
+  })
+  .map((entry, idx) => {
+    const fileStem = entry.modulePath.split('/').pop()?.replace(/\.tsx$/, '') ?? entry.meta.id;
+    const isL4 = entry.meta.layer === 'layer4' || entry.meta.layer === 'layer5';
+    const isL12 = entry.meta.layer === 'layer1' || entry.meta.layer === 'layer2';
+    return {
+      id: `recipe-auto-${entry.meta.id}`,
+      code: `6A.A${idx + 1}`,
+      name: fileStem,
+      label: entry.meta.subtitle || entry.meta.title,
+      badge: entry.meta.layer.toUpperCase(),
+      category: isL4 ? 'layer4' : isL12 ? 'layer1-2' : 'layer3-dev',
+    };
+  });
+
+export const RECIPES_JUMP_ITEMS: JumpDirectoryItem[] = [
+  ...CURATED_RECIPES_JUMP_ITEMS,
+  ...AUTO_DISCOVERED_RECIPE_JUMP_ITEMS,
 ];
 
 export interface LocalPanelSizingTunerProps {

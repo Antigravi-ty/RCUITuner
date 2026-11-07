@@ -2,27 +2,23 @@ import React from 'react';
 import {
   Gamepad2, Wrench, Settings, Play,
   Server, ChevronLeft, ChevronRight, User,
-  Terminal, Smartphone, ArrowUpRight, Sliders,
+  Terminal, Smartphone, Sliders,
 } from 'lucide-react';
 import { Badge } from '../../../ui-core/primitives/Badge';
-import { UnderlineTabs } from '../../../ui-core/primitives/UnderlineTabs';
 import { useMenuLayoutStore } from '../../../ui-core/stores/menuLayoutStore';
 import { DEFAULT_PANEL_SIZING, type MenuPanelId } from '../../../ui-core/tokens/menuLayoutTokens';
-import { usePlayCardStyleStore, type PlayCardStyleVariant } from '../../../ui-core/stores/playCardStyleStore';
-import { useMainMenuStyleStore, MAIN_MENU_STYLE_PRESETS } from '../../../ui-core/stores/mainMenuStyleStore';
 import { Layer1ContextGroupedSelector } from '../recipes/Layer1ContextGroupedSelector';
-import { resolveLayer1ContextSpec, type Layer1MenuContextMode } from '../../../ui-core/recipes/layer1MenuContextSpecs';
-import { ONLINE_SESSION_CONTEXT_SPECS, resolveOnlineSessionContextId } from '../../../ui-core/recipes/Layer2ManageRoomRecipe';
-import type { ShowcaseTab } from '../../sidebarNavConfig';
+import { resolveLayer1ContextSpec } from '../../../ui-core/recipes/layer1MenuContextSpecs';
 import {
-  type ActiveMenuRoute, type MenuVisibilityTier, USER_SETTINGS_QUICK_TABS,
-  DEV_SETTINGS_QUICK_TABS, GARAGE_QUICK_TABS, USER_LINEAR_PLAYLIST, DEV_LINEAR_PLAYLIST,
+  USER_LINEAR_PLAYLIST, DEV_LINEAR_PLAYLIST,
   findPlaylistStepIndex,
-} from './menuLayerRouteConfig';
-import type { Layer3StepOverrideState } from './MenuLayerStageRecipeRouter';
+} from './menuLayerLinearPlaylists';
+import {
+  MenuLayerL1ContextualSubBar,
+  MenuLayerL2ContextualSubBars,
+} from './MenuLayerContextualSubBars';
 import { MenuLayerDeepRouteRenderer } from './MenuLayerDeepRouteRenderer';
 import { MenuLayerFooterControls } from './MenuLayerFooterControls';
-
 import { useMenuLayerSandbox } from './MenuLayerSandboxContext';
 
 export interface MenuLayerRouteSelectorBarProps {
@@ -48,7 +44,6 @@ export const MenuLayerRouteSelectorBar = React.memo<MenuLayerRouteSelectorBarPro
     showToast,
     activeRouteSize,
     feedbackToast,
-    onNavigateToPlayCards,
     onNavigateShowcase,
     showInlineTuner,
     setShowInlineTuner,
@@ -57,9 +52,7 @@ export const MenuLayerRouteSelectorBar = React.memo<MenuLayerRouteSelectorBarPro
   } = useMenuLayerSandbox();
   const activeRouteSizeModeLabel = activeRouteSize.modeLabel;
   const onToggleInlineTuner = () => setShowInlineTuner((prev) => !prev);
-  const { panels, simulateLayer3Error, setToken } = useMenuLayoutStore();
-  const { variant: playCardVariant, setVariant: setPlayCardVariant } = usePlayCardStyleStore();
-  const mainMenuStyle = useMainMenuStyleStore();
+  const { panels } = useMenuLayoutStore();
   const getPanelWidth = (panelId: MenuPanelId) =>
     (panels?.[panelId] ?? DEFAULT_PANEL_SIZING[panelId])?.width ?? 480;
 
@@ -255,59 +248,7 @@ export const MenuLayerRouteSelectorBar = React.memo<MenuLayerRouteSelectorBarPro
           />
         </div>
 
-        {/* Sub-bar when Layer 1 Main Menu is active: Quick Style Presets + Toggles + Jump to 6A.1M */}
-        {currentRoute === 'main-menu' && (
-          <div className="w-full pt-2 flex flex-col gap-1.5 border-t border-neutral-100 dark:border-neutral-800/60 mt-1">
-            <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-neutral-500 dark:text-neutral-400 font-mono">
-              <span>
-                L1 MENU Minimalist large-font menu switching (current: {mainMenuStyle.titleFontSizePx}px{' '}
-                {mainMenuStyle.titleFontFamily === 'mono' ? 'JetBrains Mono' : 'Apple Sans'} ·{' '}
-                {mainMenuStyle.showDescription ? 'includes Description' : 'none Description'} ·{' '}
-                {mainMenuStyle.conciseResumeLabel ? 'Resume Short Title' : 'Resume Match'}):
-              </span>
-              <div className="flex items-center gap-3 flex-wrap">
-                {onToggleInlineTuner && (
-                  <button type="button" onClick={onToggleInlineTuner}
-                    className="inline-flex items-center gap-1 text-emerald-500 hover:text-emerald-400 font-bold cursor-pointer">
-                    <Sliders className="h-3 w-3" />
-                    <span>{showInlineTuner ? 'Collapse in-place full-parameter tuner ^' : 'Expand in-place full-parameter tuner v'}</span>
-                  </button>
-                )}
-                {onNavigateShowcase && (
-                  <button
-                    type="button"
-                    onClick={() => onNavigateShowcase('recipes', 'main-menu-style-tuner')}
-                    className="inline-flex items-center gap-1 text-amber-500 hover:text-amber-400 font-bold cursor-pointer"
-                  >
-                    <span>open 6A.1M MENU Full-parameter workbench and three-scheme side-by-side comparison</span>
-                    <ArrowUpRight className="h-3.5 w-3.5" />
-                  </button>
-                )}
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-1.5">
-              {MAIN_MENU_STYLE_PRESETS.map((preset) => (
-                <button
-                  key={preset.id}
-                  type="button"
-                  onClick={() => {
-                    mainMenuStyle.applyPreset(preset.params);
-                    showToast(`Toggled L1 MENU Style To: ${preset.label}`);
-                  }}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-mono border cursor-pointer transition-all ${
-                    isLight
-                      ? 'bg-neutral-50 hover:bg-amber-50/70 border-neutral-200 hover:border-amber-400 text-neutral-700'
-                      : 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 hover:border-amber-500/60 text-neutral-200'
-                  }`}
-                  title={preset.subtitle}
-                >
-                  {preset.label.split(' · ')[0]} · {preset.label.split(' · ')[1] || ''}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+        <MenuLayerL1ContextualSubBar isLight={isLight} />
       </div>
 
       {/* Layer 2: Secondary Menus (Strictly separated by User vs Developer) */}
@@ -380,150 +321,10 @@ export const MenuLayerRouteSelectorBar = React.memo<MenuLayerRouteSelectorBarPro
           </div>
         </div>
 
-        {/* Sub-bar when Play is active: 3 Card Styles Quick Switcher + Jump to L2 PlayCardPage */}
-        {currentRoute === 'play' && visibilityTier === 'user' && (
-          <div className="w-full pt-2 flex flex-col gap-1.5 border-t border-neutral-100 dark:border-neutral-800/60 mt-1">
-            <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-neutral-500 dark:text-neutral-400 font-mono">
-              <span>L2 Play Menu card style switching (PlayModeCard 3 Archetypes):</span>
-              {onNavigateToPlayCards && (
-                <button type="button" onClick={onNavigateToPlayCards}
-                  className="inline-flex items-center gap-1 text-amber-500 hover:text-amber-400 font-bold cursor-pointer">
-                  <span>open L2 · 2B PlayCard Three-style parameter tuning page</span>
-                  <ArrowUpRight className="h-3.5 w-3.5" />
-                </button>
-              )}
-            </div>
-            <div className="flex flex-wrap items-center gap-1.5">
-              {(
-                [
-                  { id: 'icon-badge-top', label: 'style 1: [Icon + Badge] / Title / Desc' },
-                  { id: 'icon-title-inline', label: 'style 2: [Icon + Title] (none Badge) / Desc' },
-                  { id: 'mono-giant-watermark', label: 'Style 3 (default): JetBrains Mono Large Text + 30% extra large background Icon' },
-                ] as { id: PlayCardStyleVariant; label: string }[]
-              ).map((item) => {
-                const active = playCardVariant === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => {
-                      setPlayCardVariant(item.id);
-                      showToast(`Toggled L2 Play Card To: ${item.label}`);
-                    }}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-mono border cursor-pointer transition-all ${
-                      active
-                        ? 'bg-amber-500 text-white border-amber-500 font-bold shadow-2xs'
-                        : isLight
-                        ? 'bg-neutral-50 hover:bg-neutral-100 border-neutral-200 text-neutral-700'
-                        : 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-neutral-300'
-                    }`}
-                  >
-                    {item.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Sub-tab bar when Garage is active */}
-        {currentRoute === 'garage' && visibilityTier === 'user' && (
-          <div className="w-full pt-2 flex flex-col gap-1.5 border-t border-neutral-100 dark:border-neutral-800/60 mt-1">
-            <div className="flex items-center justify-between text-[11px] text-neutral-500 dark:text-neutral-400 font-mono">
-              <span>Garage 5-Tab Cascading Toggle (Car / Colour / Materials / Anthem / Sync):</span>
-              <span className="text-amber-500 font-semibold">current: {garageTab.toUpperCase()}</span>
-            </div>
-            <UnderlineTabs
-              items={GARAGE_QUICK_TABS}
-              activeId={garageTab}
-              onChange={(tabId) => {
-                setGarageTab(tabId);
-                showToast(`Switched to Garage -> ${tabId}`);
-              }}
-              isLight={isLight}
-              size="sm"
-              fullWidth={false}
-            />
-          </div>
-        )}
-
-        {/* Sub-tab bar when Settings is active */}
-        {currentRoute === 'settings' && (
-          <div className="w-full pt-2 flex flex-col gap-1.5 border-t border-neutral-100 dark:border-neutral-800/60 mt-1">
-            <div className="flex items-center justify-between text-[11px] text-neutral-500 dark:text-neutral-400 font-mono">
-              <span>
-                {visibilityTier === 'user'
-                  ? 'Settings User Tab Synchronization (Gameplay / Audio / Display / Advanced):'
-                  : 'Settings Developer Exclusive Tab (Show Only Developer Hub):'}
-              </span>
-              <span className="text-amber-500 font-semibold">current: {settingsTab.toUpperCase()}</span>
-            </div>
-            <UnderlineTabs
-              items={visibilityTier === 'user' ? USER_SETTINGS_QUICK_TABS : DEV_SETTINGS_QUICK_TABS}
-              activeId={settingsTab}
-              onChange={(tabId) => {
-                setSettingsTab(tabId);
-                showToast(`Switched to Settings -> ${tabId}`);
-              }}
-              isLight={isLight}
-              size="sm"
-              fullWidth={false}
-            />
-          </div>
-        )}
-
-        {/* Sub-tab bar when Room Host Control is active */}
-        {currentRoute === 'manage-room' && (
-          <div className="w-full pt-2 flex flex-col gap-1.5 border-t border-neutral-100 dark:border-neutral-800/60 mt-1">
-            <div className="flex items-center justify-between text-[11px] text-neutral-500 dark:text-neutral-400 font-mono">
-              <span>Online Room Control 6 State Context Synchronization (Match Lobby / During Match / Online Warmup · Host & Client):</span>
-              <span className="text-amber-500 font-semibold">
-                current: {resolveOnlineSessionContextId(layer1ContextMode).toUpperCase()}
-              </span>
-            </div>
-            <div className="flex flex-wrap items-center gap-1.5">
-              {ONLINE_SESSION_CONTEXT_SPECS.map((spec) => {
-                const active = resolveOnlineSessionContextId(layer1ContextMode) === spec.id;
-                return (
-                  <button
-                    key={spec.id}
-                    type="button"
-                    onClick={() => {
-                      onChangeLayer1ContextMode(spec.id);
-                      showToast(`Room control panel switched to: ${spec.shortLabel} (${spec.role.toUpperCase()})`);
-                    }}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-mono border cursor-pointer transition-all ${
-                      active
-                        ? 'bg-amber-500 text-white border-amber-500 font-bold shadow-2xs'
-                        : isLight
-                        ? 'bg-neutral-50 hover:bg-neutral-100 border-neutral-200 text-neutral-700'
-                        : 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-neutral-300'
-                    }`}
-                  >
-                    {spec.shortLabel}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
+        <MenuLayerL2ContextualSubBars isLight={isLight} />
       </div>
 
-      <MenuLayerDeepRouteRenderer
-        isLight={isLight}
-        visibilityTier={visibilityTier}
-        currentRoute={currentRoute}
-        handleSelectRoute={handleSelectRoute}
-        getPanelWidth={getPanelWidth}
-        simulateLayer3Error={simulateLayer3Error}
-        setSimulateLayer3Error={(next: boolean) => setToken('simulateLayer3Error', next)}
-        showToast={showToast}
-        showInlineTuner={showInlineTuner}
-        onToggleInlineTuner={onToggleInlineTuner}
-        onNavigateShowcase={onNavigateShowcase}
-        layer3StepOverride={layer3StepOverride}
-        onChangeLayer3StepOverride={onChangeLayer3StepOverride}
-      />
+      <MenuLayerDeepRouteRenderer isLight={isLight} />
 
       <MenuLayerFooterControls
         isLight={isLight}
@@ -542,4 +343,3 @@ export const MenuLayerRouteSelectorBar = React.memo<MenuLayerRouteSelectorBarPro
 });
 
 MenuLayerRouteSelectorBar.displayName = 'MenuLayerRouteSelectorBar';
-

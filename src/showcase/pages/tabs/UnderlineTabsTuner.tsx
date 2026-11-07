@@ -183,7 +183,10 @@ export const UnderlineTabsTuner: React.FC<UnderlineTabsTunerProps> = React.memo(
               isLight ? 'text-neutral-500' : 'text-neutral-400'
             }`}
           >
-            Font {fontSize}px ({fontFamily === 'mono' ? 'JetBrains Mono' : 'Inter Sans'} · {activeFontWeight}/{inactiveFontWeight}) · Icon {showIcons ? `${iconSize}px (gap ${iconGap}px)` : 'Hide'} · Pad {paddingX}×{paddingY}px · Line {indicatorHeight}px
+            Font {fontSize}px ({fontFamily === 'mono' ? 'JetBrains Mono' : 'Inter Sans'} ·{' '}
+            {activeFontWeight}/{inactiveFontWeight}) · Icon{' '}
+            {showIcons ? `${iconSize}px (gap ${iconGap}px)` : 'Hide'} · Pad {paddingX}×{paddingY}px · Line{' '}
+            {indicatorHeight}px
           </span>
         </div>
 
