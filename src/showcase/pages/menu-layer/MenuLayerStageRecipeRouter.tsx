@@ -4,9 +4,10 @@ import type { Layer1MenuContextMode } from '../../../ui-core/recipes/layer1MenuC
 import { Layer2PlayRecipe } from '../../../ui-core/recipes/Layer2PlayRecipe';
 import { Layer2GarageRecipe } from '../../../ui-core/recipes/Layer2GarageRecipe';
 import { Layer2SettingsRecipe } from '../../../ui-core/recipes/Layer2SettingsRecipe';
-import { Layer2ManageRoomRecipe, resolveOnlineSessionContextId } from '../../../ui-core/recipes/Layer2ManageRoomRecipe';
-import { Layer3AcousticsEqualizerRecipe } from '../../../ui-core/recipes/Layer3AcousticsEqualizerRecipe';
-import { Layer3BallTrajectoryRecipe } from '../../../ui-core/recipes/Layer3BallTrajectoryRecipe';
+import {
+  Layer2ManageRoomRecipe,
+  resolveOnlineSessionContextId,
+} from '../../../ui-core/recipes/Layer2ManageRoomRecipe';
 import { Layer3HostMatchRecipe } from '../../../ui-core/recipes/Layer3HostMatchRecipe';
 import { Layer3HostTrainingRecipe } from '../../../ui-core/recipes/Layer3HostTrainingRecipe';
 import { Layer3CustomPlayRecipe } from '../../../ui-core/recipes/Layer3CustomPlayRecipe';
@@ -15,34 +16,18 @@ import { Layer3ExhibitionRecipe } from '../../../ui-core/recipes/Layer3Exhibitio
 import { Layer3SelfTrainingRecipe } from '../../../ui-core/recipes/Layer3SelfTrainingRecipe';
 import { Layer3KickoffTrainingRecipe } from '../../../ui-core/recipes/Layer3KickoffTrainingRecipe';
 import { Layer3TrainingConfigRecipe } from '../../../ui-core/recipes/Layer3TrainingConfigRecipe';
-import { Layer3CameraRecipe } from '../../../ui-core/recipes/Layer3CameraRecipe';
-import { Layer3KeybindingsRecipe } from '../../../ui-core/recipes/Layer3KeybindingsRecipe';
-import { Layer3ExpMultiBotsRecipe } from '../../../ui-core/recipes/Layer3ExpMultiBotsRecipe';
-import { Layer3ExpBotPackRecipe } from '../../../ui-core/recipes/Layer3ExpBotPackRecipe';
-import { Layer3DevSandboxesRecipe } from '../../../ui-core/recipes/Layer3DevSandboxesRecipe';
-import { Layer3DevActiveTunersRecipe } from '../../../ui-core/recipes/Layer3DevActiveTunersRecipe';
-import { Layer3DevCalibratedPresetsRecipe } from '../../../ui-core/recipes/Layer3DevCalibratedPresetsRecipe';
-import { Layer3DevSelfTestRecipe } from '../../../ui-core/recipes/Layer3DevSelfTestRecipe';
-import { Layer3DevUnderDevelopmentRecipe } from '../../../ui-core/recipes/Layer3DevUnderDevelopmentRecipe';
-import { Layer3DevRemoteProfileRecipe } from '../../../ui-core/recipes/Layer3DevRemoteProfileRecipe';
-import { Layer3DevQuickActionsRecipe } from '../../../ui-core/recipes/Layer3DevQuickActionsRecipe';
-import { Layer4StaticTrainingPackBrowseRecipe } from '../../../ui-core/recipes/Layer4StaticTrainingPackBrowseRecipe';
-import { Layer4AdvancedAudioRecipe } from '../../../ui-core/recipes/Layer4AdvancedAudioRecipe';
-import { Layer4ControllerSettingsRecipe } from '../../../ui-core/recipes/Layer4ControllerSettingsRecipe';
-import { Layer4EventTriggerRulesRecipe } from '../../../ui-core/recipes/Layer4EventTriggerRulesRecipe';
-import { Layer4DevSignalingLabRecipe } from '../../../ui-core/recipes/Layer4DevSignalingLabRecipe';
 import { floatingStore } from '../../../ui-core/stores/floatingStore';
 import { StoreSnapshotScope } from '../../../ui-core/stores/storeSnapshotScope';
 import { PRESET_WINDOWS } from '../../../ui-core/stores/devFloatingPresets';
 import {
   MENU_ROUTE_CONFIG,
   type ActiveMenuRoute,
-  type Layer3StepProgressStatus,
 } from './menuLayerRouteConfig';
 import {
   useMenuLayerSandbox,
   type Layer3StepOverrideState,
 } from './MenuLayerSandboxContext';
+import { MenuLayerSecondaryRecipeRoutes } from './MenuLayerSecondaryRecipeRoutes';
 
 export type { Layer3StepOverrideState };
 
@@ -69,7 +54,6 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
     bgRenderPaused,
     setLastParentRoute,
     setLiveAnimPhase,
-    handleTriggerCollapse,
     layer3StepOverride,
   } = useMenuLayerSandbox();
   const [touchInputAgent, setTouchInputAgent] = React.useState<'none' | 'necto' | 'nexto'>('none');
@@ -238,21 +222,6 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
         </StoreSnapshotScope>
       )}
 
-      {displayedRoute === 'audio-eq' && (
-        <StoreSnapshotScope
-          overrides={{ appStore: { developerMode: visibilityTier === 'developer' } }}
-        >
-          <Layer3AcousticsEqualizerRecipe isLight={isLight} onBack={goBack} />
-        </StoreSnapshotScope>
-      )}
-
-      {displayedRoute === 'dev-quick-actions' && (
-        <Layer3DevQuickActionsRecipe
-          isLight={isLight}
-          onBack={goBack}
-        />
-      )}
-
       {displayedRoute === 'host-match' && (
         <StoreSnapshotScope
           overrides={{
@@ -302,10 +271,7 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
       )}
 
       {displayedRoute === 'custom-play' && (
-        <Layer3CustomPlayRecipe
-          isLight={isLight}
-          onBack={goBack}
-        />
+        <Layer3CustomPlayRecipe isLight={isLight} onBack={goBack} />
       )}
 
       {displayedRoute === 'join-room' && (
@@ -329,10 +295,7 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
       )}
 
       {displayedRoute === 'exhibition' && (
-        <Layer3ExhibitionRecipe
-          isLight={isLight}
-          onBack={goBack}
-        />
+        <Layer3ExhibitionRecipe isLight={isLight} onBack={goBack} />
       )}
 
       {displayedRoute === 'self-training' && (
@@ -361,173 +324,14 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
       )}
 
       {displayedRoute === 'kickoff-training' && (
-        <Layer3KickoffTrainingRecipe
-          isLight={isLight}
-          onBack={goBack}
-        />
+        <Layer3KickoffTrainingRecipe isLight={isLight} onBack={goBack} />
       )}
 
       {displayedRoute === 'training-config' && (
-        <Layer3TrainingConfigRecipe
-          isLight={isLight}
-          onBack={goBack}
-        />
+        <Layer3TrainingConfigRecipe isLight={isLight} onBack={goBack} />
       )}
 
-      {displayedRoute === 'camera' && (
-        <StoreSnapshotScope
-          overrides={{
-            appStore: {
-              developerMode: visibilityTier === 'developer',
-              setLivePreviewCollapsed: handleTriggerCollapse,
-            },
-          }}
-        >
-          <Layer3CameraRecipe
-            isLight={isLight}
-            onBack={() => {
-              setLiveAnimPhase('expanded');
-              goBack();
-            }}
-          />
-        </StoreSnapshotScope>
-      )}
-
-      {displayedRoute === 'keybindings' && (
-        <StoreSnapshotScope
-          overrides={{
-            appStore: {
-              navigate: (route: string) => {
-                if (route === 'controller-settings') {
-                  setLastParentRoute('keybindings');
-                  handleSelectRoute('controller-settings');
-                }
-              },
-            },
-          }}
-        >
-          <Layer3KeybindingsRecipe isLight={isLight} onBack={goBack} />
-        </StoreSnapshotScope>
-      )}
-
-      {displayedRoute === 'exp-multi-bots' && (
-        <Layer3ExpMultiBotsRecipe
-          isLight={isLight}
-          onBack={goBack}
-        />
-      )}
-
-      {displayedRoute === 'exp-botpack-9700488' && (
-        <Layer3ExpBotPackRecipe
-          isLight={isLight}
-          onBack={goBack}
-        />
-      )}
-
-      {displayedRoute === 'dev-sandboxes' && (
-        <Layer3DevSandboxesRecipe
-          isLight={isLight}
-          onBack={goBack}
-        />
-      )}
-
-      {displayedRoute === 'dev-active-tuners' && (
-        <Layer3DevActiveTunersRecipe
-          isLight={isLight}
-          onBack={goBack}
-        />
-      )}
-
-      {displayedRoute === 'dev-calibrated-presets' && (
-        <Layer3DevCalibratedPresetsRecipe
-          isLight={isLight}
-          onBack={goBack}
-        />
-      )}
-
-      {displayedRoute === 'dev-self-test' && (
-        <Layer3DevSelfTestRecipe
-          isLight={isLight}
-          onBack={goBack}
-        />
-      )}
-
-      {displayedRoute === 'dev-under-development' && (
-        <Layer3DevUnderDevelopmentRecipe
-          isLight={isLight}
-          onBack={goBack}
-        />
-      )}
-
-      {displayedRoute === 'dev-remote-profile' && (
-        <Layer3DevRemoteProfileRecipe
-          isLight={isLight}
-          onBack={goBack}
-        />
-      )}
-
-      {displayedRoute === 'static-training-pack' && (
-        <Layer4StaticTrainingPackBrowseRecipe
-          isLight={isLight}
-          onBack={goBack}
-        />
-      )}
-
-      {displayedRoute === 'dev-tem-pack-converter' && (
-        <Layer4StaticTrainingPackBrowseRecipe
-          isLight={isLight}
-          isDevMode={true}
-          onBack={goBack}
-        />
-      )}
-
-      {displayedRoute === 'advanced-audio' && (
-        <Layer4AdvancedAudioRecipe
-          isLight={isLight}
-          onBack={goBack}
-        />
-      )}
-
-      {displayedRoute === 'controller-settings' && (
-        <Layer4ControllerSettingsRecipe
-          isLight={isLight}
-          developerMode={visibilityTier === 'developer'}
-          onBack={goBack}
-        />
-      )}
-
-      {displayedRoute === 'event-trigger-rules' && (
-        <Layer4EventTriggerRulesRecipe
-          isLight={isLight}
-          onBack={goBack}
-        />
-      )}
-
-      {displayedRoute === 'dev-signaling-lab' && (
-        <Layer4DevSignalingLabRecipe
-          isLight={isLight}
-          onBack={goBack}
-        />
-      )}
-
-      {displayedRoute === 'trajectory' && (
-        <StoreSnapshotScope
-          overrides={{
-            appStore: {
-              developerMode: visibilityTier === 'developer',
-              setLivePreviewCollapsed: handleTriggerCollapse,
-            },
-          }}
-        >
-          <Layer3BallTrajectoryRecipe
-            isLight={isLight}
-            onBack={() => {
-              setLiveAnimPhase('expanded');
-              goBack();
-            }}
-          />
-        </StoreSnapshotScope>
-      )}
+      <MenuLayerSecondaryRecipeRoutes isLight={isLight} onBack={goBack} />
     </>
   );
 });

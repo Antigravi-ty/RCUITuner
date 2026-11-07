@@ -1,13 +1,11 @@
 import type { ShowcaseTab } from '../../sidebarNavConfig';
 import type { ActiveMenuRoute } from './menuLayerRouteConfig';
+import {
+  DEEP_ROUTE_TO_6A_RECIPE_TARGET,
+  type InspectorJumpTarget,
+} from './menuLayerDeepInspectorTargets';
 
-export interface InspectorJumpTarget {
-  code: string;
-  componentName: string;
-  label: string;
-  tab: ShowcaseTab;
-  targetId?: string;
-}
+export type { InspectorJumpTarget };
 
 export interface NodePathInspectorResolution {
   /** Primary standalone recipe tuner for the active menu route (in 6A RecipesPage) */
@@ -18,63 +16,124 @@ export interface NodePathInspectorResolution {
   usesSettingActionRow: boolean;
 }
 
-const ROUTE_TO_6A_RECIPE_TARGET: Record<ActiveMenuRoute, InspectorJumpTarget> = {
-  'layer-0': { code: '5C / 6D', componentName: 'MenuLayerStageCanvas', label: '6D Floating window arrangement and match stage', tab: 'floating-windows' },
-  'main-menu': { code: '6A.1', componentName: 'Layer1MainMenuRecipe', label: '6A.1 Main menu size and button spacing tuning', tab: 'recipes', targetId: 'recipe-6a-1-main' },
-  play: { code: '6A.2', componentName: 'Layer2PlayRecipe', label: '6A.2 Play Mode selection panel tuning', tab: 'recipes', targetId: 'recipe-6a-2-play' },
-  garage: { code: '6A.3', componentName: 'Layer2GarageRecipe', label: '6A.3 Garage Garage Panel Tuning', tab: 'recipes', targetId: 'recipe-6a-3-garage' },
-  settings: { code: '6A.4', componentName: 'Layer2SettingsRecipe', label: '6A.4 Settings Panel and navigation row tuning', tab: 'recipes', targetId: 'recipe-6a-4-settings' },
-  'manage-room': { code: '6A.8', componentName: 'Layer2ManageRoomRecipe', label: '6A.8 Online room control console tuning', tab: 'recipes', targetId: 'recipe-6a-8-host-ctrl' },
-  'audio-eq': { code: '6A.7', componentName: 'Layer3AudioEqRecipe', label: '6A.7 Audio equalizer panel tuning', tab: 'recipes', targetId: 'recipe-6a-7-audio' },
-  trajectory: { code: '6A.12C', componentName: 'Layer3BallTrajectoryRecipe', label: '6A.12C Trajectory prediction panel tuning', tab: 'recipes', targetId: 'recipe-6a-12c-trajectory' },
-  'host-match': { code: '6A.6A', componentName: 'Layer3HostMatchRecipe', label: '6A.6A Host Match Room Creation Page Tuning', tab: 'recipes', targetId: 'recipe-6a-6a-host' },
-  'host-training': { code: '6A.19', componentName: 'Layer3HostTrainingRecipe', label: '6A.19 Host Training Online training lobby tuning', tab: 'recipes', targetId: 'recipe-6a-19-host-train' },
-  'custom-play': { code: '6A.26', componentName: 'Layer3CustomPlayRecipe', label: '6A.26 Custom Play Mode Hub Tuning', tab: 'recipes', targetId: 'recipe-6a-26-custom-play' },
-  'join-room': { code: '6A.6B', componentName: 'Layer3JoinRoomRecipe', label: '6A.6B Join Room Room Entry Page Tuning', tab: 'recipes', targetId: 'recipe-6a-6b-join' },
-  exhibition: { code: '6A.9', componentName: 'Layer3ExhibitionRecipe', label: '6A.9 Exhibition Offline race panel tuning', tab: 'recipes', targetId: 'recipe-6a-9-bot-diff' },
-  'self-training': { code: '6A.10', componentName: 'Layer3SelfTrainingRecipe', label: '6A.10 Self-Training Four-Grid Tuning', tab: 'recipes', targetId: 'recipe-6a-10-self-train' },
-  'kickoff-training': { code: '6A.11', componentName: 'Layer3KickoffTrainingRecipe', label: '6A.11 Kickoff Kickoff training panel tuning', tab: 'recipes', targetId: 'recipe-6a-11-kickoff' },
-  'training-config': { code: '6A.18', componentName: 'Layer3TrainingConfigRecipe', label: '6A.18 Training Training configuration panel tuning', tab: 'recipes', targetId: 'recipe-6a-18-training' },
-  camera: { code: '6A.12', componentName: 'Layer3CameraRecipe', label: '6A.12 Camera Camera settings panel tuning', tab: 'recipes', targetId: 'recipe-6a-12-camera' },
-  keybindings: { code: '6A.12B', componentName: 'Layer3KeybindingsRecipe', label: '6A.12B Key Bindings Key Mapping Tuning', tab: 'recipes', targetId: 'recipe-6a-12b-keybindings' },
-  'exp-multi-bots': { code: '6A.13', componentName: 'Layer3ExpMultiBotsRecipe', label: '6A.13 3v3 multi Bot Orchestration Panel Tuning', tab: 'recipes', targetId: 'recipe-6a-13-multibots' },
-  'dev-sandboxes': { code: '6A.20', componentName: 'Layer3DevSandboxesRecipe', label: '6A.20 Sandboxes and isolation chamber panel tuning', tab: 'recipes', targetId: 'recipe-6a-20-dev-isolation' },
-  'dev-active-tuners': { code: '6A.21', componentName: 'Layer3DevActiveTunersRecipe', label: '6A.21 Active tuner panel tuning', tab: 'recipes', targetId: 'recipe-6a-21-dev-tuners' },
-  'dev-calibrated-presets': { code: '6A.22', componentName: 'Layer3DevCalibratedPresetsRecipe', label: '6A.22 Tuner library calibrated', tab: 'recipes', targetId: 'recipe-6a-22-dev-presets' },
-  'dev-self-test': { code: '6A.24', componentName: 'Layer3DevSelfTestRecipe', label: '6A.24 Developer self-test suites', tab: 'recipes', targetId: 'recipe-6a-24-dev-self-test' },
-  'dev-under-development': { code: '6A.23', componentName: 'Layer3DevUnderDevelopmentRecipe', label: '6A.23 Dev feature panel tuning', tab: 'recipes', targetId: 'recipe-6a-23-dev-under-dev' },
-  'static-training-pack': { code: '6A.14', componentName: 'Layer4StaticTrainingPackBrowseRecipe', label: '6A.14 .RCSPack Browser panel tuning', tab: 'recipes', targetId: 'recipe-6a-14-rcspack' },
-  'advanced-audio': { code: '6A.15', componentName: 'Layer4AdvancedAudioRecipe', label: '6A.15 Advanced audio synthesis pool panel tuning', tab: 'recipes', targetId: 'recipe-6a-15-adv-audio' },
-  'controller-settings': { code: '6A.16', componentName: 'Layer4ControllerSettingsRecipe', label: '6A.16 Advanced controller curve panel tuning', tab: 'recipes', targetId: 'recipe-6a-16-adv-ctrl' },
-  'event-trigger-rules': { code: '6A.17', componentName: 'Layer4EventTriggerRulesRecipe', label: '6A.17 Trigger rule engine panel tuning', tab: 'recipes', targetId: 'recipe-6a-17-triggers' },
-  'dev-signaling-lab': { code: '6A.25', componentName: 'Layer4DevSignalingLabRecipe', label: '6A.25 4-Server Signaling & Dual Bridge Lab', tab: 'recipes', targetId: 'recipe-6a-25-dev-signaling-lab' },
-  'exp-botpack-9700488': { code: '6A.13B', componentName: 'Layer3ExpBotPackRecipe', label: '6A.13B BotPack_9700488 Showcase (6 Bots)', tab: 'recipes', targetId: 'recipe-6a-13b-botpack' },
-  'dev-remote-profile': { code: '6A.27', componentName: 'Layer3DevRemoteProfileRecipe', label: '6A.27 Remote Profile & Account Management', tab: 'recipes', targetId: 'recipe-6a-27-dev-remote-profile' },
-  'dev-quick-actions': { code: '6A.28', componentName: 'Layer3DevQuickActionsRecipe', label: '6A.28 Quick Actions & Match Toggles', tab: 'recipes', targetId: 'recipe-6a-28-dev-quick-actions' },
-  'dev-tem-pack-converter': { code: '6A.14D', componentName: 'Layer4StaticTrainingPackBrowseRecipe', label: '6A.14D Dev .tem -> .RCSPack Pack Converter', tab: 'recipes', targetId: 'recipe-6a-14-rcspack' },
+const makeJump = (
+  code: string,
+  componentName: string,
+  label: string,
+  tab: ShowcaseTab,
+  targetId?: string
+): InspectorJumpTarget => ({
+  code,
+  componentName,
+  label,
+  tab,
+  ...(targetId ? { targetId } : {}),
+});
+
+const CORE_ROUTE_TO_6A_RECIPE_TARGET: Record<
+  'layer-0' | 'main-menu' | 'play' | 'garage' | 'settings' | 'manage-room',
+  InspectorJumpTarget
+> = {
+  'layer-0': makeJump(
+    '5C / 6D',
+    'MenuLayerStageCanvas',
+    '6D Floating window arrangement and match stage',
+    'floating-windows'
+  ),
+  'main-menu': makeJump(
+    '6A.1',
+    'Layer1MainMenuRecipe',
+    '6A.1 Main menu size and button spacing tuning',
+    'recipes',
+    'recipe-6a-1-main'
+  ),
+  play: makeJump(
+    '6A.2',
+    'Layer2PlayRecipe',
+    '6A.2 Play Mode selection panel tuning',
+    'recipes',
+    'recipe-6a-2-play'
+  ),
+  garage: makeJump(
+    '6A.3',
+    'Layer2GarageRecipe',
+    '6A.3 Garage Garage Panel Tuning',
+    'recipes',
+    'recipe-6a-3-garage'
+  ),
+  settings: makeJump(
+    '6A.4',
+    'Layer2SettingsRecipe',
+    '6A.4 Settings Panel and navigation row tuning',
+    'recipes',
+    'recipe-6a-4-settings'
+  ),
+  'manage-room': makeJump(
+    '6A.8',
+    'Layer2ManageRoomRecipe',
+    '6A.8 Online room control console tuning',
+    'recipes',
+    'recipe-6a-8-host-ctrl'
+  ),
 };
 
-const PANEL_SHELL_TARGET: InspectorJumpTarget = {
-  code: '6A.2S', componentName: 'PanelShellTuner', label: '6A.2S 3-Stage Panel Shell Tuning (top bar/Content/bottom bar Padding)', tab: 'recipes', targetId: 'panel-shell-tuner',
+const ROUTE_TO_6A_RECIPE_TARGET: Record<ActiveMenuRoute, InspectorJumpTarget> = {
+  ...CORE_ROUTE_TO_6A_RECIPE_TARGET,
+  ...(DEEP_ROUTE_TO_6A_RECIPE_TARGET as Record<
+    Exclude<ActiveMenuRoute, keyof typeof CORE_ROUTE_TO_6A_RECIPE_TARGET>,
+    InspectorJumpTarget
+  >),
 };
-const SETTING_ACTION_ROW_TARGET: InspectorJumpTarget = {
-  code: '6A.4S', componentName: 'SettingActionRowTuner', label: '6A.4S SettingActionRow Tuner (border/Description/Padding/SVG Color)', tab: 'recipes', targetId: 'setting-action-row-tuner',
-};
-const UNDERLINE_TABS_TARGET: InspectorJumpTarget = {
-  code: '6A.4T', componentName: 'UnderlineTabsTuner', label: '6A.4T UnderlineTabs Top bar tab tuner', tab: 'recipes', targetId: 'underline-tabs-tuner',
-};
-const SEGMENTED_SWITCH_TARGET: InspectorJumpTarget = {
-  code: 'L1.2', componentName: 'SegmentedSwitch', label: 'SegmentedSwitch (Segmented Switcher)', tab: 'tabs', targetId: 'l1-segmented-switch',
-};
-const SLIDER_CONTROL_TARGET: InspectorJumpTarget = {
-  code: 'L1.3', componentName: 'SliderControl', label: 'SliderControl (Stepper Slider)', tab: 'tabs', targetId: 'l1-slider-control',
-};
-const DUAL_GRABBER_TARGET: InspectorJumpTarget = {
-  code: 'L1.4', componentName: 'DualGrabberSlider', label: 'DualGrabberSlider (Dual-cursor deadzone slider)', tab: 'tabs', targetId: 'l1-dual-grabber-slider',
-};
-const TOGGLE_SWITCH_TARGET: InspectorJumpTarget = {
-  code: 'L1.6', componentName: 'ToggleSwitch', label: 'ToggleSwitch (Toggle Switch)', tab: 'tabs', targetId: 'l1-toggle-switch',
-};
+
+const PANEL_SHELL_TARGET = makeJump(
+  '6A.2S',
+  'PanelShellTuner',
+  '6A.2S 3-Stage Panel Shell Tuning (top bar/Content/bottom bar Padding)',
+  'recipes',
+  'panel-shell-tuner'
+);
+const SETTING_ACTION_ROW_TARGET = makeJump(
+  '6A.4S',
+  'SettingActionRowTuner',
+  '6A.4S SettingActionRow Tuner (border/Description/Padding/SVG Color)',
+  'recipes',
+  'setting-action-row-tuner'
+);
+const UNDERLINE_TABS_TARGET = makeJump(
+  '6A.4T',
+  'UnderlineTabsTuner',
+  '6A.4T UnderlineTabs Top bar tab tuner',
+  'recipes',
+  'underline-tabs-tuner'
+);
+const SEGMENTED_SWITCH_TARGET = makeJump(
+  'L1.2',
+  'SegmentedSwitch',
+  'SegmentedSwitch (Segmented Switcher)',
+  'tabs',
+  'l1-segmented-switch'
+);
+const SLIDER_CONTROL_TARGET = makeJump(
+  'L1.3',
+  'SliderControl',
+  'SliderControl (Stepper Slider)',
+  'tabs',
+  'l1-slider-control'
+);
+const DUAL_GRABBER_TARGET = makeJump(
+  'L1.4',
+  'DualGrabberSlider',
+  'DualGrabberSlider (Dual-cursor deadzone slider)',
+  'tabs',
+  'l1-dual-grabber-slider'
+);
+const TOGGLE_SWITCH_TARGET = makeJump(
+  'L1.6',
+  'ToggleSwitch',
+  'ToggleSwitch (Toggle Switch)',
+  'tabs',
+  'l1-toggle-switch'
+);
 
 /**
  * Pure decoupled resolver that inspects the active 7A node path
@@ -93,8 +152,8 @@ export function resolveNodePathInspectorLinks(
     return {
       pageRecipeTarget,
       elementTargets: [
-        { code: '6D', componentName: 'FloatingWindowManager', label: 'Floating Window Floating Window and Stack Tray', tab: 'floating-windows' },
-        { code: '5C', componentName: 'SafeAreaHud', label: 'Viewport & Safe Area Viewport Safe Area', tab: 'viewport-safe-area' },
+        makeJump('6D', 'FloatingWindowManager', 'Floating Window Floating Window and Stack Tray', 'floating-windows'),
+        makeJump('5C', 'SafeAreaHud', 'Viewport & Safe Area Viewport Safe Area', 'viewport-safe-area'),
       ],
       usesSettingActionRow: false,
     };
@@ -104,10 +163,10 @@ export function resolveNodePathInspectorLinks(
     return {
       pageRecipeTarget,
       elementTargets: [
-        { code: '6A.1M', componentName: 'MainMenuStyleTuner', label: '6A.1M MENU Minimalist large-text and font-outline tuning workbench', tab: 'recipes', targetId: 'main-menu-style-tuner' },
-        { code: 'L4.Nav', componentName: 'MenuContainer', label: 'MenuContainer Stack menu container', tab: 'navigation' },
-        { code: 'L4.Nav', componentName: 'MainMenuRow', label: 'MainMenuRow List items and shortcut badges', tab: 'navigation' },
-        { code: 'L1.Badge', componentName: 'KeycapBadge', label: 'KeycapBadge Keycap Primitive', tab: 'badges' },
+        makeJump('6A.1M', 'MainMenuStyleTuner', '6A.1M MENU Minimalist large-text and font-outline tuning workbench', 'recipes', 'main-menu-style-tuner'),
+        makeJump('L4.Nav', 'MenuContainer', 'MenuContainer Stack menu container', 'navigation'),
+        makeJump('L4.Nav', 'MainMenuRow', 'MainMenuRow List items and shortcut badges', 'navigation'),
+        makeJump('L1.Badge', 'KeycapBadge', 'KeycapBadge Keycap Primitive', 'badges'),
       ],
       usesSettingActionRow: false,
     };
@@ -117,14 +176,25 @@ export function resolveNodePathInspectorLinks(
     if (settingsTab === 'gameplay') {
       return {
         pageRecipeTarget,
-        elementTargets: [SETTING_ACTION_ROW_TARGET, SEGMENTED_SWITCH_TARGET, PANEL_SHELL_TARGET, UNDERLINE_TABS_TARGET, TOGGLE_SWITCH_TARGET],
+        elementTargets: [
+          SETTING_ACTION_ROW_TARGET,
+          SEGMENTED_SWITCH_TARGET,
+          PANEL_SHELL_TARGET,
+          UNDERLINE_TABS_TARGET,
+          TOGGLE_SWITCH_TARGET,
+        ],
         usesSettingActionRow: true,
       };
     }
     if (settingsTab === 'audio') {
       return {
         pageRecipeTarget,
-        elementTargets: [SETTING_ACTION_ROW_TARGET, SLIDER_CONTROL_TARGET, TOGGLE_SWITCH_TARGET, PANEL_SHELL_TARGET],
+        elementTargets: [
+          SETTING_ACTION_ROW_TARGET,
+          SLIDER_CONTROL_TARGET,
+          TOGGLE_SWITCH_TARGET,
+          PANEL_SHELL_TARGET,
+        ],
         usesSettingActionRow: true,
       };
     }
@@ -133,11 +203,22 @@ export function resolveNodePathInspectorLinks(
         pageRecipeTarget,
         elementTargets: [
           SETTING_ACTION_ROW_TARGET,
-          { code: '6A.4S-E', componentName: 'SettingPresetCustomRow', label: '6A.4S-E SettingPresetCustomRow (UI Scaling & Render Scale Slide Merge)', tab: 'recipes', targetId: 'setting-preset-custom-tuner' },
+          {
+            code: '6A.4S-E',
+            componentName: 'SettingPresetCustomRow',
+            label: '6A.4S-E SettingPresetCustomRow (UI Scaling & Render Scale Slide Merge)',
+            tab: 'recipes',
+            targetId: 'setting-preset-custom-tuner',
+          },
           SEGMENTED_SWITCH_TARGET,
           SLIDER_CONTROL_TARGET,
           PANEL_SHELL_TARGET,
-          { code: '5C', componentName: 'GameViewport', label: '5C Viewport scaling and safe area', tab: 'viewport-safe-area' },
+          {
+            code: '5C',
+            componentName: 'GameViewport',
+            label: '5C Viewport scaling and safe area',
+            tab: 'viewport-safe-area',
+          },
         ],
         usesSettingActionRow: true,
       };
@@ -146,14 +227,44 @@ export function resolveNodePathInspectorLinks(
       return {
         pageRecipeTarget,
         elementTargets: [
-          { code: '6A.4S-H', componentName: 'TelemetryConfigCard', label: '6A.4S-H Show Telemetry Summary (Show ▾ Collapsed and embedded telemetry configuration tuning)', tab: 'recipes', targetId: 'setting-telemetry-summary-tuner' },
-          { code: 'L3.8', componentName: 'TelemetryConfigCard', label: 'L3.8 TelemetryConfigCard (Level 1 Nested telemetry matrix page)', tab: 'composable-nesting', targetId: 'l3-telemetry-matrix' },
-          { code: '6A.4S-F', componentName: 'SettingDeveloperStatusRow', label: '6A.4S-F SettingDeveloperStatusRow (Developer Disabled/Active Badge)', tab: 'recipes', targetId: 'setting-dev-status-tuner' },
+          {
+            code: '6A.4S-H',
+            componentName: 'TelemetryConfigCard',
+            label:
+              '6A.4S-H Show Telemetry Summary (Show ▾ Collapsed and embedded telemetry configuration tuning)',
+            tab: 'recipes',
+            targetId: 'setting-telemetry-summary-tuner',
+          },
+          {
+            code: 'L3.8',
+            componentName: 'TelemetryConfigCard',
+            label: 'L3.8 TelemetryConfigCard (Level 1 Nested telemetry matrix page)',
+            tab: 'composable-nesting',
+            targetId: 'l3-telemetry-matrix',
+          },
+          {
+            code: '6A.4S-F',
+            componentName: 'SettingDeveloperStatusRow',
+            label: '6A.4S-F SettingDeveloperStatusRow (Developer Disabled/Active Badge)',
+            tab: 'recipes',
+            targetId: 'setting-dev-status-tuner',
+          },
           SETTING_ACTION_ROW_TARGET,
-          { code: '6A.5', componentName: 'AudioDebugSection', label: '6A.5 AudioDebugSection (Settings Full Preview · Audio pipeline diagnostic suite)', tab: 'recipes', targetId: 'recipe-6a-5-settings-preview' },
+          {
+            code: '6A.5',
+            componentName: 'AudioDebugSection',
+            label: '6A.5 AudioDebugSection (Settings Full Preview · Audio pipeline diagnostic suite)',
+            tab: 'recipes',
+            targetId: 'recipe-6a-5-settings-preview',
+          },
           DUAL_GRABBER_TARGET,
           SEGMENTED_SWITCH_TARGET,
-          { code: '6D', componentName: 'FloatingWindowCard', label: 'Floating Window Floating Launcher', tab: 'floating-windows' },
+          {
+            code: '6D',
+            componentName: 'FloatingWindowCard',
+            label: 'Floating Window Floating Launcher',
+            tab: 'floating-windows',
+          },
           PANEL_SHELL_TARGET,
         ],
         usesSettingActionRow: true,
@@ -166,7 +277,12 @@ export function resolveNodePathInspectorLinks(
         SEGMENTED_SWITCH_TARGET,
         TOGGLE_SWITCH_TARGET,
         PANEL_SHELL_TARGET,
-        { code: '6D', componentName: 'FloatingWindowManager', label: '6D Developer parameter overlay', tab: 'floating-windows' },
+        {
+          code: '6D',
+          componentName: 'FloatingWindowManager',
+          label: '6D Developer parameter overlay',
+          tab: 'floating-windows',
+        },
       ],
       usesSettingActionRow: true,
     };
@@ -175,13 +291,36 @@ export function resolveNodePathInspectorLinks(
   if (currentRoute === 'garage') {
     const garageElements: InspectorJumpTarget[] = [PANEL_SHELL_TARGET, UNDERLINE_TABS_TARGET];
     if (garageTab === 'car') {
-      garageElements.unshift({ code: 'L2.Card', componentName: 'SelectableCard', label: 'SelectableCard (Vehicle preset selection card)', tab: 'cards' });
+      garageElements.unshift({
+        code: 'L2.Card',
+        componentName: 'SelectableCard',
+        label: 'SelectableCard (Vehicle preset selection card)',
+        tab: 'cards',
+      });
     } else if (garageTab === 'paint') {
-      garageElements.unshift({ code: 'L3.5', componentName: 'PriorityQueueList', label: 'PriorityQueueList (Livery priority queue)', tab: 'composable-nesting', targetId: 'l3-5-priority-event-matrix' });
+      garageElements.unshift({
+        code: 'L3.5',
+        componentName: 'PriorityQueueList',
+        label: 'PriorityQueueList (Livery priority queue)',
+        tab: 'composable-nesting',
+        targetId: 'l3-5-priority-event-matrix',
+      });
     } else if (garageTab === 'loadout') {
       garageElements.unshift(
-        { code: 'L3.3', componentName: 'UVTransformControl', label: 'UVTransformControl UV Offset / Scale / Rotation', tab: 'composable-nesting', targetId: 'l3-3-uv-color-tuner' },
-        { code: 'L3.3', componentName: 'ColorSwatchInput', label: 'ColorSwatchInput Swatch & Hex Input', tab: 'composable-nesting', targetId: 'l3-3-uv-color-tuner' }
+        {
+          code: 'L3.3',
+          componentName: 'UVTransformControl',
+          label: 'UVTransformControl UV Offset / Scale / Rotation',
+          tab: 'composable-nesting',
+          targetId: 'l3-3-uv-color-tuner',
+        },
+        {
+          code: 'L3.3',
+          componentName: 'ColorSwatchInput',
+          label: 'ColorSwatchInput Swatch & Hex Input',
+          tab: 'composable-nesting',
+          targetId: 'l3-3-uv-color-tuner',
+        }
       );
     }
     return { pageRecipeTarget, elementTargets: garageElements, usesSettingActionRow: false };
@@ -192,10 +331,22 @@ export function resolveNodePathInspectorLinks(
       pageRecipeTarget,
       elementTargets: [
         ...(currentRoute === 'play'
-          ? [{ code: 'L2.2B', componentName: 'PlayModeCard', label: 'PlayModeCard (Tri-Style/watermark/Icon Color Page)', tab: 'play-cards' as ShowcaseTab }]
+          ? [
+              {
+                code: 'L2.2B',
+                componentName: 'PlayModeCard',
+                label: 'PlayModeCard (Tri-Style/watermark/Icon Color Page)',
+                tab: 'play-cards' as ShowcaseTab,
+              },
+            ]
           : []),
         { code: 'L2.Card', componentName: 'Card', label: 'Card Grid mode card container', tab: 'cards' },
-        { code: 'L2.Card', componentName: 'SelectableCard', label: 'SelectableCard Interactive selection card', tab: 'cards' },
+        {
+          code: 'L2.Card',
+          componentName: 'SelectableCard',
+          label: 'SelectableCard Interactive selection card',
+          tab: 'cards',
+        },
         PANEL_SHELL_TARGET,
       ],
       usesSettingActionRow: false,
@@ -209,15 +360,33 @@ export function resolveNodePathInspectorLinks(
         ...(currentRoute === 'camera'
           ? [
               {
-                code: '6A.12M', componentName: 'CameraSettingsStyleTuner',
+                code: '6A.12M',
+                componentName: 'CameraSettingsStyleTuner',
                 label: '6A.12M Camera Settings Center Aligned · Checkbox · Red large button tuning console',
-                tab: 'recipes' as ShowcaseTab, targetId: 'camera-settings-style-tuner',
+                tab: 'recipes' as ShowcaseTab,
+                targetId: 'camera-settings-style-tuner',
               },
-              { code: 'L1.7', componentName: 'Checkbox', label: 'L1.7 Checkbox Checkbox atomic primitive', tab: 'tabs' as ShowcaseTab, targetId: 'l1-checkbox' },
-              { code: 'L3.2', componentName: 'Dialogue', label: 'L3.2 Dialogue Red secondary confirmation popup', tab: 'dialogue' as ShowcaseTab },
+              {
+                code: 'L1.7',
+                componentName: 'Checkbox',
+                label: 'L1.7 Checkbox Checkbox atomic primitive',
+                tab: 'tabs' as ShowcaseTab,
+                targetId: 'l1-checkbox',
+              },
+              {
+                code: 'L3.2',
+                componentName: 'Dialogue',
+                label: 'L3.2 Dialogue Red secondary confirmation popup',
+                tab: 'dialogue' as ShowcaseTab,
+              },
             ]
           : []),
-        { code: '6C', componentName: 'LivePreviewDock', label: '6C Live Preview Side pill storage unit', tab: 'live-preview' },
+        {
+          code: '6C',
+          componentName: 'LivePreviewDock',
+          label: '6C Live Preview Side pill storage unit',
+          tab: 'live-preview',
+        },
         SLIDER_CONTROL_TARGET,
         PANEL_SHELL_TARGET,
       ],
@@ -233,7 +402,12 @@ export function resolveNodePathInspectorLinks(
   ) {
     return {
       pageRecipeTarget,
-      elementTargets: [SETTING_ACTION_ROW_TARGET, PANEL_SHELL_TARGET, SLIDER_CONTROL_TARGET, SEGMENTED_SWITCH_TARGET],
+      elementTargets: [
+        SETTING_ACTION_ROW_TARGET,
+        PANEL_SHELL_TARGET,
+        SLIDER_CONTROL_TARGET,
+        SEGMENTED_SWITCH_TARGET,
+      ],
       usesSettingActionRow: true,
     };
   }
@@ -242,8 +416,18 @@ export function resolveNodePathInspectorLinks(
     return {
       pageRecipeTarget,
       elementTargets: [
-        { code: 'L1.Keycap', componentName: 'KeycapBadge', label: 'KeycapBadge Keycap shortcut badge', tab: 'badges' },
-        { code: 'L1.Btn', componentName: 'Button', label: 'Button Interactive button primitive', tab: 'badges' },
+        {
+          code: 'L1.Keycap',
+          componentName: 'KeycapBadge',
+          label: 'KeycapBadge Keycap shortcut badge',
+          tab: 'badges',
+        },
+        {
+          code: 'L1.Btn',
+          componentName: 'Button',
+          label: 'Button Interactive button primitive',
+          tab: 'badges',
+        },
         PANEL_SHELL_TARGET,
       ],
       usesSettingActionRow: false,
@@ -254,8 +438,19 @@ export function resolveNodePathInspectorLinks(
     return {
       pageRecipeTarget,
       elementTargets: [
-        { code: '5B', componentName: 'CubicBezierCurveEditor', label: '5B Bezier joystick transfer curve editor', tab: 'charts-curves' },
-        { code: 'L3.11', componentName: 'CameraSwivelSimulatorCard', label: 'L3.11 View rotation simulator', tab: 'composable-nesting', targetId: 'l3-11-swivel-kickoff-duel' },
+        {
+          code: '5B',
+          componentName: 'CubicBezierCurveEditor',
+          label: '5B Bezier joystick transfer curve editor',
+          tab: 'charts-curves',
+        },
+        {
+          code: 'L3.11',
+          componentName: 'CameraSwivelSimulatorCard',
+          label: 'L3.11 View rotation simulator',
+          tab: 'composable-nesting',
+          targetId: 'l3-11-swivel-kickoff-duel',
+        },
         PANEL_SHELL_TARGET,
       ],
       usesSettingActionRow: false,

@@ -7,14 +7,17 @@ import { useMenuLayoutStore } from '../../../ui-core/stores/menuLayoutStore';
 export interface PanelShellStageThreeFooterSectionProps {
   isLight: boolean;
   showCode: boolean;
+  onTemplateTokenChange?: () => void;
 }
 
 export const PanelShellStageThreeFooterSection: React.FC<PanelShellStageThreeFooterSectionProps> = ({
   isLight,
   showCode,
+  onTemplateTokenChange,
 }) => {
   const {
     panelBodyPaddingX,
+    panelBodyPaddingY,
     panelFooterPaddingX,
     panelFooterPaddingY,
     panelFooterFontSize,
@@ -28,6 +31,47 @@ export const PanelShellStageThreeFooterSection: React.FC<PanelShellStageThreeFoo
 
   return (
     <>
+      {/* Stage 2: Menu Content Container */}
+      <div className="flex flex-col gap-3 pt-3 border-t border-neutral-200/60 dark:border-neutral-800/80">
+        <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-500">
+          Variant A · Stage 2 Content Container Middle Content Area &amp; Tabs Padding
+        </span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <SliderControl
+            label="Content horizontal padding (bodyPadX)"
+            value={panelBodyPaddingX}
+            min={0}
+            max={36}
+            step={1}
+            unit="px"
+            editable={true}
+            allowOutOfBoundsInput={true}
+            colorScheme="sky"
+            onChange={(v) => {
+              setToken('panelBodyPaddingX', v);
+              onTemplateTokenChange?.();
+            }}
+            isLight={isLight}
+          />
+          <SliderControl
+            label="Content vertical padding (bodyPadY)"
+            value={panelBodyPaddingY}
+            min={0}
+            max={32}
+            step={1}
+            unit="px"
+            editable={true}
+            allowOutOfBoundsInput={true}
+            colorScheme="emerald"
+            onChange={(v) => {
+              setToken('panelBodyPaddingY', v);
+              onTemplateTokenChange?.();
+            }}
+            isLight={isLight}
+          />
+        </div>
+      </div>
+
       {/* Stage 3: Split Footer */}
       <div className="flex flex-col gap-3 pt-3 border-t border-neutral-200/60 dark:border-neutral-800/80">
         <div className="flex flex-wrap items-center justify-between gap-2">

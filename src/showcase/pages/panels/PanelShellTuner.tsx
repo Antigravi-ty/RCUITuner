@@ -15,7 +15,10 @@ import { ToggleSwitch } from '../../../ui-core/primitives/ToggleSwitch';
 import { Badge } from '../../../ui-core/primitives/Badge';
 import { Button } from '../../../ui-core/primitives/Button';
 import { useMenuLayoutStore } from '../../../ui-core/stores/menuLayoutStore';
-import { resolvePanelHeaderBackBtnGeometry } from '../../../ui-core/tokens/menuLayoutTokens';
+import {
+  resolvePanelHeaderBackBtnGeometry,
+  type MenuLayoutTokens,
+} from '../../../ui-core/tokens/menuLayoutTokens';
 import { useReviewLedgerStore } from '../../components/review/reviewLedgerStore';
 import { FloatingWindowShellTunerSection } from './FloatingWindowShellTunerSection';
 import { PanelHeaderBackButtonLab } from './PanelHeaderBackButtonLab';
@@ -80,6 +83,14 @@ export const PanelShellTuner: React.FC<PanelShellTunerProps> = React.memo(
       }
     }, []);
 
+    const setShellToken = <K extends keyof MenuLayoutTokens>(
+      key: K,
+      val: MenuLayoutTokens[K]
+    ) => {
+      setToken(key, val);
+      notifyTemplateDrift();
+    };
+
     const btnGeom = resolvePanelHeaderBackBtnGeometry({
       panelHeaderPaddingX,
       panelHeaderPaddingY,
@@ -109,6 +120,8 @@ export const PanelShellTuner: React.FC<PanelShellTunerProps> = React.memo(
       setSimulateTemplateStale(false);
     };
 
+    const mutedTextCls = `text-[11px] font-mono ${isLight ? 'text-neutral-500' : 'text-neutral-400'}`;
+
     return (
       <div
         id="panel-shell-tuner"
@@ -131,11 +144,7 @@ export const PanelShellTuner: React.FC<PanelShellTunerProps> = React.memo(
             <Badge variant="amber" size="sm" isLight={isLight}>
               L2 ⇄ L6 ⇄ L7 Global Sync
             </Badge>
-            <span
-              className={`text-[11px] font-mono ${
-                isLight ? 'text-neutral-500' : 'text-neutral-400'
-              }`}
-            >
+            <span className={mutedTextCls}>
               Header: {panelHeaderPaddingX}×{panelHeaderPaddingY}px ({panelHeaderTitleFontSize}px ·
               Btn {btnGeom.width}×{btnGeom.height}px · R={btnGeom.radiusSummary}) · Body:{' '}
               {panelBodyPaddingX}×{panelBodyPaddingY}px · Footer: {panelFooterPaddingX}×
@@ -237,20 +246,13 @@ export const PanelShellTuner: React.FC<PanelShellTunerProps> = React.memo(
             )}
             <ToggleSwitch
               checked={lockPanelPaddingX}
-              onCheckedChange={(v) => {
-                setToken('lockPanelPaddingX', v);
-                notifyTemplateDrift();
-              }}
+              onCheckedChange={(v) => setShellToken('lockPanelPaddingX', v)}
               label="Lock horizontal margin alignment (Lock Header / Tabs / Content / Footer Padding X)"
               variant="neutral"
               isLight={isLight}
             />
           </div>
-          <span
-            className={`text-[11px] font-mono ${
-              isLight ? 'text-neutral-500' : 'text-neutral-400'
-            }`}
-          >
+          <span className={mutedTextCls}>
             {lockPanelPaddingX
               ? `Unified left-align baseline locked (${panelHeaderPaddingX}px)`
               : 'Unlocked: Allow Header / Content / Footer Independently set different levels Padding'}
@@ -272,30 +274,21 @@ export const PanelShellTuner: React.FC<PanelShellTunerProps> = React.memo(
             <div className="flex items-center gap-4 flex-wrap">
               <ToggleSwitch
                 checked={panelHeaderBackBtnShowArrow}
-                onCheckedChange={(v) => {
-                  setToken('panelHeaderBackBtnShowArrow', v);
-                  notifyTemplateDrift();
-                }}
+                onCheckedChange={(v) => setShellToken('panelHeaderBackBtnShowArrow', v)}
                 label="Show Arrow (Show Arrow)"
                 variant="neutral"
                 isLight={isLight}
               />
               <ToggleSwitch
                 checked={panelHeaderBackBtnShowLabel}
-                onCheckedChange={(v) => {
-                  setToken('panelHeaderBackBtnShowLabel', v);
-                  notifyTemplateDrift();
-                }}
+                onCheckedChange={(v) => setShellToken('panelHeaderBackBtnShowLabel', v)}
                 label="show BACK (Show Back)"
                 variant="neutral"
                 isLight={isLight}
               />
               <ToggleSwitch
                 checked={lockPanelHeaderBackBtnAspect}
-                onCheckedChange={(v) => {
-                  setToken('lockPanelHeaderBackBtnAspect', v);
-                  notifyTemplateDrift();
-                }}
+                onCheckedChange={(v) => setShellToken('lockPanelHeaderBackBtnAspect', v)}
                 label="Lock 1:1 square (Lock W=H)"
                 variant="neutral"
                 isLight={isLight}
@@ -307,97 +300,49 @@ export const PanelShellTuner: React.FC<PanelShellTunerProps> = React.memo(
             <SliderControl
               label="title font size (titleFontSize)"
               value={panelHeaderTitleFontSize}
-              min={8}
-              max={28}
-              step={1}
-              unit="px"
-              editable={true}
-              allowOutOfBoundsInput={true}
-              colorScheme="amber"
-              onChange={(v) => {
-                setToken('panelHeaderTitleFontSize', v);
-                notifyTemplateDrift();
-              }}
+              min={8} max={28} step={1} unit="px"
+              editable allowOutOfBoundsInput colorScheme="amber"
+              onChange={(v) => setShellToken('panelHeaderTitleFontSize', v)}
               isLight={isLight}
             />
             <SliderControl
               label="Back Button Width (backBtnWidth)"
               value={panelHeaderBackBtnWidth}
-              min={12}
-              max={56}
-              step={1}
-              unit="px"
-              editable={true}
-              allowOutOfBoundsInput={true}
-              colorScheme="amber"
-              onChange={(v) => {
-                setToken('panelHeaderBackBtnWidth', v);
-                notifyTemplateDrift();
-              }}
+              min={12} max={56} step={1} unit="px"
+              editable allowOutOfBoundsInput colorScheme="amber"
+              onChange={(v) => setShellToken('panelHeaderBackBtnWidth', v)}
               isLight={isLight}
             />
             <SliderControl
               label="Back Button Height (backBtnHeight)"
               value={panelHeaderBackBtnHeight}
-              min={12}
-              max={44}
-              step={1}
-              unit="px"
-              editable={true}
-              allowOutOfBoundsInput={true}
-              colorScheme="amber"
-              onChange={(v) => {
-                setToken('panelHeaderBackBtnHeight', v);
-                notifyTemplateDrift();
-              }}
+              min={12} max={44} step={1} unit="px"
+              editable allowOutOfBoundsInput colorScheme="amber"
+              onChange={(v) => setShellToken('panelHeaderBackBtnHeight', v)}
               isLight={isLight}
             />
             <SliderControl
               label="Button to title spacing (headerGap)"
               value={panelHeaderGap}
-              min={0}
-              max={24}
-              step={1}
-              unit="px"
-              editable={true}
-              allowOutOfBoundsInput={true}
-              colorScheme="amber"
-              onChange={(v) => {
-                setToken('panelHeaderGap', v);
-                notifyTemplateDrift();
-              }}
+              min={0} max={24} step={1} unit="px"
+              editable allowOutOfBoundsInput colorScheme="amber"
+              onChange={(v) => setShellToken('panelHeaderGap', v)}
               isLight={isLight}
             />
             <SliderControl
               label="Header horizontal padding (padX)"
               value={panelHeaderPaddingX}
-              min={0}
-              max={36}
-              step={1}
-              unit="px"
-              editable={true}
-              allowOutOfBoundsInput={true}
-              colorScheme="sky"
-              onChange={(v) => {
-                setToken('panelHeaderPaddingX', v);
-                notifyTemplateDrift();
-              }}
+              min={0} max={36} step={1} unit="px"
+              editable allowOutOfBoundsInput colorScheme="sky"
+              onChange={(v) => setShellToken('panelHeaderPaddingX', v)}
               isLight={isLight}
             />
             <SliderControl
               label="Header vertical padding (padY)"
               value={panelHeaderPaddingY}
-              min={0}
-              max={28}
-              step={1}
-              unit="px"
-              editable={true}
-              allowOutOfBoundsInput={true}
-              colorScheme="emerald"
-              onChange={(v) => {
-                setToken('panelHeaderPaddingY', v);
-                notifyTemplateDrift();
-              }}
+              min={0} max={28} step={1} unit="px"
+              editable allowOutOfBoundsInput colorScheme="emerald"
+              onChange={(v) => setShellToken('panelHeaderPaddingY', v)}
               isLight={isLight}
             />
           </div>
@@ -405,49 +350,12 @@ export const PanelShellTuner: React.FC<PanelShellTunerProps> = React.memo(
           <PanelHeaderBackButtonLab isLight={isLight} onTemplateTokenChange={notifyTemplateDrift} />
         </div>
 
-        {/* Stage 2: Menu Content Container */}
-        <div className="flex flex-col gap-3 pt-3 border-t border-neutral-200/60 dark:border-neutral-800/80">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-500">
-            Variant A · Stage 2 Content Container Middle Content Area &amp; Tabs Padding
-          </span>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <SliderControl
-              label="Content horizontal padding (bodyPadX)"
-              value={panelBodyPaddingX}
-              min={0}
-              max={36}
-              step={1}
-              unit="px"
-              editable={true}
-              allowOutOfBoundsInput={true}
-              colorScheme="sky"
-              onChange={(v) => {
-                setToken('panelBodyPaddingX', v);
-                notifyTemplateDrift();
-              }}
-              isLight={isLight}
-            />
-            <SliderControl
-              label="Content vertical padding (bodyPadY)"
-              value={panelBodyPaddingY}
-              min={0}
-              max={32}
-              step={1}
-              unit="px"
-              editable={true}
-              allowOutOfBoundsInput={true}
-              colorScheme="emerald"
-              onChange={(v) => {
-                setToken('panelBodyPaddingY', v);
-                notifyTemplateDrift();
-              }}
-              isLight={isLight}
-            />
-          </div>
-        </div>
-
-        {/* Stage 3: Menu Split Footer */}
-        <PanelShellStageThreeFooterSection isLight={isLight} showCode={showCode} />
+        {/* Stage 2 & Stage 3: Menu Content Container & Split Footer */}
+        <PanelShellStageThreeFooterSection
+          isLight={isLight}
+          showCode={showCode}
+          onTemplateTokenChange={notifyTemplateDrift}
+        />
 
         {/* Variant B: Floating Window 3-Stage Shell Tokens */}
         <FloatingWindowShellTunerSection
