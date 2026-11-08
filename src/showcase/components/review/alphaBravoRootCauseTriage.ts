@@ -1,9 +1,14 @@
 import { UI_APPROVAL_LEDGER } from '../../../ui-core/manifest/surfaceCalibration';
+import {
+  buildApprovalMessageWithDiffs,
+  collectTunerExportDiffSnapshot,
+} from './exportDiffAndSizeTiering';
 import type {
   AlphaRootCauseCluster,
   ReviewBundleExportPayload,
   RuntimeReviewDecision,
   SurfaceVariantReviewUnit,
+  TunerExportDiffSnapshot,
 } from './reviewTypes';
 
 function classifyAlphaDepCategory(
@@ -26,18 +31,6 @@ function formatAlphaShortName(depPath: string): string {
   return `Alpha:StoreConfig(${stem})`;
 }
 
-/**
- * Computes Alpha <-> Bravo Root-Cause Clustering & Attribution across all review units.
- *
- * Rules:
- * - If multiple rejected surfaces co-occur on the same shared Alpha dependency (`>= 2` rejected
- *   surfaces, or `>= 35%` rejection ratio when at least 2 surfaces use it), classify as
- *   `fix-alpha-mother` ("Inspect & fix shared Workspace Alpha mother component first; do not
- *   hard-patch individual business surfaces").
- * - Otherwise, if an Alpha dependency is shared by many approved surfaces and only 1 surface
- *   is rejected, classify as `fix-bravo-surface-locally` ("Underlying Alpha mother is healthy;
- *   apply localized fix to the rejected surface and `surfaceCalibrationOverrides.json`").
- */
 export function computeAlphaBravoRootCauseClusters(
   units: SurfaceVariantReviewUnit[]
 ): AlphaRootCauseCluster[] {
@@ -78,7 +71,6 @@ export function computeAlphaBravoRootCauseClusters(
 
   for (const [alphaDep, stats] of depMap.entries()) {
     if (stats.rejected.size === 0) continue;
-    // Skip universal shell unless >= 3 surfaces are rejected, so more specific primitives rank higher
     if (
       alphaDep === 'src/ui-core/layout/UniversalThreeStageShell.tsx' &&
       stats.rejected.size < 3 &&
@@ -133,8 +125,9 @@ export function computeAlphaBravoRootCauseClusters(
 export function buildReviewBundlePayload(params: {
   units: SurfaceVariantReviewUnit[];
   decisionsMap: Record<string, RuntimeReviewDecision>;
+  diffSnapshot?: TunerExportDiffSnapshot;
 }): ReviewBundleExportPayload {
-  const { units, decisionsMap } = params;
+  const { units, decisionsMap, diffSnapshot = collectTunerExportDiffSnapshot() } = params;
   const nowIso = new Date().toISOString();
 
   const approvedCount = units.filter((u) => u.status === 'approved').length;
@@ -151,16 +144,27 @@ export function buildReviewBundlePayload(params: {
     a.unitKey.localeCompare(b.unitKey)
   );
 
+  const approvalMessage = buildApprovalMessageWithDiffs({
+    baseNote: `Approved ${approvedCount}/${units.length} units (${rejectedCount} rejected, ${deferredCount} deferred)`,
+    diffSnapshot,
+  });
+
   const surfacePatch: ReviewBundleExportPayload['ledgerPatch']['surfaces'] = {};
   for (const unit of units) {
     const baseLedger = UI_APPROVAL_LEDGER.surfaces[unit.surfaceId];
     const hasChangedStatus = !baseLedger || baseLedger.status !== unit.status;
     const hasNote = Boolean(unit.note && unit.note.trim().length > 0);
-    if (hasChangedStatus || hasNote || decisionsMap[unit.unitKey]) {
+    const hasCalOv = Boolean(diffSnapshot.calibrationOverrides[unit.surfaceId]);
+    if (hasChangedStatus || hasNote || hasCalOv || decisionsMap[unit.unitKey]) {
+      const noteWithDiff = buildApprovalMessageWithDiffs({
+        baseNote: unit.note,
+        surfaceId: unit.surfaceId,
+        diffSnapshot,
+      });
       surfacePatch[unit.surfaceId] = {
         status: unit.status,
         approvedAt: unit.updatedAt || nowIso,
-        ...(hasNote ? { note: unit.note.trim() } : {}),
+        ...(noteWithDiff ? { note: noteWithDiff } : {}),
       };
     }
   }
@@ -168,6 +172,7 @@ export function buildReviewBundlePayload(params: {
   return {
     schemaVersion: 1,
     exportedAt: nowIso,
+    approvalMessage,
     summary: {
       totalUnits: units.length,
       approvedCount,
@@ -177,9 +182,15 @@ export function buildReviewBundlePayload(params: {
       bucket1VisualCount,
       bucket2ConfigCount,
       bucket3TemplateCount,
+      calibratedSurfaceCount: diffSnapshot.totalCalibrationSurfaceCount,
+      storeDiffCount: diffSnapshot.totalStoreDiffCount,
     },
     rootCauseRecommendations,
     decisions,
+    surfaceCalibrationOverrides: diffSnapshot.calibrationOverrides,
+    calibrationDiffs: diffSnapshot.calibrationDiffs,
+    storeDiffs: diffSnapshot.storeDiffs,
+    storeDiffMap: diffSnapshot.storeDiffMap,
     ledgerPatch: {
       updatedAt: nowIso,
       surfaces: surfacePatch,
@@ -207,10 +218,12 @@ export function formatReviewBundleMarkdown(
   const lines: string[] = [
     '# [RCUITuner Workspace Bravo · Rapid Review & Triage Bundle]',
     `- **Exported At**: \`${payload.exportedAt}\``,
+    `- **Approval Message**: \`${payload.approvalMessage}\``,
     `- **Summary**: **${payload.summary.approvedCount}** Approved · ` +
       `**${payload.summary.rejectedCount}** Rejected · ` +
       `**${payload.summary.deferredCount}** Deferred · ` +
       `**${payload.summary.pendingCount}** Pending (Total ${payload.summary.totalUnits} units)`,
+    `- **Collected Diffs**: **${payload.summary.calibratedSurfaceCount}** Calibrated Surfaces · **${payload.summary.storeDiffCount}** Store Diff Keys`,
     `- **3-Bucket Queue Snapshot**: [B1] Bucket 1 (Visual/New): \`${payload.summary.bucket1VisualCount}\` · ` +
       `[B2] Bucket 2 (Config/Sizing): \`${payload.summary.bucket2ConfigCount}\` · ` +
       `[B3] Bucket 3 (Template-Stale): \`${payload.summary.bucket3TemplateCount}\``,
@@ -276,7 +289,19 @@ export function formatReviewBundleMarkdown(
 
   lines.push(
     '',
-    '## 5. `manifest/uiApprovalLedger.json` Delta Patch',
+    '## 5. Collected `surfaceCalibrationOverrides` & Store Diffs',
+    '```json',
+    JSON.stringify(
+      {
+        surfaceCalibrationOverrides: payload.surfaceCalibrationOverrides,
+        storeDiffMap: payload.storeDiffMap,
+      },
+      null,
+      2
+    ),
+    '```',
+    '',
+    '## 6. `manifest/uiApprovalLedger.json` Delta Patch',
     '```json',
     JSON.stringify(payload.ledgerPatch, null, 2),
     '```',

@@ -1,6 +1,8 @@
 import type {
   SurfaceApprovalRecord,
   SurfaceApprovalStatus,
+  SurfaceCalibrationLedger,
+  SurfaceCalibrationOverride,
 } from '../../../ui-core/manifest/surfaceMetaTypes';
 
 export type ReviewTriageBucketId =
@@ -64,8 +66,47 @@ export interface RuntimeReviewDecision {
   subViewFile?: string;
   status: SurfaceApprovalStatus;
   note: string;
+  approvalMessage?: string;
   simulatedStaleReason?: ReviewStaleReason;
   updatedAt: string;
+}
+
+export interface CalibrationOverrideDiffEntry {
+  surfaceId: string;
+  override: SurfaceCalibrationOverride;
+  changedFields: string[];
+  sizingDiff: Partial<SurfaceCalibrationOverride>;
+  configDiff: Record<string, { before: unknown; after: unknown }>;
+}
+
+export interface StoreDiffEntry {
+  key: string;
+  scope: 'ui-store' | 'domain-store' | 'page-sync';
+  before: unknown;
+  after: unknown;
+}
+
+export interface TunerExportDiffSnapshot {
+  calibrationOverrides: SurfaceCalibrationLedger;
+  calibrationDiffs: CalibrationOverrideDiffEntry[];
+  storeDiffs: StoreDiffEntry[];
+  storeDiffMap: Record<string, { before: unknown; after: unknown }>;
+  totalCalibrationSurfaceCount: number;
+  totalStoreDiffCount: number;
+  hasAnyDiff: boolean;
+}
+
+export type ExportRecommendedAction = 'copy-clipboard' | 'download-json';
+
+export interface ExportSizeTierMetrics {
+  lineCount: number;
+  byteCount: number;
+  maxCopyLines: number;
+  maxCopyBytes: number;
+  recommendedAction: ExportRecommendedAction;
+  tierLabel: string;
+  formattedBadge: string;
+  reason: string;
 }
 
 export interface AlphaRootCauseCluster {
@@ -82,6 +123,7 @@ export interface AlphaRootCauseCluster {
 export interface ReviewBundleExportPayload {
   schemaVersion: 1;
   exportedAt: string;
+  approvalMessage: string;
   summary: {
     totalUnits: number;
     approvedCount: number;
@@ -91,9 +133,15 @@ export interface ReviewBundleExportPayload {
     bucket1VisualCount: number;
     bucket2ConfigCount: number;
     bucket3TemplateCount: number;
+    calibratedSurfaceCount: number;
+    storeDiffCount: number;
   };
   rootCauseRecommendations: AlphaRootCauseCluster[];
   decisions: RuntimeReviewDecision[];
+  surfaceCalibrationOverrides: SurfaceCalibrationLedger;
+  calibrationDiffs: CalibrationOverrideDiffEntry[];
+  storeDiffs: StoreDiffEntry[];
+  storeDiffMap: Record<string, { before: unknown; after: unknown }>;
   ledgerPatch: {
     updatedAt: string;
     surfaces: Record<

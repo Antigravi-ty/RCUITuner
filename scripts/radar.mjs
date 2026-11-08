@@ -45,6 +45,7 @@ import {
   analyzeWideWaist,
 } from './radar/waistAndGutScanner.mjs';
 import { checkAndSyncApprovalLedger } from './radar/approvalLedgerEngine.mjs';
+import { detectUnmatchedAndUncalibratedSurfaces } from './radar/unmatchedSurfaceDetector.mjs';
 
 const args = new Set(process.argv.slice(2));
 const JSON_MODE = args.has('--json');
@@ -189,6 +190,9 @@ const approvalReport = checkAndSyncApprovalLedger({
   dependencyGraph: runtimeDependencyGraph,
   syncApproval: SYNC_APPROVAL,
 });
+const unmatchedSurfaceReport = detectUnmatchedAndUncalibratedSurfaces({
+  allRelFiles,
+});
 
 const totalErrors =
   lockfileViolations.length +
@@ -236,6 +240,7 @@ const summary = {
   arbitrarySplitErrors,
   gutSharingErrors,
   approvalLedger: approvalReport,
+  unmatchedSurfaceReport,
   asAnyCount: totalAsAnyCount,
   passed: totalErrors === 0,
 };
@@ -318,7 +323,27 @@ console.log(
       : `FAIL (${cjkErrors.length} CJK, ${emojiErrors.length} Emoji, ${domainHygieneErrors.length} Domain, ${anyHygieneErrors.length} Any)`
   }`
 );
+console.log(
+  `10. RC Surface Match : ${
+    unmatchedSurfaceReport.unmatchedOrUncalibratedCount === 0
+      ? `PASS (${unmatchedSurfaceReport.matchedAndCalibratedCount}/${unmatchedSurfaceReport.totalCandidates} RC surfaces matched & calibrated across 6A/6D/7A & Manifest)`
+      : `HIGHLIGHT (${unmatchedSurfaceReport.matchedAndCalibratedCount}/${unmatchedSurfaceReport.totalCandidates} matched · ${unmatchedSurfaceReport.unmatchedOrUncalibratedCount} unmatched/uncalibrated RC surface(s) flagged for follow-up)`
+  }`
+);
 console.log('----------------------------------------------------------------------');
+
+if (unmatchedSurfaceReport.unmatchedItems.length > 0) {
+  console.log('[UNMATCHED / UNCALIBRATED RC SURFACE DETECTOR REPORT]');
+  for (const item of unmatchedSurfaceReport.unmatchedItems) {
+    console.log(
+      `  * [${item.status.toUpperCase()}] ${item.surfaceId} (${item.entryFile}) -> [${item.issues.join(', ')}]`
+    );
+    for (const target of item.followUpTargets) {
+      console.log(`      -> Follow-up: ${target}`);
+    }
+  }
+  console.log('----------------------------------------------------------------------');
+}
 
 for (const msg of lockfileViolations) console.error(`\n[ERROR] ${msg}`);
 if (!tsResult.ok) {

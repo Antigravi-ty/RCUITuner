@@ -13,6 +13,7 @@ import {
 import { CodeBlock } from '../CodeBlock';
 import type { ShowcaseTab } from '../sidebarNavConfig';
 import { PYRAMID_SPEC } from './overview/overviewPyramidSpecs';
+import { UnmatchedSurfaceRadarPanel } from '../components/radar/UnmatchedSurfaceRadarPanel';
 
 export interface OverviewPageProps {
   isLight?: boolean;
@@ -104,6 +105,12 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ isLight = true, onSe
           ), where each module follows a deterministic eight-level pyramid architecture.
         </p>
       </div>
+
+      <UnmatchedSurfaceRadarPanel
+        isLight={isLight}
+        defaultExpanded={true}
+        onSelectTab={onSelectTab}
+      />
 
       {/* Section 1: L0–L7 Pyramid Matrix */}
       <div className={sectionClass}>

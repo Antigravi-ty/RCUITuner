@@ -15,6 +15,10 @@ import { RecipesActiveWorkbenchBar } from './recipes/RecipesActiveWorkbenchBar';
 import { RapidReviewTriageBar } from '../components/review/RapidReviewTriageBar';
 import { useReviewLedgerStore } from '../components/review/reviewLedgerStore';
 import { AutoConfigTunerPanel } from '../components/tuner/AutoConfigTunerPanel';
+import {
+  UnmatchedRecipeFallbackStage,
+  UnmatchedSurfaceRadarPanel,
+} from '../components/radar/UnmatchedSurfaceRadarPanel';
 
 export const RecipesPage: React.FC<{ isLight?: boolean }> = ({ isLight = true }) => {
   const {
@@ -205,15 +209,21 @@ export const RecipesPage: React.FC<{ isLight?: boolean }> = ({ isLight = true })
       </div>
 
       {/* 1. TOP-PINNED VIEW BOX STAGE: Single On-Demand Module (Directly below static page header) */}
-      {renderMode === 'single' && (
-        <OnDemandRecipeStage
-          itemId={activeRecipeId}
-          isLight={isLight}
-          simulateLayer3Error={simulateLayer3Error}
-          onToggleLayer3Error={handleToggleLayer3Error}
-          onSelectRecipeId={handleSelectRecipeId}
-        />
-      )}
+      {renderMode === 'single' &&
+        (activeRecipeId.startsWith('recipe-auto-') ? (
+          <UnmatchedRecipeFallbackStage
+            activeRecipeId={activeRecipeId}
+            isLight={isLight}
+          />
+        ) : (
+          <OnDemandRecipeStage
+            itemId={activeRecipeId}
+            isLight={isLight}
+            simulateLayer3Error={simulateLayer3Error}
+            onToggleLayer3Error={handleToggleLayer3Error}
+            onSelectRecipeId={handleSelectRecipeId}
+          />
+        ))}
 
       {/* 2. ACTIVE MODULE QUICK SWITCHER, RELATED SIBLING TUNERS & GLOBAL EXPORT BAR (Placed BELOW the View Box) */}
       {renderMode === 'single' && (
@@ -224,6 +234,13 @@ export const RecipesPage: React.FC<{ isLight?: boolean }> = ({ isLight = true })
           onSelectRecipeId={handleSelectRecipeId}
         />
       )}
+
+      {/* 3. RC UNMATCHED / UNCALIBRATED SURFACE RADAR DETECTOR */}
+      <UnmatchedSurfaceRadarPanel
+        isLight={isLight}
+        defaultExpanded={false}
+        onSelectRecipeId={handleSelectRecipeId}
+      />
 
       {/* Categorized & Searchable On-Demand Selector Directory */}
       <PageJumpDirectory

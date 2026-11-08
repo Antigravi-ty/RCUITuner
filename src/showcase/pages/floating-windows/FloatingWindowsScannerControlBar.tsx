@@ -11,6 +11,12 @@ import { DEV_PRESET_WINDOWS } from '../../../ui-core/stores/devFloatingPresets';
 import { floatingSandboxStore, useFloatingStore } from '../../../ui-core/stores/floatingStore';
 import { FloatingWindowIcon } from '../../../ui-core/navigation/FloatingWindowIcon';
 import { FloatingWindowsMinWidthCalibrationBar } from './FloatingWindowsMinWidthCalibrationBar';
+import {
+  DEV_FLOATING_LINEAR_PLAYLIST,
+  USER_FLOATING_LINEAR_PLAYLIST,
+  buildFloatingWindowsLinearPlaylist,
+  findFloatingPlaylistUnitIndex,
+} from './floatingWindowsLinearPlaylists';
 import { useFloatingWindowsCalibration } from './useFloatingWindowsCalibration';
 
 export interface FloatingScannerActions {
@@ -62,6 +68,21 @@ export const FloatingWindowsScannerControlBar: React.FC<
     resolvedIntrinsicMaxH,
   } = useFloatingWindowsCalibration(currentPreset);
 
+  const activePlaylist = React.useMemo(
+    () => buildFloatingWindowsLinearPlaylist(tier, { presets: activeTierWindows }),
+    [tier, activeTierWindows]
+  );
+  const activePlaylistIdx = React.useMemo(
+    () =>
+      findFloatingPlaylistUnitIndex(
+        activePlaylist,
+        currentPreset?.id || '',
+        activeSubTab
+      ),
+    [activePlaylist, currentPreset?.id, activeSubTab]
+  );
+  const activePlaylistUnit = activePlaylist[activePlaylistIdx] || activePlaylist[0];
+
   return (
     <div
       className={`p-4 rounded-2xl border flex flex-col gap-3.5 transition-colors ${
@@ -89,7 +110,9 @@ export const FloatingWindowsScannerControlBar: React.FC<
               }`}
             >
               <User className="h-3.5 w-3.5" />
-              <span>User Only ({USER_PRESET_WINDOWS.length} Windows)</span>
+              <span>
+                User Only ({USER_PRESET_WINDOWS.length}W · {USER_FLOATING_LINEAR_PLAYLIST.length}U)
+              </span>
             </button>
             <button
               type="button"
@@ -103,12 +126,14 @@ export const FloatingWindowsScannerControlBar: React.FC<
               }`}
             >
               <Terminal className="h-3.5 w-3.5" />
-              <span>Developer Only ({DEV_PRESET_WINDOWS.length} Windows)</span>
+              <span>
+                Developer Only ({DEV_PRESET_WINDOWS.length}W · {DEV_FLOATING_LINEAR_PLAYLIST.length}U)
+              </span>
             </button>
           </div>
         </div>
 
-        {/* Linear Prev / Next Window Scanner */}
+        {/* Linear Prev / Next Flattened Unit Scanner */}
         <div className="flex items-center gap-2 flex-wrap">
           <button
             type="button"
@@ -120,7 +145,7 @@ export const FloatingWindowsScannerControlBar: React.FC<
             }`}
           >
             <ChevronLeft className="h-3.5 w-3.5" />
-            <span>Prev Window</span>
+            <span>Prev Unit</span>
           </button>
           <button
             type="button"
@@ -131,7 +156,7 @@ export const FloatingWindowsScannerControlBar: React.FC<
                 : 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-neutral-100'
             }`}
           >
-            <span>Next Window</span>
+            <span>Next Unit</span>
             <ChevronRight className="h-3.5 w-3.5" />
           </button>
           <div
@@ -142,10 +167,11 @@ export const FloatingWindowsScannerControlBar: React.FC<
             }`}
           >
             <span className="font-bold text-amber-500">
-              [{currentIndex + 1} / {activeTierWindows.length}]
+              [{activePlaylist.length > 0 ? activePlaylistIdx + 1 : currentIndex + 1} /{' '}
+              {activePlaylist.length || activeTierWindows.length}]
             </span>
-            <span className="font-semibold truncate max-w-[240px]">
-              {currentPreset?.title}
+            <span className="font-semibold truncate max-w-[280px]">
+              {activePlaylistUnit?.label || currentPreset?.title}
             </span>
           </div>
         </div>

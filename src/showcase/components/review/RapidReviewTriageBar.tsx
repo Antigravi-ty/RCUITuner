@@ -12,6 +12,12 @@ import {
 } from 'lucide-react';
 import { quickNotification } from '../../../ui-core/stores/quickNotificationStore';
 import {
+  buildApprovalMessageWithDiffs,
+  collectTunerExportDiffSnapshot,
+  computeExportSizeTierMetrics,
+  subscribeTunerDiffChanges,
+} from './exportDiffAndSizeTiering';
+import {
   RapidReviewBucketFilterStrip,
   RapidReviewSpotCheckStrip,
 } from './RapidReviewBucketFilterStrip';
@@ -43,7 +49,24 @@ export const RapidReviewTriageBar: React.FC<RapidReviewTriageBarProps> = React.m
     } = useReviewLedgerStore();
 
     const [isCollapsed, setIsCollapsed] = useState(false);
+    const [diffTick, setDiffTick] = useState(0);
     const noteInputRef = useRef<HTMLInputElement | null>(null);
+
+    useEffect(() => {
+      return subscribeTunerDiffChanges(() => {
+        setDiffTick((t) => t + 1);
+      });
+    }, []);
+
+    const diffSnapshot = useMemo(() => {
+      void diffTick;
+      return collectTunerExportDiffSnapshot();
+    }, [diffTick]);
+
+    const diffSizeMetrics = useMemo(() => {
+      const serialized = JSON.stringify(diffSnapshot, null, 2);
+      return computeExportSizeTierMetrics(serialized);
+    }, [diffSnapshot]);
 
     const allUnits = useMemo(
       () =>
@@ -113,9 +136,14 @@ export const RapidReviewTriageBar: React.FC<RapidReviewTriageBarProps> = React.m
             status,
             advanceToNext: true,
           });
+          const approvalMsg = buildApprovalMessageWithDiffs({
+            baseNote: activeUnit.note,
+            surfaceId: activeUnit.surfaceId,
+            diffSnapshot,
+          });
           const labelMsg = `${status.toUpperCase()} [${activeUnit.referenceCode}] ${
             activeUnit.label
-          }${next ? ` → Next: ${next.label}` : ''}`;
+          } (${approvalMsg})${next ? ` -> Next: ${next.label}` : ''}`;
           if (status === 'approved') quickNotification.success(labelMsg);
           else if (status === 'rejected') quickNotification.warning(labelMsg);
           else quickNotification.info(labelMsg);
@@ -131,7 +159,7 @@ export const RapidReviewTriageBar: React.FC<RapidReviewTriageBarProps> = React.m
 
       window.addEventListener('keydown', handleKeyDown);
       return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [activeUnit, setDecision]);
+    }, [activeUnit, diffSnapshot, setDecision]);
 
     if (!activeUnit) return null;
 
@@ -146,13 +174,21 @@ export const RapidReviewTriageBar: React.FC<RapidReviewTriageBarProps> = React.m
         status,
         advanceToNext: true,
       });
+      const approvalMsg = buildApprovalMessageWithDiffs({
+        baseNote: activeUnit.note,
+        surfaceId: activeUnit.surfaceId,
+        diffSnapshot,
+      });
       const msg = `${status.toUpperCase()} [${activeUnit.referenceCode}] ${
         activeUnit.label
-      }${next ? ` → ${next.label}` : ''}`;
+      } (${approvalMsg})${next ? ` -> ${next.label}` : ''}`;
       if (status === 'approved') quickNotification.success(msg);
       else if (status === 'rejected') quickNotification.warning(msg);
       else quickNotification.info(msg);
     };
+
+    const totalDiffCount =
+      diffSnapshot.totalCalibrationSurfaceCount + diffSnapshot.totalStoreDiffCount;
 
     return (
       <>
@@ -215,11 +251,17 @@ export const RapidReviewTriageBar: React.FC<RapidReviewTriageBarProps> = React.m
               <button
                 type="button"
                 onClick={() => setExporterModalOpen(true)}
-                title="Open Review Bundle Exporter with Alpha ⇄ Bravo Root-Cause Attribution"
+                title={diffSizeMetrics.reason}
                 className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[11px] font-bold bg-amber-500 hover:bg-amber-400 text-neutral-950 border-amber-400 cursor-pointer transition-all active:scale-95"
               >
                 <Download className="h-3.5 w-3.5" />
-                <span>Export Review Bundle</span>
+                <span>
+                  Export Bundle ({totalDiffCount} Diffs · {diffSizeMetrics.formattedBadge} ·{' '}
+                  {diffSizeMetrics.recommendedAction === 'copy-clipboard'
+                    ? 'Copy'
+                    : 'Download .json'}
+                  )
+                </span>
               </button>
 
               <button

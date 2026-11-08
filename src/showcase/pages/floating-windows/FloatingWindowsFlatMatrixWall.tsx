@@ -11,7 +11,6 @@ import { getFloatingWindowIcon } from '../../../ui-core/navigation/FloatingWindo
 import { useMenuLayoutStore } from '../../../ui-core/stores/menuLayoutStore';
 import { StoreSnapshotScope } from '../../../ui-core/stores/storeSnapshotScope';
 import { DEFAULT_FLOATING_SHELL_TOKENS } from '../../../ui-core/tokens/menuLayoutTokens';
-import { getDiscoveredFloatingSurfaces } from '../../../ui-core/manifest/floatingSurfaceRegistry';
 import { AuditTicketHeader } from '../../components/AuditTicketHeader';
 import {
   USER_PRESET_WINDOWS,
@@ -20,6 +19,10 @@ import {
 } from '../../../ui-core/stores/floatingPresets';
 import { DEV_PRESET_WINDOWS } from '../../../ui-core/stores/devFloatingPresets';
 import { renderFloatingWindowPanel } from '../../../ui-core/panels/floatingWindowRegistry';
+import {
+  buildFloatingWindowsLinearPlaylist,
+  type FloatingWindowPlaylistUnit,
+} from './floatingWindowsLinearPlaylists';
 
 export interface FloatingWindowsFlatMatrixWallProps {
   isLight: boolean;
@@ -27,72 +30,13 @@ export interface FloatingWindowsFlatMatrixWallProps {
   selectedPreset?: PresetConfig;
 }
 
-interface FlatMatrixCardSpec {
-  key: string;
-  preset: PresetConfig;
-  tabId?: string;
-  tabLabel?: string;
-  storeOverrides?: Record<string, Record<string, unknown>>;
-  referenceCode: string;
-  componentName: string;
-  sourceFile: string;
-  stateId: string;
-  activeProps: Record<string, unknown>;
-}
-
-function buildCardsForPreset(
-  preset: PresetConfig,
-  windowIdx: number,
-  tierPrefix: string
-): FlatMatrixCardSpec[] {
-  const baseCode = `6D.${tierPrefix}${windowIdx + 1}`;
-  const compName = preset.component || preset.id;
-  const srcFile =
-    preset.sourcePath ||
-    `src/ui-core/panels/${preset.tier === 'user' ? 'user' : 'dev'}/${compName}.tsx`;
-
-  const discovered = getDiscoveredFloatingSurfaces().find(
-    (entry) => entry.meta.id === `floating:${preset.id}` || entry.meta.id === preset.id
-  );
-
-  if (preset.tabs && preset.tabs.length > 0) {
-    return preset.tabs.map((tab, tIdx) => {
-      const variantMeta = discovered?.meta.variants?.find((v) => v.variantId === tab.id);
-      return {
-        key: `${preset.id}:${tab.id}`,
-        preset,
-        tabId: tab.id,
-        tabLabel: tab.label,
-        storeOverrides: variantMeta?.storeOverrides,
-        referenceCode: `${baseCode}.${tIdx + 1}`,
-        componentName: compName,
-        sourceFile: srcFile,
-        stateId: `${preset.id}:${tab.id}`,
-        activeProps: { activeTab: tab.id },
-      };
-    });
-  }
-
-  return [
-    {
-      key: `${preset.id}:default`,
-      preset,
-      referenceCode: baseCode,
-      componentName: compName,
-      sourceFile: srcFile,
-      stateId: `${preset.id}:default`,
-      activeProps: {},
-    },
-  ];
-}
-
 const RealFloatingShellCard: React.FC<{
-  card: FlatMatrixCardSpec;
+  card: FloatingWindowPlaylistUnit;
   isLight: boolean;
   floatingOuterRadius: number;
 }> = React.memo(({ card, isLight, floatingOuterRadius }) => {
   const [hoveredDesc, setHoveredDesc] = useState<string | null>(null);
-  const { preset, tabId, tabLabel, storeOverrides } = card;
+  const { preset, subtab: tabId, tabLabel, storeOverrides } = card;
   const showCornerDragger = preset.resizable !== false;
   const defaultDesc =
     preset.summary ||
@@ -213,20 +157,20 @@ export const FloatingWindowsFlatMatrixWall: React.FC<FloatingWindowsFlatMatrixWa
       16;
 
     const tierList = tier === 'user' ? USER_PRESET_WINDOWS : DEV_PRESET_WINDOWS;
-    const tierPrefix = tier === 'user' ? 'U' : 'D';
+    const allTierUnits = React.useMemo(
+      () => buildFloatingWindowsLinearPlaylist(tier),
+      [tier]
+    );
 
-    const cards: FlatMatrixCardSpec[] = React.useMemo(() => {
+    const cards: FloatingWindowPlaylistUnit[] = React.useMemo(() => {
       if (scope === 'selected' && selectedPreset) {
-        const idx = Math.max(
-          0,
-          tierList.findIndex((p) => p.id === selectedPreset.id)
+        const filtered = allTierUnits.filter(
+          (u) => u.windowId === selectedPreset.id
         );
-        return buildCardsForPreset(selectedPreset, idx, tierPrefix);
+        if (filtered.length > 0) return filtered;
       }
-      return tierList.flatMap((preset, idx) =>
-        buildCardsForPreset(preset, idx, tierPrefix)
-      );
-    }, [scope, selectedPreset, tierList, tierPrefix]);
+      return allTierUnits;
+    }, [scope, selectedPreset, allTierUnits]);
 
     return (
       <div className="flex flex-col gap-4 w-full">
@@ -284,7 +228,7 @@ export const FloatingWindowsFlatMatrixWall: React.FC<FloatingWindowsFlatMatrixWa
             >
               <Layers className="h-3.5 w-3.5" />
               <span>
-                All {tier === 'user' ? 'User' : 'Developer'} ({tierList.length}) Windows &amp; Tabs
+                All {tier === 'user' ? 'User' : 'Developer'} ({tierList.length} Windows · {allTierUnits.length} Units)
               </span>
             </button>
           </div>
@@ -294,7 +238,7 @@ export const FloatingWindowsFlatMatrixWall: React.FC<FloatingWindowsFlatMatrixWa
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 w-full items-start">
           {cards.map((card, idx) => (
             <div
-              key={card.key}
+              key={card.id}
               className={`p-4 rounded-2xl border flex flex-col gap-3 w-full ${
                 isLight
                   ? 'bg-neutral-50/70 border-neutral-200/90'
@@ -303,12 +247,8 @@ export const FloatingWindowsFlatMatrixWall: React.FC<FloatingWindowsFlatMatrixWa
             >
               <AuditTicketHeader
                 index={idx + 1}
-                label={
-                  card.tabLabel
-                    ? `${card.preset.title} · [${card.tabLabel}]`
-                    : card.preset.title
-                }
-                description={card.preset.summary}
+                label={card.label}
+                description={card.breadcrumb || card.preset.summary}
                 referenceCode={card.referenceCode}
                 componentName={card.componentName}
                 sourceFile={card.sourceFile}

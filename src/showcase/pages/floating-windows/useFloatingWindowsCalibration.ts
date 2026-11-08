@@ -10,6 +10,7 @@ import {
 import { DEV_PRESET_WINDOWS } from '../../../ui-core/stores/devFloatingPresets';
 import { getDiscoveredFloatingSurfaces } from '../../../ui-core/manifest/floatingSurfaceRegistry';
 import { resolveCalibratedSurfaceSizing } from '../../../ui-core/manifest/surfaceCalibration';
+import { resolveFloatingPresetSubTabs } from './floatingWindowsLinearPlaylists';
 
 const useSyncedState = createScopedSyncedState('page:floating-windows-v2');
 
@@ -26,6 +27,7 @@ export function buildMergedFloatingPresets(tier: FloatingWindowVisibilityTier): 
       maxHeight: preset.maxHeight,
       mode: preset.autoFitHeight ? 'adaptive' : 'fixed',
     });
+    const resolvedTabs = resolveFloatingPresetSubTabs(preset, 'all');
     byId.set(preset.id, {
       ...preset,
       width: calibrated.width,
@@ -34,13 +36,28 @@ export function buildMergedFloatingPresets(tier: FloatingWindowVisibilityTier): 
       minHeight: calibrated.minHeight ?? preset.minHeight,
       maxHeight: calibrated.maxHeight,
       autoFitHeight: calibrated.mode === 'adaptive' ? true : preset.autoFitHeight,
+      ...(resolvedTabs.length > 0 ? { tabs: resolvedTabs } : {}),
     });
   }
 
   for (const entry of getDiscoveredFloatingSurfaces()) {
     const entryTier: FloatingWindowVisibilityTier =
       entry.meta.layer === 'floating-user' ? 'user' : 'developer';
-    if (entryTier !== tier || byId.has(entry.meta.id)) continue;
+    if (entryTier !== tier) continue;
+    const existing = byId.get(entry.meta.id);
+    if (existing) {
+      if (
+        (!existing.tabs || existing.tabs.length === 0) &&
+        entry.meta.variants &&
+        entry.meta.variants.length > 0
+      ) {
+        byId.set(entry.meta.id, {
+          ...existing,
+          tabs: entry.meta.variants.map((v) => ({ id: v.variantId, label: v.label })),
+        });
+      }
+      continue;
+    }
     const calibrated = resolveCalibratedSurfaceSizing(
       `floating:${entry.meta.id}`,
       entry.meta.defaultSizing
@@ -78,6 +95,38 @@ export function useFloatingWindowsCalibration(currentPreset?: PresetConfig) {
     {},
     'manualMinHeights'
   );
+
+  const spawnPresetIntoSandbox = (preset: PresetConfig, singletonOverride?: boolean) => {
+    const savedManualMinW =
+      typeof manualMinWidths[preset.id] === 'number'
+        ? Math.round(manualMinWidths[preset.id])
+        : undefined;
+    const savedManualMinH =
+      typeof manualMinHeights[preset.id] === 'number'
+        ? Math.round(manualMinHeights[preset.id])
+        : undefined;
+    floatingSandboxStore.spawnWindow({
+      id: preset.id,
+      title: preset.title,
+      subtitle: preset.summary,
+      category: preset.category,
+      width: savedManualMinW ?? preset.minWidth ?? preset.width,
+      height:
+        savedManualMinH !== undefined
+          ? Math.max(savedManualMinH, preset.height)
+          : preset.height,
+      minWidth: preset.minWidth,
+      manualMinWidth: savedManualMinW,
+      minHeight: preset.minHeight,
+      manualMinHeight: savedManualMinH,
+      maxWidth: preset.maxWidth,
+      maxHeight: preset.maxHeight,
+      autoFitHeight: preset.autoFitHeight,
+      resizable: preset.resizable,
+      singleton: singletonOverride ?? preset.singleton,
+      startMinimized: false,
+    });
+  };
 
   const [minWidthDraft, setMinWidthDraft] = React.useState<string>('');
   const [isEditingMinWidth, setIsEditingMinWidth] = React.useState<boolean>(false);
@@ -256,6 +305,7 @@ export function useFloatingWindowsCalibration(currentPreset?: PresetConfig) {
   return {
     manualMinWidths,
     manualMinHeights,
+    spawnPresetIntoSandbox,
     activeWindowInstance,
     resolvedAutoMinW,
     resolvedScrollbarReserve,

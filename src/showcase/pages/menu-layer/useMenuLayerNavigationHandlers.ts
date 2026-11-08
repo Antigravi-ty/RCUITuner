@@ -1,5 +1,7 @@
 import { useEffect } from 'react';
+import { dialogue } from '../../../ui-core/compounds/dialogue/dialogueStore';
 import { floatingStore } from '../../../ui-core/stores/floatingStore';
+import { useStaticTrainingPackStore } from '../../../ui-core/stores/staticTrainingPackStore';
 import type { ContainerTransitionMode } from '../../../ui-core/tokens/easing';
 import {
   resolveLayer1ContextSpec,
@@ -85,7 +87,7 @@ export function useMenuLayerNavigationHandlers({
     'stepPhase'
   );
   const [layer3StepOverride, setLayer3StepOverride] = useState<Layer3StepOverrideState>(
-    { progressStatus: 'idle', currentStep: 1, defaultEditingConfig: false },
+    { progressStatus: 'idle', currentStep: 1, defaultEditingConfig: false, memberSlots: 3 },
     'layer3StepOverride'
   );
 
@@ -252,6 +254,7 @@ export function useMenuLayerNavigationHandlers({
       progressStatus: step.progressStatus ?? 'idle',
       currentStep: step.currentStep ?? 1,
       defaultEditingConfig: Boolean(step.defaultEditingConfig),
+      memberSlots: step.memberSlots ?? layer3StepOverride.memberSlots ?? 3,
     });
     handleSelectRoute(step.route);
     showToast(`[${nextIdx + 1}/${activePlaylist.length}] ${step.label}`);
@@ -259,6 +262,7 @@ export function useMenuLayerNavigationHandlers({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.defaultPrevented || dialogue.getCount() > 0) return;
       const target = e.target as HTMLElement | null;
       const isEditable =
         target &&
@@ -270,6 +274,12 @@ export function useMenuLayerNavigationHandlers({
         if (currentRoute === 'trajectory' || currentRoute === 'camera') {
           e.preventDefault();
           handleToggleLivePreview();
+        } else if (
+          currentRoute === 'layer-0' &&
+          layer1ContextMode === 'static-training-edit'
+        ) {
+          e.preventDefault();
+          useStaticTrainingPackStore.getState().toggleEdgeInspectorExpanded();
         }
       } else if (e.key === 'Escape') {
         e.preventDefault();
@@ -283,6 +293,7 @@ export function useMenuLayerNavigationHandlers({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [
     currentRoute,
+    layer1ContextMode,
     liveAnimPhase,
     lastParentRoute,
     routeHistory,

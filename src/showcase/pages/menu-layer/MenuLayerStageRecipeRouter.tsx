@@ -16,7 +16,9 @@ import { Layer3ExhibitionRecipe } from '../../../ui-core/recipes/Layer3Exhibitio
 import { Layer3SelfTrainingRecipe } from '../../../ui-core/recipes/Layer3SelfTrainingRecipe';
 import { Layer3KickoffTrainingRecipe } from '../../../ui-core/recipes/Layer3KickoffTrainingRecipe';
 import { Layer3TrainingConfigRecipe } from '../../../ui-core/recipes/Layer3TrainingConfigRecipe';
+import { openStaticTrainingExitConfirmDialogue } from '../../../ui-core/recipes/StaticTrainingShotInspectorDrawer';
 import { floatingStore } from '../../../ui-core/stores/floatingStore';
+import { useStaticTrainingPackStore } from '../../../ui-core/stores/staticTrainingPackStore';
 import { StoreSnapshotScope } from '../../../ui-core/stores/storeSnapshotScope';
 import { PRESET_WINDOWS } from '../../../ui-core/stores/devFloatingPresets';
 import {
@@ -29,6 +31,7 @@ import {
   type Layer3StepOverrideState,
 } from './MenuLayerSandboxContext';
 import { MenuLayerSecondaryRecipeRoutes } from './MenuLayerSecondaryRecipeRoutes';
+import { resolveManageRoomRosterOverride } from './menuLayerOnlineRoomSteps';
 
 export type { Layer3StepOverrideState };
 
@@ -122,8 +125,16 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
                 onChangeLayer1ContextMode?.('freeplay');
                 showToast('Left Room/Match and Return Free Play (MENU)');
               } else if (target === 'exit-edit-mode') {
-                handleSelectRoute('static-training-pack');
-                showToast('Exited Edit Training Pack Return to training pack browser');
+                openStaticTrainingExitConfirmDialogue(async (action) => {
+                  if (action === 'save') {
+                    await useStaticTrainingPackStore.getState().commitEditSessionToMainDb();
+                  } else {
+                    await useStaticTrainingPackStore.getState().discardEditSessionChanges();
+                  }
+                  onChangeLayer1ContextMode?.('freeplay');
+                  handleSelectRoute('static-training-pack');
+                  showToast('Exited Edit Training Pack Return to training pack browser');
+                });
               }
             }}
           />
@@ -198,6 +209,10 @@ export const MenuLayerStageRecipeRouter = React.memo<MenuLayerStageRecipeRouterP
               developerMode: visibilityTier === 'developer',
             },
             onlineRoomStore: {
+              ...resolveManageRoomRosterOverride(
+                resolveOnlineSessionContextId(layer1ContextMode),
+                layer3StepOverride?.memberSlots ?? 3
+              ),
               sessionContext: resolveOnlineSessionContextId(layer1ContextMode),
               onSessionContextChange: (ctx: string) => {
                 onChangeLayer1ContextMode?.(ctx as Layer1MenuContextMode);

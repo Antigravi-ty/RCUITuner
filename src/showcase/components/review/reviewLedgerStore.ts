@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { UI_APPROVAL_LEDGER } from '../../../ui-core/manifest/surfaceCalibration';
 import type { SurfaceApprovalStatus } from '../../../ui-core/manifest/surfaceMetaTypes';
+import { buildApprovalMessageWithDiffs } from './exportDiffAndSizeTiering';
 import {
   buildAllReviewUnits,
   buildUnitKey,
@@ -191,6 +192,14 @@ export const useReviewLedgerStore = create<ReviewLedgerStoreState>((set, get) =>
     const prev = state.decisionsMap[targetKey];
     const nowIso = new Date().toISOString();
 
+    const resolvedNote = note !== undefined ? note : prev?.note ?? '';
+    const approvalMessage = buildApprovalMessageWithDiffs({
+      baseNote: resolvedNote,
+      surfaceId,
+      unitKey: targetKey,
+      status,
+    });
+
     const nextDecision: RuntimeReviewDecision = {
       unitKey: targetKey,
       surfaceId,
@@ -201,7 +210,8 @@ export const useReviewLedgerStore = create<ReviewLedgerStoreState>((set, get) =>
       sourceFile: reg?.sourceFile ?? prev?.sourceFile,
       subViewFile: reg?.subViewFile ?? prev?.subViewFile,
       status,
-      note: note !== undefined ? note : prev?.note ?? '',
+      note: resolvedNote,
+      approvalMessage,
       simulatedStaleReason:
         simulatedStaleReason !== undefined
           ? simulatedStaleReason
@@ -261,6 +271,13 @@ export const useReviewLedgerStore = create<ReviewLedgerStoreState>((set, get) =>
     const reg = state.registeredUnitsMap[unitKey];
     const prev = state.decisionsMap[unitKey];
     const ledgerRecord = UI_APPROVAL_LEDGER.surfaces[surfaceId];
+    const resolvedStatus = prev?.status ?? ledgerRecord?.status ?? 'approved';
+    const approvalMessage = buildApprovalMessageWithDiffs({
+      baseNote: note,
+      surfaceId,
+      unitKey,
+      status: resolvedStatus,
+    });
 
     const nextDecision: RuntimeReviewDecision = {
       unitKey,
@@ -271,8 +288,9 @@ export const useReviewLedgerStore = create<ReviewLedgerStoreState>((set, get) =>
       componentName: reg?.componentName ?? prev?.componentName,
       sourceFile: reg?.sourceFile ?? prev?.sourceFile,
       subViewFile: reg?.subViewFile ?? prev?.subViewFile,
-      status: prev?.status ?? ledgerRecord?.status ?? 'approved',
+      status: resolvedStatus,
       note,
+      approvalMessage,
       simulatedStaleReason: prev?.simulatedStaleReason,
       updatedAt: new Date().toISOString(),
     };

@@ -90,11 +90,13 @@ export const MenuLayerRouteSelectorBar = React.memo<MenuLayerRouteSelectorBarPro
             progressStatus: step.progressStatus,
             currentStep: step.currentStep ?? 1,
             defaultEditingConfig: Boolean(step.defaultEditingConfig),
+            memberSlots: step.memberSlots ?? layer3StepOverride?.memberSlots ?? 3,
           }
         : {
             progressStatus: 'idle',
             currentStep: 1,
             defaultEditingConfig: false,
+            memberSlots: step.memberSlots ?? layer3StepOverride?.memberSlots ?? 3,
           }
     );
     handleSelectRoute(step.route);

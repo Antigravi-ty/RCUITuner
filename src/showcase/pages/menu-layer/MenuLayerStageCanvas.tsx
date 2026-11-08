@@ -1,9 +1,13 @@
 import React from 'react';
 import { KeycapBadge } from '../../../ui-core/primitives/KeycapBadge';
 import { MorphingStageShell } from '../../../ui-core/navigation/MorphingStageShell';
+import { EdgeInspectorDrawer } from '../../../ui-core/navigation/EdgeInspectorDrawer';
 import { FloatingStackIcon } from '../../../ui-core/navigation/FloatingStackIcon';
 import { FloatingWindowManager } from '../../../ui-core/navigation/FloatingWindowManager';
+import { StaticTrainingPackHUD } from '../../../ui-core/hud/StaticTrainingPackHUD';
+import { StaticTrainingShotInspectorDrawer } from '../../../ui-core/recipes/StaticTrainingShotInspectorDrawer';
 import { floatingStore } from '../../../ui-core/stores/floatingStore';
+import { useStaticTrainingPackStore } from '../../../ui-core/stores/staticTrainingPackStore';
 import { PRESET_WINDOWS } from '../../../ui-core/stores/devFloatingPresets';
 import { renderFloatingWindowPanel } from '../../../ui-core/panels/floatingWindowRegistry';
 import { MenuLayerStageRecipeRouter } from './MenuLayerStageRecipeRouter';
@@ -24,6 +28,7 @@ export const MenuLayerStageCanvas: React.FC<MenuLayerStageCanvasProps> = ({
     manualBoundarySize,
     isCursorHidden,
     currentRoute,
+    layer1ContextMode,
     isDockState,
     ballSimSpeed,
     hasStackIcon,
@@ -43,6 +48,15 @@ export const MenuLayerStageCanvas: React.FC<MenuLayerStageCanvasProps> = ({
     isPillContentVisible,
     isContentVisible,
   } = useMenuLayerSandbox();
+  const isEdgeInspectorExpanded = useStaticTrainingPackStore(
+    (s) => s.isEdgeInspectorExpanded
+  );
+  const setEdgeInspectorExpanded = useStaticTrainingPackStore(
+    (s) => s.setEdgeInspectorExpanded
+  );
+  const isStaticTrainingEditActive = layer1ContextMode === 'static-training-edit';
+  const isStaticTrainingHudActive =
+    isStaticTrainingEditActive || layer1ContextMode === 'static-training-play';
   const lockedW = boundaryLocked && manualBoundarySize ? manualBoundarySize.width : undefined;
   const lockedH = boundaryLocked && manualBoundarySize ? manualBoundarySize.height : undefined;
 
@@ -51,7 +65,7 @@ export const MenuLayerStageCanvas: React.FC<MenuLayerStageCanvasProps> = ({
       id="rc-ui-tuner-preview-stage"
       ref={stageRef}
       className={`scroll-mt-6 relative mx-auto w-full rounded-2xl border p-6 md:p-10 flex items-center justify-center overflow-hidden transition-all duration-300 ${
-        isCursorHidden ? 'cursor-none' : 'cursor-default'
+        isCursorHidden && !isStaticTrainingEditActive ? 'cursor-none' : 'cursor-default'
       } ${
         isLight
           ? 'bg-neutral-100/70 border-neutral-200/90 shadow-inner'
@@ -104,7 +118,9 @@ export const MenuLayerStageCanvas: React.FC<MenuLayerStageCanvasProps> = ({
           </span>
           <span className="text-xs text-neutral-400 max-w-md text-center leading-relaxed">
             {currentRoute === 'layer-0'
-              ? hasStackIcon
+              ? isStaticTrainingEditActive
+                ? '[*] Static Training Pack Edit Mode: Press TAB to toggle EdgeInspectorDrawer + StaticTrainingShotInspectorDrawer, or press ESC to open the Main Menu.'
+                : hasStackIcon
                 ? '[*] Layer 0 status: Keep Top Right Stack Stack Icon, Allow draggable observation window (Show on Hover) . Click Top-right X Toggle icon and hide mouse cursor. '
                 : '[*] Layer 0 status: none Stack icon, Hide mouse in match mode. Press ESC Call main menu and restore mouse. '
               : isDockState
@@ -131,6 +147,30 @@ export const MenuLayerStageCanvas: React.FC<MenuLayerStageCanvasProps> = ({
           renderFloatingWindowPanel(item.id, { isLight: ctx.isLight })
         }
       />
+
+      {isStaticTrainingHudActive && <StaticTrainingPackHUD isLight={isLight} />}
+
+      {isStaticTrainingEditActive && (
+        <EdgeInspectorDrawer
+          isExpanded={isEdgeInspectorExpanded}
+          onExpandedChange={(expanded) => {
+            setEdgeInspectorExpanded(expanded);
+          }}
+          side="right"
+          topOffset={72}
+          bottomOffset={184}
+          expandedWidth={520}
+          enableHotkey={false}
+          positionMode="absolute"
+          isLight={isLight}
+        >
+          <StaticTrainingShotInspectorDrawer
+            isLight={isLight}
+            transparent={true}
+            onCollapseDrawer={() => setEdgeInspectorExpanded(false)}
+          />
+        </EdgeInspectorDrawer>
+      )}
 
       <div
         className="absolute inset-0 pointer-events-none backdrop-blur-none z-10"
@@ -164,10 +204,14 @@ export const MenuLayerStageCanvas: React.FC<MenuLayerStageCanvasProps> = ({
           <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
           <div className="flex flex-col">
             <span className="text-xs font-bold font-mono">
-              Active Match (Layer 0 · In-Game Arena)
+              {isStaticTrainingEditActive
+                ? 'Static Training Pack Edit Mode (Layer 0 · Edge Inspector Active)'
+                : 'Active Match (Layer 0 · In-Game Arena)'}
             </span>
             <span className="text-[11px] text-neutral-400">
-              {hasStackIcon
+              {isStaticTrainingEditActive
+                ? 'Press TAB to toggle EdgeInspectorDrawer · Press ESC to open Main Menu'
+                : hasStackIcon
                 ? 'Keep Top Right Stack Stack Icon: Allow free dragging and parameter adjustment (Show on Hover) . Hide mouse for immersion, Click the top-right icon to close it. '
                 : 'Currently in non-menu match state with no Stack icon (Mouse Hidden) . Press Keyboard ESC Key to Open Menu'}
             </span>
@@ -210,3 +254,4 @@ export const MenuLayerStageCanvas: React.FC<MenuLayerStageCanvasProps> = ({
     </div>
   );
 };
+
