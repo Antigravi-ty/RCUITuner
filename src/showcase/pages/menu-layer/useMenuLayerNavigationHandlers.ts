@@ -7,8 +7,10 @@ import {
   resolveLayer1ContextSpec,
   type Layer1MenuContextMode,
 } from '../../../ui-core/recipes/layer1MenuContextSpecs';
+import { useReviewLedgerStore } from '../../components/review/reviewLedgerStore';
 import { createScopedSyncedState } from '../../stores/crossClientSync';
 import { readUrlParams } from '../../stores/urlSync';
+import { isFloatingWindowPlaylistUnit } from '../floating-windows/floatingWindowsLinearPlaylists';
 import type { Layer3StepOverrideState } from './MenuLayerStageRecipeRouter';
 import {
   MENU_ROUTE_CONFIG,
@@ -18,10 +20,14 @@ import {
   type MenuVisibilityTier,
 } from './menuLayerRouteConfig';
 import {
-  USER_LINEAR_PLAYLIST,
-  DEV_LINEAR_PLAYLIST,
+  ALL_UNIFIED_APPROVAL_PLAYLIST,
   findPlaylistStepIndex,
+  findUnifiedStepByLedgerKey,
   resolveRouteAuditInfo,
+  resolveUnifiedPlaylistByScope,
+  spawnFloatingPresetOnUnifiedStage,
+  type UnifiedApprovalPlaylistStep,
+  type UnifiedPlaylistScope,
 } from './menuLayerLinearPlaylists';
 import { useMenuLayerUrlSync } from './useMenuLayerUrlSync';
 
@@ -34,6 +40,15 @@ export interface UseMenuLayerNavigationHandlersParams {
 export function useMenuLayerNavigationHandlers({
   showToast,
 }: UseMenuLayerNavigationHandlersParams) {
+  const [rawPlaylistScope, setPlaylistScope] = useState<UnifiedPlaylistScope>(
+    'all',
+    'playlistScope'
+  );
+  const playlistScope: UnifiedPlaylistScope =
+    rawPlaylistScope === 'user' || rawPlaylistScope === 'developer'
+      ? rawPlaylistScope
+      : 'all';
+
   const [rawVisibilityTier, setVisibilityTier] = useState<MenuVisibilityTier>(() => {
     const p = readUrlParams();
     return p.tier === 'developer' ? 'developer' : 'user';
@@ -50,15 +65,27 @@ export function useMenuLayerNavigationHandlers({
 
   const [rawCurrentRoute, setCurrentRoute] = useState<ActiveMenuRoute>(() => {
     const p = readUrlParams();
+    if (p.fw) return 'layer-0';
     return normalizeMenuRoute(p.route) ?? 'main-menu';
   }, 'currentRoute');
   const currentRoute: ActiveMenuRoute = normalizeMenuRoute(rawCurrentRoute) ?? 'main-menu';
 
   const [rawDisplayedRoute, setDisplayedRoute] = useState<ActiveMenuRoute>(() => {
     const p = readUrlParams();
+    if (p.fw) return 'layer-0';
     return normalizeMenuRoute(p.route) ?? 'main-menu';
   }, 'displayedRoute');
   const displayedRoute: ActiveMenuRoute = normalizeMenuRoute(rawDisplayedRoute) ?? currentRoute;
+
+  const [activeFloatingWindowId, setActiveFloatingWindowId] = useState<string | null>(() => {
+    const p = readUrlParams();
+    return p.fw || null;
+  }, 'activeFloatingWindowId');
+
+  const [activeFloatingSubTab, setActiveFloatingSubTab] = useState<string>(() => {
+    const p = readUrlParams();
+    return p.fwTab || '';
+  }, 'activeFloatingSubTab');
 
   const [transitionMode, setTransitionMode] = useState<ContainerTransitionMode>(
     'fluid-morph',
@@ -103,22 +130,66 @@ export function useMenuLayerNavigationHandlers({
     setGarageTab,
     layer1ContextMode,
     setLayer1ContextMode,
+    floatingSync: {
+      activeFloatingWindowId,
+      setActiveFloatingWindowId,
+      activeFloatingSubTab,
+      setActiveFloatingSubTab,
+      onRestoreFloatingFromUrl: (fwId) => {
+        const fwStep = ALL_UNIFIED_APPROVAL_PLAYLIST.find(
+          (s) => isFloatingWindowPlaylistUnit(s) && s.windowId === fwId
+        );
+        if (fwStep && isFloatingWindowPlaylistUnit(fwStep)) {
+          spawnFloatingPresetOnUnifiedStage(fwStep.preset);
+        }
+      },
+    },
   });
 
-  const activePlaylist = visibilityTier === 'user' ? USER_LINEAR_PLAYLIST : DEV_LINEAR_PLAYLIST;
+  const activePlaylist = resolveUnifiedPlaylistByScope(playlistScope);
   const activePlaylistIdx = findPlaylistStepIndex(
     activePlaylist,
     currentRoute,
     layer1ContextMode,
     settingsTab,
     garageTab,
-    layer3StepOverride
+    layer3StepOverride,
+    activeFloatingWindowId,
+    activeFloatingSubTab
   );
   const activePlaylistStep = activePlaylist[activePlaylistIdx] || activePlaylist[0];
-  const auditInfo = resolveRouteAuditInfo(currentRoute, visibilityTier);
+  const auditInfo = resolveRouteAuditInfo(
+    currentRoute,
+    visibilityTier,
+    layer1ContextMode,
+    activePlaylistStep
+  );
+
+  // Sync active unified step to Review Ledger Store
+  useEffect(() => {
+    useReviewLedgerStore.getState().setActiveUnit({
+      surfaceId: auditInfo.surfaceId,
+      variantId: auditInfo.variantId,
+      label: activePlaylistStep?.label || currentRoute,
+      referenceCode: auditInfo.referenceCode,
+      componentName: auditInfo.componentName,
+      sourceFile: auditInfo.sourceFile,
+    });
+  }, [
+    auditInfo.surfaceId,
+    auditInfo.variantId,
+    auditInfo.referenceCode,
+    auditInfo.componentName,
+    auditInfo.sourceFile,
+    activePlaylistStep?.label,
+    currentRoute,
+  ]);
 
   const handleChangeVisibilityTier = (nextTier: MenuVisibilityTier) => {
     setVisibilityTier(nextTier);
+    if (playlistScope !== 'all') {
+      setPlaylistScope(nextTier);
+    }
     if (nextTier === 'developer') {
       if (layer1ContextMode !== 'dev-test-lab' && layer1ContextMode !== 'exp-multi-bots') {
         setLayer1ContextMode('dev-test-lab');
@@ -126,6 +197,7 @@ export function useMenuLayerNavigationHandlers({
       setSettingsTab('developer');
       const cfg = MENU_ROUTE_CONFIG[currentRoute];
       if (cfg && cfg.tier === 'user') {
+        setActiveFloatingWindowId(null);
         setCurrentRoute('settings');
         setDisplayedRoute('settings');
       }
@@ -138,18 +210,30 @@ export function useMenuLayerNavigationHandlers({
       }
       const cfg = MENU_ROUTE_CONFIG[currentRoute];
       if (cfg && cfg.tier === 'developer') {
+        setActiveFloatingWindowId(null);
         setCurrentRoute('main-menu');
         setDisplayedRoute('main-menu');
       }
     }
   };
 
+  const handleChangePlaylistScope = (nextScope: UnifiedPlaylistScope) => {
+    setPlaylistScope(nextScope);
+    if (nextScope === 'user' || nextScope === 'developer') {
+      handleChangeVisibilityTier(nextScope);
+    }
+  };
+
   const handleSelectRoute = (
     rawTargetRoute: ActiveMenuRoute,
-    options?: { pushHistory?: boolean }
+    options?: { pushHistory?: boolean; keepFloatingWindow?: boolean }
   ) => {
     const targetRoute = normalizeMenuRoute(rawTargetRoute) ?? rawTargetRoute;
-    if (targetRoute === currentRoute) return;
+    if (!options?.keepFloatingWindow && activeFloatingWindowId) {
+      setActiveFloatingWindowId(null);
+      setActiveFloatingSubTab('');
+    }
+    if (targetRoute === currentRoute && !activeFloatingWindowId) return;
     const shouldPush = options?.pushHistory !== false;
     if (shouldPush && currentRoute !== 'layer-0' && targetRoute !== 'layer-0') {
       setRouteHistory((prev) => {
@@ -184,6 +268,69 @@ export function useMenuLayerNavigationHandlers({
     }, 100);
   };
 
+  const applyUnifiedStep = (
+    step: UnifiedApprovalPlaylistStep,
+    announceMsg?: string
+  ) => {
+    if (step.tier !== visibilityTier) {
+      setVisibilityTier(step.tier);
+    }
+    if (isFloatingWindowPlaylistUnit(step)) {
+      useStaticTrainingPackStore.getState().setEdgeInspectorExpanded(false);
+      setActiveFloatingWindowId(step.windowId);
+      setActiveFloatingSubTab(step.subtab || '');
+      setCurrentRoute('layer-0');
+      setDisplayedRoute('layer-0');
+      spawnFloatingPresetOnUnifiedStage(step.preset);
+      if (announceMsg) showToast(announceMsg);
+      return;
+    }
+
+    if (activeFloatingWindowId) {
+      setActiveFloatingWindowId(null);
+      setActiveFloatingSubTab('');
+      floatingStore.clearAll();
+    }
+
+    if (step.route === 'layer-0') {
+      if (step.contextMode === 'static-training-edit') {
+        setLayer1ContextMode('static-training-edit');
+        useStaticTrainingPackStore.getState().setEdgeInspectorExpanded(true);
+      } else {
+        if (layer1ContextMode === 'static-training-edit') {
+          setLayer1ContextMode('freeplay');
+        }
+        useStaticTrainingPackStore.getState().setEdgeInspectorExpanded(false);
+      }
+    } else {
+      useStaticTrainingPackStore.getState().setEdgeInspectorExpanded(false);
+      if (step.contextMode) setLayer1ContextMode(step.contextMode);
+      if (step.route === 'settings' && step.subtab) setSettingsTab(step.subtab);
+      if (step.route === 'garage' && step.subtab) setGarageTab(step.subtab);
+      setLayer3StepOverride({
+        progressStatus: step.progressStatus ?? 'idle',
+        currentStep: step.currentStep ?? 1,
+        defaultEditingConfig: Boolean(step.defaultEditingConfig),
+        memberSlots: step.memberSlots ?? layer3StepOverride.memberSlots ?? 3,
+      });
+    }
+    handleSelectRoute(step.route);
+    if (announceMsg) showToast(announceMsg);
+  };
+
+  // Listen to RapidReviewTriageBar navigationSeq (Approve/Reject/Defer or < / > in bottom bar)
+  const navigationSeq = useReviewLedgerStore((s) => s.navigationSeq);
+  const activeUnitKey = useReviewLedgerStore((s) => s.activeUnitKey);
+  useEffect(() => {
+    if (navigationSeq === 0) return;
+    const matchedStep = findUnifiedStepByLedgerKey(activeUnitKey);
+    if (!matchedStep) return;
+    if (playlistScope !== 'all' && matchedStep.tier !== playlistScope) {
+      setPlaylistScope('all');
+    }
+    applyUnifiedStep(matchedStep);
+  }, [navigationSeq]);
+
   const handleTriggerCollapse = () => {
     if (liveAnimPhase !== 'expanded') return;
     setLiveAnimPhase('collapsing_content');
@@ -217,6 +364,7 @@ export function useMenuLayerNavigationHandlers({
   const handleNavigateBack = () => {
     if (currentRoute === 'layer-0') {
       floatingStore.triggerBatchMinimize();
+      setActiveFloatingWindowId(null);
       handleSelectRoute('main-menu', { pushHistory: false });
       showToast('ESC: Open Main Menu (Expanded floating window collapsed)');
       return;
@@ -247,17 +395,7 @@ export function useMenuLayerNavigationHandlers({
     const nextIdx = (activePlaylistIdx + delta + activePlaylist.length) % activePlaylist.length;
     const step = activePlaylist[nextIdx];
     if (!step) return;
-    if (step.contextMode) setLayer1ContextMode(step.contextMode);
-    if (step.route === 'settings' && step.subtab) setSettingsTab(step.subtab);
-    if (step.route === 'garage' && step.subtab) setGarageTab(step.subtab);
-    setLayer3StepOverride({
-      progressStatus: step.progressStatus ?? 'idle',
-      currentStep: step.currentStep ?? 1,
-      defaultEditingConfig: Boolean(step.defaultEditingConfig),
-      memberSlots: step.memberSlots ?? layer3StepOverride.memberSlots ?? 3,
-    });
-    handleSelectRoute(step.route);
-    showToast(`[${nextIdx + 1}/${activePlaylist.length}] ${step.label}`);
+    applyUnifiedStep(step, `[${nextIdx + 1}/${activePlaylist.length}] ${step.label}`);
   };
 
   useEffect(() => {
@@ -299,14 +437,22 @@ export function useMenuLayerNavigationHandlers({
     routeHistory,
     activePlaylist,
     activePlaylistIdx,
+    activeFloatingWindowId,
+    activeFloatingSubTab,
   ]);
 
   return {
+    playlistScope,
+    handleChangePlaylistScope,
     visibilityTier,
     layer1ContextMode,
     setLayer1ContextMode,
     currentRoute,
     displayedRoute,
+    activeFloatingWindowId,
+    setActiveFloatingWindowId,
+    activeFloatingSubTab,
+    setActiveFloatingSubTab,
     transitionMode,
     setTransitionMode,
     settingsTab,

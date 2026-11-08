@@ -114,7 +114,7 @@ const initialPersisted = loadPersistedState();
 export const useReviewLedgerStore = create<ReviewLedgerStoreState>((set, get) => ({
   decisionsMap: initialPersisted.decisionsMap,
   registeredUnitsMap: {},
-  activeUnitKey: 'floating:atmosphere-fx-tuner::default',
+  activeUnitKey: 'recipe:Layer1MainMenuRecipe::default',
   navigationSeq: 0,
   activeBucketFilter: initialPersisted.activeBucketFilter,
   simulateTemplateStale: initialPersisted.simulateTemplateStale,
@@ -236,11 +236,12 @@ export const useReviewLedgerStore = create<ReviewLedgerStoreState>((set, get) =>
       decisionsMap: nextDecisionsMap,
       registeredUnitsMap: state.registeredUnitsMap,
       globalTemplateStaleOverride: state.simulateTemplateStale,
+      activeUnitKey: targetKey,
     });
 
     let nextActiveKey = targetKey;
     let nextUnit: SurfaceVariantReviewUnit | null =
-      allUnits.find((u) => u.unitKey === targetKey) ?? null;
+      allUnits.find((u) => u.unitKey === targetKey || u.surfaceId === surfaceId) ?? null;
 
     if (advanceToNext) {
       const filtered =
@@ -248,7 +249,9 @@ export const useReviewLedgerStore = create<ReviewLedgerStoreState>((set, get) =>
           ? allUnits
           : allUnits.filter((u) => u.bucket === state.activeBucketFilter);
       const list = filtered.length > 0 ? filtered : allUnits;
-      const idx = list.findIndex((u) => u.unitKey === targetKey);
+      const idx = list.findIndex(
+        (u) => u.unitKey === targetKey || u.surfaceId === surfaceId
+      );
       const nextIdx = idx >= 0 ? (idx + 1) % list.length : 0;
       if (list[nextIdx]) {
         nextActiveKey = list[nextIdx].unitKey;
@@ -311,10 +314,12 @@ export const useReviewLedgerStore = create<ReviewLedgerStoreState>((set, get) =>
 
   stepQueue: (delta) => {
     const state = get();
+    const activeSurfaceId = state.activeUnitKey.split('::')[0];
     const allUnits = buildAllReviewUnits({
       decisionsMap: state.decisionsMap,
       registeredUnitsMap: state.registeredUnitsMap,
       globalTemplateStaleOverride: state.simulateTemplateStale,
+      activeUnitKey: state.activeUnitKey,
     });
     const filtered =
       state.activeBucketFilter === 'all'
@@ -323,7 +328,9 @@ export const useReviewLedgerStore = create<ReviewLedgerStoreState>((set, get) =>
     const list = filtered.length > 0 ? filtered : allUnits;
     if (list.length === 0) return null;
 
-    const currIdx = list.findIndex((u) => u.unitKey === state.activeUnitKey);
+    const currIdx = list.findIndex(
+      (u) => u.unitKey === state.activeUnitKey || u.surfaceId === activeSurfaceId
+    );
     const nextIdx =
       currIdx >= 0
         ? (currIdx + delta + list.length) % list.length
@@ -342,6 +349,7 @@ export const useReviewLedgerStore = create<ReviewLedgerStoreState>((set, get) =>
       decisionsMap: state.decisionsMap,
       registeredUnitsMap: state.registeredUnitsMap,
       globalTemplateStaleOverride: state.simulateTemplateStale,
+      activeUnitKey: state.activeUnitKey,
     });
     const templateStaleUnits = allUnits.filter(
       (u) => u.bucket === 'bucket-3-template'

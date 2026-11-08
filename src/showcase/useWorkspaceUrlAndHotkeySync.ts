@@ -151,8 +151,8 @@ export function useWorkspaceUrlAndHotkeySync() {
         const p = readUrlParams();
         const routeDesc =
           activeTab === 'layer-preview'
-            ? `7A Menu Layer (${p.route || 'main-menu'}${
-                p.subtab ? ` · ${p.subtab}` : ''
+            ? `Unified Approval Stage (${p.fw || p.route || 'main-menu'}${
+                p.fwTab ? ` · ${p.fwTab}` : p.subtab ? ` · ${p.subtab}` : ''
               })`
             : activeTab;
         setLastJumpOrigin({
@@ -166,7 +166,11 @@ export function useWorkspaceUrlAndHotkeySync() {
       const targetWs = getWorkspaceForTab(tab);
       setLastTabByWorkspace((prev) => ({ ...prev, [targetWs]: tab }));
       updateUrlParams(
-        { tab, ...(tab === 'recipes' && targetId ? { recipe: targetId } : {}) },
+        {
+          tab,
+          ...(tab === 'recipes' && targetId ? { recipe: targetId } : {}),
+          ...(tab === 'floating-windows' && targetId ? { fw: targetId } : {}),
+        },
         { push: true, hash: targetId ?? null }
       );
       syncWorkspaceUrlParam(targetWs);

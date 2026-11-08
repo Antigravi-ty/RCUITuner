@@ -16,6 +16,9 @@ import {
   ROUTE_TO_PANEL_ID,
 } from './menuLayerRouteConfig';
 
+import { createScopedSyncedState } from '../../stores/crossClientSync';
+const useSyncedState = createScopedSyncedState('page:menu-layer-v2');
+
 export interface UseMenuLayerAdaptiveMetricsParams {
   currentRoute: ActiveMenuRoute;
   displayedRoute: ActiveMenuRoute;
@@ -23,11 +26,8 @@ export interface UseMenuLayerAdaptiveMetricsParams {
   layer1ContextMode: Layer1MenuContextMode;
   touchMode: boolean;
   stageSize: { width: number; height: number };
-  containerPreset: 'full' | '1080p-compact' | 'small-squeeze';
-  boundaryLocked?: boolean;
-  manualBoundarySize?: { width: number; height: number };
-  widthMode: MenuPanelWidthAdaptiveMode;
-  manualMinWidths: Record<string, number>;
+  isDockState: boolean;
+  showToast: (msg: string) => void;
 }
 
 export function useMenuLayerAdaptiveMetrics({
@@ -37,12 +37,27 @@ export function useMenuLayerAdaptiveMetrics({
   layer1ContextMode,
   touchMode,
   stageSize,
-  containerPreset,
-  boundaryLocked = false,
-  manualBoundarySize,
-  widthMode,
-  manualMinWidths,
+  isDockState,
+  showToast,
 }: UseMenuLayerAdaptiveMetricsParams) {
+  const [containerPreset, setContainerPreset] = useSyncedState<
+    'full' | '1080p-compact' | 'small-squeeze'
+  >('full', 'containerPreset');
+  const [boundaryLocked, setBoundaryLocked] = useSyncedState<boolean>(false, 'boundaryLocked');
+  const [manualBoundarySize, setManualBoundarySize] = useSyncedState<{
+    width: number;
+    height: number;
+  }>({ width: 960, height: 640 }, 'manualBoundarySize');
+  const [widthMode, setWidthMode] = useSyncedState<MenuPanelWidthAdaptiveMode>(
+    'design-auto-expand',
+    'widthMode'
+  );
+  const [manualMinWidths, setManualMinWidths] = useSyncedState<Record<string, number>>(
+    {},
+    'manualMinWidths'
+  );
+  const [minWidthDraft, setMinWidthDraft] = useLocalState<string>('');
+  const [isEditingMinWidth, setIsEditingMinWidth] = useLocalState<boolean>(false);
   const {
     panels,
     dividerMarginY,
@@ -267,10 +282,123 @@ export function useMenuLayerAdaptiveMetrics({
     });
   };
 
+  const dockW = 88;
+  const dockH = 38;
+  const activeRouteSize = resolveRouteGeometry(currentRoute);
+  const expandedW = activeRouteSize.width || 480;
+  const expandedH = activeRouteSize.height || 540;
+  const activeMetricKey = getRouteMetricKey(currentRoute);
+  const hasManualMinOverride =
+    currentRoute !== 'layer-0' && typeof manualMinWidths[activeMetricKey] === 'number';
+
+  useEffect(() => {
+    if (!isEditingMinWidth && currentRoute !== 'layer-0') {
+      setMinWidthDraft(String(Math.round(activeRouteSize.effectiveMinWidth)));
+    }
+  }, [currentRoute, activeMetricKey, activeRouteSize.effectiveMinWidth, isEditingMinWidth]);
+
+  const applyManualMinWidth = (nextVal: number) => {
+    if (currentRoute === 'layer-0' || !Number.isFinite(nextVal)) return;
+    const clamped = Math.max(260, Math.min(1100, Math.round(nextVal)));
+    setManualMinWidths((prev) => ({
+      ...prev,
+      [activeMetricKey]: clamped,
+    }));
+    setMinWidthDraft(String(clamped));
+  };
+
+  const handleResetAutoMinWidth = () => {
+    if (currentRoute === 'layer-0') return;
+    setManualMinWidths((prev) => {
+      const next = { ...prev };
+      delete next[activeMetricKey];
+      return next;
+    });
+    showToast(
+      `[ok] Restored ${activeMetricKey} Auto-detect minimum width (${activeRouteSize.autoMinWidth}px)`
+    );
+  };
+
+  const autoResolvedStageW =
+    containerPreset === '1080p-compact'
+      ? Math.min(stageSize.width, 760)
+      : containerPreset === 'small-squeeze'
+      ? Math.min(stageSize.width, 520)
+      : stageSize.width;
+  const autoResolvedStageH =
+    containerPreset === '1080p-compact'
+      ? 520
+      : containerPreset === 'small-squeeze'
+      ? 380
+      : currentRoute !== 'layer-0' && !isDockState
+      ? Math.max(stageSize.height, 620, Math.min(980, expandedH + 48))
+      : Math.max(stageSize.height, 620);
+
+  const effectiveStageW = boundaryLocked ? manualBoundarySize.width : autoResolvedStageW;
+  const effectiveStageH = boundaryLocked ? manualBoundarySize.height : autoResolvedStageH;
+
+  const handleToggleBoundaryLock = () => {
+    if (!boundaryLocked) {
+      const snapW = Math.max(320, Math.round(autoResolvedStageW));
+      const snapH = Math.max(260, Math.round(autoResolvedStageH));
+      setManualBoundarySize({ width: snapW, height: snapH });
+      setBoundaryLocked(true);
+      showToast(`[ok] Canvas Boundary Locked at ${snapW}x${snapH}px`);
+    } else {
+      setBoundaryLocked(false);
+      showToast('[ok] Canvas Boundary Unlocked (Auto-Adaptive)');
+    }
+  };
+
+  const handleChangeManualBoundarySize = (next: { width: number; height: number }) => {
+    setManualBoundarySize({
+      width: Math.max(320, Math.min(2560, Math.round(next.width))),
+      height: Math.max(260, Math.min(1600, Math.round(next.height))),
+    });
+    setBoundaryLocked(true);
+  };
+
+  const xExpanded =
+    currentRoute !== 'layer-0'
+      ? activeRouteSize.x
+      : Math.max(16, Math.round((effectiveStageW - expandedW) / 2));
+  const yExpanded =
+    currentRoute !== 'layer-0'
+      ? activeRouteSize.y
+      : Math.max(16, Math.round((effectiveStageH - expandedH) / 2));
+  const xDock = Math.max(16, Math.round(effectiveStageW - 16 - dockW));
+  const yDock = Math.max(16, Math.round((effectiveStageH - dockH) / 2));
+  const targetX = isDockState ? xDock : xExpanded;
+  const targetY = isDockState ? yDock : yExpanded;
+  const targetW = isDockState ? dockW : expandedW;
+  const targetH = isDockState ? dockH : expandedH;
+  const targetRadius = isDockState ? 12 : panelOuterRadius;
+
   return {
     contentWrapperRef,
-    panelOuterRadius,
-    getRouteMetricKey,
-    resolveRouteGeometry,
+    containerPreset,
+    setContainerPreset,
+    boundaryLocked,
+    manualBoundarySize,
+    setManualBoundarySize,
+    widthMode,
+    setWidthMode,
+    manualMinWidths,
+    minWidthDraft,
+    setMinWidthDraft,
+    setIsEditingMinWidth,
+    activeRouteSize,
+    hasManualMinOverride,
+    applyManualMinWidth,
+    handleResetAutoMinWidth,
+    effectiveStageW,
+    effectiveStageH,
+    handleToggleBoundaryLock,
+    handleChangeManualBoundarySize,
+    targetX,
+    targetY,
+    targetW,
+    targetH,
+    targetRadius,
   };
 }

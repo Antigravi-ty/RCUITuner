@@ -11,11 +11,14 @@ import type { ShowcaseTab } from '../../sidebarNavConfig';
 import type {
   ActiveMenuRoute,
   Layer3StepProgressStatus,
-  LinearPlaylistStep,
   LivePreviewAnimPhase,
   MenuVisibilityTier,
 } from './menuLayerRouteConfig';
-import type { resolveRouteAuditInfo } from './menuLayerLinearPlaylists';
+import type {
+  resolveRouteAuditInfo,
+  UnifiedApprovalPlaylistStep,
+  UnifiedPlaylistScope,
+} from './menuLayerLinearPlaylists';
 
 export interface Layer3StepOverrideState {
   progressStatus?: Layer3StepProgressStatus;
@@ -39,6 +42,12 @@ export interface MenuLayerSandboxContextValue {
   isCursorHidden: boolean;
   currentRoute: ActiveMenuRoute;
   displayedRoute: ActiveMenuRoute;
+  activeFloatingWindowId: string | null;
+  setActiveFloatingWindowId: (id: string | null) => void;
+  activeFloatingSubTab: string;
+  setActiveFloatingSubTab: (tab: string) => void;
+  playlistScope: UnifiedPlaylistScope;
+  handleChangePlaylistScope: (scope: UnifiedPlaylistScope) => void;
   isDockState: boolean;
   ballSimSpeed: number;
   hasStackIcon: boolean;
@@ -84,8 +93,8 @@ export interface MenuLayerSandboxContextValue {
   setLayer3StepOverride: (next: Layer3StepOverrideState) => void;
   stepPlaylistBy: (delta: -1 | 1) => void;
   activePlaylistIdx: number;
-  activePlaylist: LinearPlaylistStep[];
-  activePlaylistStep: LinearPlaylistStep | undefined;
+  activePlaylist: UnifiedApprovalPlaylistStep[];
+  activePlaylistStep: UnifiedApprovalPlaylistStep | undefined;
   transitionMode: ContainerTransitionMode;
   setTransitionMode: (mode: ContainerTransitionMode) => void;
   auditInfo: ReturnType<typeof resolveRouteAuditInfo>;

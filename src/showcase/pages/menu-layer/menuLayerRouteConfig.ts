@@ -104,6 +104,7 @@ const makeJumpItem = (
 export const MENU_SANDBOX_JUMP_ITEMS: SandboxJumpEntry[] = [
   // --- User Tier ---
   makeJumpItem('7A.0', 'MenuLayerStageCanvas', 'Level 0 menu-less game state (0px)', 'Layer 0 · User', 'layer-0', 'user'),
+  makeJumpItem('7A.0E', 'StaticTrainingShotInspectorDrawer', 'Static Training Shot Inspector Drawer (Edge Inspector)', 'Layer 0 · Edge Inspector', 'layer-0', 'user'),
   makeJumpItem('7A.1', 'Layer1MainMenuRecipe', 'Main pause root menu (11 User Contexts)', 'Layer 1 · User', 'main-menu', 'user'),
   makeJumpItem('7A.2', 'Layer2PlayRecipe', 'Mode Selection 2×3 Grid (Play)', 'Layer 2 · User', 'play', 'user'),
   makeJumpItem('7A.3', 'Layer2GarageRecipe', 'Garage Preset (5 Tabs includes Loadout)', 'Layer 2 · User', 'garage', 'user'),

@@ -115,14 +115,21 @@ export const AuditTicketHeader: React.FC<AuditTicketHeaderProps> = React.memo(
     ]);
 
     const ledgerRecord = UI_APPROVAL_LEDGER.surfaces[surfaceId];
-    const runtimeDecision = decisionsMap[unitKey];
+    const activeSurfaceMatchKey = activeUnitKey.startsWith(`${surfaceId}::`)
+      ? activeUnitKey
+      : '';
+    const runtimeDecision =
+      decisionsMap[unitKey] ??
+      (activeSurfaceMatchKey ? decisionsMap[activeSurfaceMatchKey] : undefined) ??
+      decisionsMap[buildUnitKey(surfaceId, 'default')];
     const { status, bucket, staleReason } = classifySurfaceBucket({
       surfaceId,
       ledgerRecord,
       runtimeDecision,
       globalTemplateStaleOverride: simulateTemplateStale,
     });
-    const isFocusedUnit = activeUnitKey === unitKey;
+    const isFocusedUnit =
+      activeUnitKey === unitKey || activeUnitKey.split('::')[0] === surfaceId;
 
     const handleCopyPath = (e: React.MouseEvent) => {
       e.stopPropagation();
@@ -141,7 +148,7 @@ export const AuditTicketHeader: React.FC<AuditTicketHeaderProps> = React.memo(
       e.stopPropagation();
       const lines = [
         '### [UI Audit Ticket]',
-        `- **Reference Code**: \`[${referenceCode}]\``,
+        ...(referenceCode ? [`- **Surface Group**: \`${referenceCode}\``] : []),
         `- **Review Unit Key**: \`${unitKey}\` (Status: \`${status}\` · Bucket: \`${bucket}\`)`,
         `- **Target Component**: \`${componentName}\``,
         `- **Source File**: \`${sourceFile}\``,
@@ -161,7 +168,7 @@ export const AuditTicketHeader: React.FC<AuditTicketHeaderProps> = React.memo(
       setCopiedTicket(true);
       window.setTimeout(() => setCopiedTicket(false), 1800);
       quickNotification.success(
-        `Copied UI Audit Ticket for [${referenceCode}] ${componentName} (${stateId})`
+        `Copied UI Audit Ticket for ${componentName} (${stateId})`
       );
     };
 
@@ -184,7 +191,7 @@ export const AuditTicketHeader: React.FC<AuditTicketHeaderProps> = React.memo(
         status: nextStatus,
       });
       quickNotification.info(
-        `Marked [${referenceCode}] ${label} as ${nextStatus.toUpperCase()}`
+        `Marked ${label} as ${nextStatus.toUpperCase()}`
       );
     };
 
@@ -210,7 +217,8 @@ export const AuditTicketHeader: React.FC<AuditTicketHeaderProps> = React.memo(
             title={description || label}
           >
             {index !== undefined ? `${index}. ` : ''}
-            [{referenceCode}] {label}
+            {referenceCode ? `[${referenceCode}] ` : ''}
+            {label}
           </span>
           <span
             className={`text-[10px] font-mono px-1.5 py-0.5 rounded border truncate max-w-[300px] ${
