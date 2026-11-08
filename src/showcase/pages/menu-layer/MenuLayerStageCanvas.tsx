@@ -28,6 +28,10 @@ export const MenuLayerStageCanvas: React.FC<MenuLayerStageCanvasProps> = ({
     manualBoundarySize,
     isCursorHidden,
     currentRoute,
+    activeFloatingWindowId,
+    activeFloatingSubTab,
+    setActiveFloatingSubTab,
+    activePlaylistStep,
     layer1ContextMode,
     isDockState,
     ballSimSpeed,
@@ -54,9 +58,11 @@ export const MenuLayerStageCanvas: React.FC<MenuLayerStageCanvasProps> = ({
   const setEdgeInspectorExpanded = useStaticTrainingPackStore(
     (s) => s.setEdgeInspectorExpanded
   );
-  const isStaticTrainingEditActive = layer1ContextMode === 'static-training-edit';
+  const isStaticTrainingEditActive =
+    !activeFloatingWindowId && layer1ContextMode === 'static-training-edit';
   const isStaticTrainingHudActive =
-    isStaticTrainingEditActive || layer1ContextMode === 'static-training-play';
+    !activeFloatingWindowId &&
+    (isStaticTrainingEditActive || layer1ContextMode === 'static-training-play');
   const lockedW = boundaryLocked && manualBoundarySize ? manualBoundarySize.width : undefined;
   const lockedH = boundaryLocked && manualBoundarySize ? manualBoundarySize.height : undefined;
 
@@ -65,7 +71,9 @@ export const MenuLayerStageCanvas: React.FC<MenuLayerStageCanvasProps> = ({
       id="rc-ui-tuner-preview-stage"
       ref={stageRef}
       className={`scroll-mt-6 relative mx-auto w-full rounded-2xl border p-6 md:p-10 flex items-center justify-center overflow-hidden transition-all duration-300 ${
-        isCursorHidden && !isStaticTrainingEditActive ? 'cursor-none' : 'cursor-default'
+        isCursorHidden && !isStaticTrainingEditActive && !activeFloatingWindowId
+          ? 'cursor-none'
+          : 'cursor-default'
       } ${
         isLight
           ? 'bg-neutral-100/70 border-neutral-200/90 shadow-inner'
@@ -79,7 +87,7 @@ export const MenuLayerStageCanvas: React.FC<MenuLayerStageCanvasProps> = ({
           ? '520px'
           : containerPreset === 'small-squeeze'
           ? '380px'
-          : `${Math.max(620, Math.min(980, targetH + 48))}px`,
+          : `${Math.max(660, Math.min(980, targetH + 48))}px`,
         height: lockedH
           ? `${lockedH}px`
           : containerPreset === '1080p-compact'
@@ -102,13 +110,19 @@ export const MenuLayerStageCanvas: React.FC<MenuLayerStageCanvasProps> = ({
     >
       <div
         className={`absolute inset-0 flex flex-col items-center justify-center pointer-events-none transition-opacity duration-300 ${
-          currentRoute === 'layer-0' || isDockState ? 'opacity-100' : 'opacity-25'
+          activeFloatingWindowId
+            ? 'opacity-25'
+            : currentRoute === 'layer-0' || isDockState
+            ? 'opacity-100'
+            : 'opacity-25'
         }`}
       >
         <div className="flex flex-col items-center gap-2 select-none">
           <span
             className={`text-5xl ${
-              currentRoute === 'layer-0' || isDockState ? 'animate-bounce' : ''
+              (currentRoute === 'layer-0' && !activeFloatingWindowId) || isDockState
+                ? 'animate-bounce'
+                : ''
             }`}
           >
             [Ball]
@@ -118,14 +132,16 @@ export const MenuLayerStageCanvas: React.FC<MenuLayerStageCanvasProps> = ({
           </span>
           <span className="text-xs text-neutral-400 max-w-md text-center leading-relaxed">
             {currentRoute === 'layer-0'
-              ? isStaticTrainingEditActive
+              ? activeFloatingWindowId
+                ? `[*] Floating Window Stage: Inspecting "${activePlaylistStep?.label || activeFloatingWindowId}". Drag header to reposition or corner arc to resize.`
+                : isStaticTrainingEditActive
                 ? '[*] Static Training Pack Edit Mode: Press TAB to toggle EdgeInspectorDrawer + StaticTrainingShotInspectorDrawer, or press ESC to open the Main Menu.'
                 : hasStackIcon
-                ? '[*] Layer 0 status: Keep Top Right Stack Stack Icon, Allow draggable observation window (Show on Hover) . Click Top-right X Toggle icon and hide mouse cursor. '
-                : '[*] Layer 0 status: none Stack icon, Hide mouse in match mode. Press ESC Call main menu and restore mouse. '
+                ? '[*] Layer 0 status: Keep Top Right Stack Icon, Allow draggable observation window (Show on Hover). Click Top-right X Toggle icon and hide mouse cursor.'
+                : '[*] Layer 0 status: none Stack icon, Hide mouse in match mode. Press ESC Call main menu and restore mouse.'
               : isDockState
               ? '[*] Live Preview Collapsed to right Dock Pill: Background Image 100% Resume rendering, zero black screen occlusion!'
-              : 'Central panel expanded state: Background rendering auto-dimming and noise reduction, Focus on fine-tuned parameter controller. '}
+              : 'Central panel expanded state: Background rendering auto-dimming and noise reduction, Focus on fine-tuned parameter controller.'}
           </span>
         </div>
       </div>
@@ -143,9 +159,17 @@ export const MenuLayerStageCanvas: React.FC<MenuLayerStageCanvasProps> = ({
             `${win.title} · Hover controls for details · Drag bottom-right corner arc to resize.`
           );
         }}
-        renderWindowContent={(item, ctx) =>
-          renderFloatingWindowPanel(item.id, { isLight: ctx.isLight })
-        }
+        renderWindowContent={(item, ctx) => {
+          const isMatchedFw =
+            activeFloatingWindowId !== null &&
+            (item.id === activeFloatingWindowId ||
+              item.id.startsWith(activeFloatingWindowId));
+          return renderFloatingWindowPanel(item.id, {
+            isLight: ctx.isLight,
+            activeTab: isMatchedFw ? activeFloatingSubTab || undefined : undefined,
+            onTabChange: isMatchedFw ? setActiveFloatingSubTab : undefined,
+          });
+        }}
       />
 
       {isStaticTrainingHudActive && <StaticTrainingPackHUD isLight={isLight} />}
@@ -199,7 +223,7 @@ export const MenuLayerStageCanvas: React.FC<MenuLayerStageCanvasProps> = ({
         }}
       />
 
-      {currentRoute === 'layer-0' && (
+      {currentRoute === 'layer-0' && !activeFloatingWindowId && (
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 px-4 py-2.5 rounded-2xl border backdrop-blur-md select-none transition-all shadow-xl bg-neutral-900/90 text-neutral-100 border-neutral-700/80">
           <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
           <div className="flex flex-col">
@@ -212,8 +236,8 @@ export const MenuLayerStageCanvas: React.FC<MenuLayerStageCanvasProps> = ({
               {isStaticTrainingEditActive
                 ? 'Press TAB to toggle EdgeInspectorDrawer · Press ESC to open Main Menu'
                 : hasStackIcon
-                ? 'Keep Top Right Stack Stack Icon: Allow free dragging and parameter adjustment (Show on Hover) . Hide mouse for immersion, Click the top-right icon to close it. '
-                : 'Currently in non-menu match state with no Stack icon (Mouse Hidden) . Press Keyboard ESC Key to Open Menu'}
+                ? 'Keep Top Right Stack Icon: Allow free dragging and parameter adjustment (Show on Hover). Hide mouse for immersion, Click the top-right icon to close it.'
+                : 'Currently in non-menu match state with no Stack icon (Mouse Hidden). Press Keyboard ESC Key to Open Menu'}
             </span>
           </div>
           <div className="h-4 w-px bg-neutral-700" />

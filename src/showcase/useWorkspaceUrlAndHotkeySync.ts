@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   WORKSPACE_SECTIONS,
   WORKSPACE_SPECS,
@@ -15,21 +15,24 @@ import {
 } from './sidebarNavConfig';
 import { readUrlParams, updateUrlParams } from './stores/urlSync';
 import { useSyncedState } from './stores/crossClientSync';
+import { useCrossTabTargetFollow } from './stores/crossTabTargetFollow';
 import type { JumpOriginRecord } from './SidebarWorkspaceHeader';
 
 export function resolveInitialTabFromUrl(): ShowcaseTab {
   const rawTab = readUrlParams().tab;
   if (isValidShowcaseTab(rawTab)) return rawTab;
   const initialWs = readWorkspaceFromUrl('overview');
-  return initialWs === 'bravo' ? WORKSPACE_SPECS.bravo.defaultTab : 'overview';
+  return WORKSPACE_SPECS[initialWs].defaultTab;
 }
 
 export function useWorkspaceUrlAndHotkeySync() {
   const initialUrlTab = resolveInitialTabFromUrl();
-  const [activeTab, setActiveTab] = useSyncedState<ShowcaseTab>(
-    'app:activeTab',
-    initialUrlTab
-  );
+  /**
+   * Window-local workspaceMode / activeTab state:
+   * Never broadcast across tabs so Window A can remain on Unified Approval Stage
+   * while Window B remains on Surface Workbench.
+   */
+  const [activeTab, setActiveTab] = React.useState<ShowcaseTab>(initialUrlTab);
   const [isLight, setIsLight] = useSyncedState<boolean>('app:isLight', true);
   const [lastJumpOrigin, setLastJumpOrigin] = React.useState<JumpOriginRecord | null>(
     null
@@ -39,8 +42,12 @@ export function useWorkspaceUrlAndHotkeySync() {
   >(() => {
     const ws = getWorkspaceForTab(initialUrlTab);
     return {
-      alpha: ws === 'alpha' ? initialUrlTab : WORKSPACE_SPECS.alpha.defaultTab,
-      bravo: ws === 'bravo' ? initialUrlTab : WORKSPACE_SPECS.bravo.defaultTab,
+      primitives:
+        ws === 'primitives' ? initialUrlTab : WORKSPACE_SPECS.primitives.defaultTab,
+      workbench:
+        ws === 'workbench' ? initialUrlTab : WORKSPACE_SPECS.workbench.defaultTab,
+      approval:
+        ws === 'approval' ? initialUrlTab : WORKSPACE_SPECS.approval.defaultTab,
     };
   });
 
@@ -50,6 +57,45 @@ export function useWorkspaceUrlAndHotkeySync() {
   const activeSectionMeta = activeNavMeta
     ? WORKSPACE_SECTIONS[activeNavMeta.workspaceSection]
     : undefined;
+
+  const { activeTarget, isFollowingStage } = useCrossTabTargetFollow();
+  const prevFollowedStampRef = useRef<number>(activeTarget.updatedAt);
+
+  // When this window is in Surface Workbench and Following Stage is enabled,
+  // automatically align between 'recipes' and 'floating-windows' when the remote target kind changes.
+  useEffect(() => {
+    if (!isFollowingStage) {
+      prevFollowedStampRef.current = activeTarget.updatedAt;
+      return;
+    }
+    if (activeTarget.updatedAt <= prevFollowedStampRef.current) return;
+    prevFollowedStampRef.current = activeTarget.updatedAt;
+
+    if (activeWorkspace !== 'workbench') return;
+
+    if (
+      activeTarget.kind === 'floating-window' &&
+      activeTab === 'recipes' &&
+      activeTarget.floatingWindowId
+    ) {
+      setActiveTab('floating-windows');
+      updateUrlParams({
+        tab: 'floating-windows',
+        fw: activeTarget.floatingWindowId,
+        ...(activeTarget.subtab ? { fwTab: activeTarget.subtab } : {}),
+      });
+    } else if (
+      activeTarget.kind === 'menu-route' &&
+      activeTab === 'floating-windows' &&
+      activeTarget.recipeId
+    ) {
+      setActiveTab('recipes');
+      updateUrlParams(
+        { tab: 'recipes', recipe: activeTarget.recipeId },
+        { hash: activeTarget.recipeId }
+      );
+    }
+  }, [activeTarget, isFollowingStage, activeWorkspace, activeTab]);
 
   const scrollToAnchorWithRetry = useCallback((targetId?: string) => {
     if (!targetId || typeof document === 'undefined') return;
@@ -97,29 +143,47 @@ export function useWorkspaceUrlAndHotkeySync() {
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [setActiveTab, scrollToAnchorWithRetry]);
+  }, [scrollToAnchorWithRetry]);
 
-  const handleSelectTab = useCallback(
-    (nextTab: ShowcaseTab) => {
-      const nextWs = getWorkspaceForTab(nextTab);
-      setLastTabByWorkspace((prev) => ({ ...prev, [nextWs]: nextTab }));
-      updateUrlParams({ tab: nextTab }, { push: true, hash: null });
-      syncWorkspaceUrlParam(nextWs);
-      setActiveTab(nextTab);
-    },
-    [setActiveTab]
-  );
+  const handleSelectTab = useCallback((nextTab: ShowcaseTab) => {
+    const nextWs = getWorkspaceForTab(nextTab);
+    setLastTabByWorkspace((prev) => ({ ...prev, [nextWs]: nextTab }));
+    updateUrlParams({ tab: nextTab }, { push: true, hash: null });
+    syncWorkspaceUrlParam(nextWs);
+    setActiveTab(nextTab);
+  }, []);
 
   const handleSelectWorkspace = useCallback(
     (nextWorkspace: TunerWorkspaceId) => {
       if (nextWorkspace === activeWorkspace) return;
-      const targetTab =
+      let targetTab =
         lastTabByWorkspace[nextWorkspace] ?? WORKSPACE_SPECS[nextWorkspace].defaultTab;
-      updateUrlParams({ tab: targetTab }, { push: true, hash: null });
+      if (
+        nextWorkspace === 'workbench' &&
+        isFollowingStage &&
+        activeTarget.kind === 'floating-window'
+      ) {
+        targetTab = 'floating-windows';
+      }
+      updateUrlParams(
+        {
+          tab: targetTab,
+          ...(targetTab === 'recipes' && isFollowingStage && activeTarget.recipeId
+            ? { recipe: activeTarget.recipeId }
+            : {}),
+        },
+        {
+          push: true,
+          hash:
+            targetTab === 'recipes' && isFollowingStage && activeTarget.recipeId
+              ? activeTarget.recipeId
+              : null,
+        }
+      );
       syncWorkspaceUrlParam(nextWorkspace);
       setActiveTab(targetTab);
     },
-    [activeWorkspace, lastTabByWorkspace, setActiveTab]
+    [activeWorkspace, lastTabByWorkspace, isFollowingStage, activeTarget]
   );
 
   useEffect(() => {
@@ -135,10 +199,13 @@ export function useWorkspaceUrlAndHotkeySync() {
       }
       if (e.key === '1') {
         e.preventDefault();
-        handleSelectWorkspace('alpha');
+        handleSelectWorkspace('primitives');
       } else if (e.key === '2') {
         e.preventDefault();
-        handleSelectWorkspace('bravo');
+        handleSelectWorkspace('workbench');
+      } else if (e.key === '3') {
+        e.preventDefault();
+        handleSelectWorkspace('approval');
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -151,8 +218,8 @@ export function useWorkspaceUrlAndHotkeySync() {
         const p = readUrlParams();
         const routeDesc =
           activeTab === 'layer-preview'
-            ? `7A Menu Layer (${p.route || 'main-menu'}${
-                p.subtab ? ` · ${p.subtab}` : ''
+            ? `Unified Approval Stage (${p.fw || p.route || 'main-menu'}${
+                p.fwTab ? ` · ${p.fwTab}` : p.subtab ? ` · ${p.subtab}` : ''
               })`
             : activeTab;
         setLastJumpOrigin({
@@ -166,7 +233,11 @@ export function useWorkspaceUrlAndHotkeySync() {
       const targetWs = getWorkspaceForTab(tab);
       setLastTabByWorkspace((prev) => ({ ...prev, [targetWs]: tab }));
       updateUrlParams(
-        { tab, ...(tab === 'recipes' && targetId ? { recipe: targetId } : {}) },
+        {
+          tab,
+          ...(tab === 'recipes' && targetId ? { recipe: targetId } : {}),
+          ...(tab === 'floating-windows' && targetId ? { fw: targetId } : {}),
+        },
         { push: true, hash: targetId ?? null }
       );
       syncWorkspaceUrlParam(targetWs);
@@ -176,7 +247,7 @@ export function useWorkspaceUrlAndHotkeySync() {
       }
       scrollToAnchorWithRetry(targetId);
     },
-    [activeTab, setActiveTab, scrollToAnchorWithRetry]
+    [activeTab, scrollToAnchorWithRetry]
   );
 
   const handleReturnToJumpOrigin = useCallback(() => {
@@ -190,16 +261,16 @@ export function useWorkspaceUrlAndHotkeySync() {
     }
     setActiveTab(lastJumpOrigin.fromTab);
     setLastJumpOrigin(null);
-  }, [lastJumpOrigin, setActiveTab]);
+  }, [lastJumpOrigin]);
 
   const handleNavigateToSandboxPlay = useCallback(() => {
     updateUrlParams(
       { tab: 'layer-preview', tier: 'user', route: 'play' },
       { push: true, hash: 'rc-ui-tuner-preview-stage' }
     );
-    syncWorkspaceUrlParam('bravo');
+    syncWorkspaceUrlParam('approval');
     setActiveTab('layer-preview');
-  }, [setActiveTab]);
+  }, []);
 
   useEffect(() => {
     if (typeof document !== 'undefined') {

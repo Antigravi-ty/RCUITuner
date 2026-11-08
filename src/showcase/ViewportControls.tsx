@@ -1,7 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useViewportStore, viewportStore } from '../ui-core/stores/viewportStore';
 import { useCrossClientSyncStatus } from './stores/crossClientSync';
-import { Sliders, Shield, Eye, EyeOff, Radio, RotateCcw, Copy, Check } from 'lucide-react';
+import { useCrossTabTargetFollow } from './stores/crossTabTargetFollow';
+import {
+  Sliders,
+  Shield,
+  Eye,
+  EyeOff,
+  Radio,
+  RotateCcw,
+  Copy,
+  Check,
+  Link2,
+  Unlink,
+} from 'lucide-react';
 import { Badge } from '../ui-core/primitives/Badge';
 
 export interface ViewportControlsProps {
@@ -12,6 +24,7 @@ export const ViewportControls: React.FC<ViewportControlsProps> = ({ isLight = tr
   const { renderScale, safeAreaMargin, showSafeAreaHud, metrics } = useViewportStore();
   const { connected, paused, togglePaused, transport, resetAll, exportParameters } =
     useCrossClientSyncStatus();
+  const { activeTarget, isFollowingStage, toggleFollowingStage } = useCrossTabTargetFollow();
   const [showMarginPopover, setShowMarginPopover] = useState(false);
   const [justReset, setJustReset] = useState(false);
   const [justCopiedParams, setJustCopiedParams] = useState(false);
@@ -33,7 +46,6 @@ export const ViewportControls: React.FC<ViewportControlsProps> = ({ isLight = tr
     window.setTimeout(() => setJustCopiedParams(false), 1500);
   };
 
-  // Close margin popover on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
@@ -49,10 +61,47 @@ export const ViewportControls: React.FC<ViewportControlsProps> = ({ isLight = tr
   const presetMargins = [-5, -2.5, 0, 2.5, 5, 7.5, 10];
 
   return (
-    <div className="flex items-center gap-2.5">
+    <div className="flex items-center gap-2">
+      {/* 0. Cross-Tab Target Follow Toggle ([Following Stage] vs [Unlinked]) */}
+      <button
+        type="button"
+        onClick={toggleFollowingStage}
+        data-ui-action="toggle-follow-stage"
+        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-mono font-semibold transition-all cursor-pointer active:scale-95 ${
+          isFollowingStage
+            ? isLight
+              ? 'bg-sky-50 hover:bg-sky-100/80 border-sky-300 text-sky-800 shadow-2xs'
+              : 'bg-sky-950/60 hover:bg-sky-900/60 border-sky-500/40 text-sky-300'
+            : isLight
+            ? 'bg-white hover:bg-neutral-100 border-neutral-200 text-neutral-500'
+            : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-800 text-neutral-400'
+        }`}
+        title={
+          isFollowingStage
+            ? `Following Stage Active Target (${activeTarget.label} -> ${activeTarget.targetId}) · Window workspaceMode stays local while activeTargetId syncs across tabs. Click to Unlink.`
+            : 'Unlinked from Stage Target Follow · Click to re-link and follow active stage target across tabs.'
+        }
+      >
+        {isFollowingStage ? (
+          <Link2 className="h-3.5 w-3.5 text-sky-500 shrink-0" />
+        ) : (
+          <Unlink className="h-3.5 w-3.5 text-neutral-400 shrink-0" />
+        )}
+        <span>{isFollowingStage ? 'Following Stage' : 'Unlinked'}</span>
+        {isFollowingStage && activeTarget?.targetId && (
+          <span
+            className={`hidden 2xl:inline px-1.5 py-0.2 rounded text-[10px] font-bold truncate max-w-[120px] ${
+              isLight ? 'bg-sky-500/15 text-sky-700' : 'bg-sky-500/20 text-sky-200'
+            }`}
+          >
+            {activeTarget.targetId}
+          </span>
+        )}
+      </button>
+
       {/* 1. UI Scaling Slider Control */}
       <div
-        className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-colors ${
+        className={`hidden lg:flex items-center gap-2 px-2.5 py-1.5 rounded-xl border transition-colors ${
           isLight
             ? 'bg-neutral-50/90 border-neutral-200 shadow-2xs'
             : 'bg-neutral-900/80 border-neutral-800'
@@ -60,7 +109,7 @@ export const ViewportControls: React.FC<ViewportControlsProps> = ({ isLight = tr
       >
         <Sliders className={`h-3.5 w-3.5 shrink-0 ${isLight ? 'text-neutral-700' : 'text-neutral-300'}`} />
         <span className={`text-[11px] font-mono shrink-0 ${isLight ? 'text-neutral-500' : 'text-neutral-400'}`}>
-          Scaling
+          Scale
         </span>
         <input
           type="range"
@@ -69,7 +118,7 @@ export const ViewportControls: React.FC<ViewportControlsProps> = ({ isLight = tr
           step={5}
           value={renderScale}
           onChange={(e) => viewportStore.setRenderScale(Number(e.target.value))}
-          className="w-20 md:w-28 h-1.5 bg-neutral-300 dark:bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-neutral-800 dark:accent-neutral-200"
+          className="w-16 xl:w-24 h-1.5 bg-neutral-300 dark:bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-neutral-800 dark:accent-neutral-200"
           title={`Current Device/Window UI Scale: ${renderScale}% (Actual Factor: ${(metrics.scaleFactor * 100).toFixed(0)}% · Effective only for this window, No Cross-Platform Sync)`}
         />
         <button
@@ -91,7 +140,7 @@ export const ViewportControls: React.FC<ViewportControlsProps> = ({ isLight = tr
         <button
           type="button"
           onClick={() => setShowMarginPopover((prev) => !prev)}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
             showMarginPopover
               ? isLight
                 ? 'bg-amber-50 border-amber-400 text-amber-900 shadow-xs'
@@ -103,13 +152,12 @@ export const ViewportControls: React.FC<ViewportControlsProps> = ({ isLight = tr
           title="Adjust screen safe area edges Safe Area Margin (-5% ~ +10%)"
         >
           <Shield className={`h-3.5 w-3.5 ${isLight ? 'text-emerald-600' : 'text-emerald-400'}`} />
-          <span>Safe Area:</span>
+          <span className="hidden xl:inline">Safe Area:</span>
           <span className="font-mono font-bold text-amber-500">
             {safeAreaMargin > 0 ? `+${safeAreaMargin}` : safeAreaMargin}%
           </span>
         </button>
 
-        {/* Dropdown Stepper Popover */}
         {showMarginPopover && (
           <div
             className={`absolute right-0 top-full mt-2 w-64 p-3.5 rounded-2xl border shadow-xl z-50 flex flex-col gap-3 transition-colors ${
@@ -140,7 +188,6 @@ export const ViewportControls: React.FC<ViewportControlsProps> = ({ isLight = tr
               </span>
             </div>
 
-            {/* Quick Presets */}
             <div className="flex flex-wrap gap-1.5">
               {presetMargins.map((p) => (
                 <button
@@ -161,7 +208,7 @@ export const ViewportControls: React.FC<ViewportControlsProps> = ({ isLight = tr
             </div>
 
             <p className={`text-[10px] leading-relaxed ${isLight ? 'text-neutral-500' : 'text-neutral-400'}`}>
-              Width-based percentage offset, benchmark Rocket Companion Game fullscreen safe area algorithm. 
+              Width-based percentage offset matching Rocket Companion fullscreen safe area rules.
             </p>
           </div>
         )}
@@ -171,7 +218,7 @@ export const ViewportControls: React.FC<ViewportControlsProps> = ({ isLight = tr
       <button
         type="button"
         onClick={() => viewportStore.setShowSafeAreaHud(!showSafeAreaHud)}
-        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
+        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
           showSafeAreaHud
             ? isLight
               ? 'bg-emerald-50 border-emerald-400 text-emerald-800 shadow-xs'
@@ -205,8 +252,8 @@ export const ViewportControls: React.FC<ViewportControlsProps> = ({ isLight = tr
         }`}
         title={
           paused
-            ? 'Cross-screen sync paused for current window (Click to Restore Vite WebSocket real-time sync) '
-            : `Vite WebSocket Cross-Window/Cross-device real-time mixer synchronization enabled (${transport}) · Click to detach temporarily`
+            ? 'Cross-screen parameter sync paused for current window (Click to restore real-time sync)'
+            : `Real-time parameter & target sync enabled (${transport}) · Click to pause`
         }
       >
         <span
@@ -244,7 +291,7 @@ export const ViewportControls: React.FC<ViewportControlsProps> = ({ isLight = tr
         <span className="hidden xl:inline">{justCopiedParams ? 'Copied' : 'Export'}</span>
       </button>
 
-      {/* 6. Square Icon-Only Restart Default Button (Clears Vite Server + All Connected Tabs) */}
+      {/* 6. Square Icon-Only Restart Default Button */}
       <button
         type="button"
         onClick={handleRestartDefault}
@@ -264,4 +311,3 @@ export const ViewportControls: React.FC<ViewportControlsProps> = ({ isLight = tr
     </div>
   );
 };
-

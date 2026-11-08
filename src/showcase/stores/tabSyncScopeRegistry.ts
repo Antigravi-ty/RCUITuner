@@ -72,7 +72,7 @@ export function isKeyInActiveTabScope(
   activeTab: string,
   explicitPrefix?: string
 ): boolean {
-  if (key === 'app:activeTab') return false;
+  if (key === 'app:activeTab' || key === 'sync:activeTarget') return false;
   if (explicitPrefix) {
     if (explicitPrefix === '*') return true;
     return key.startsWith(explicitPrefix);

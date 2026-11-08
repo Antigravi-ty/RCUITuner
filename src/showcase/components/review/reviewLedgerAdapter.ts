@@ -31,6 +31,15 @@ export function resolveCanonicalSurfaceId(params: {
 
   const candidateStem = fileStem || componentName;
 
+  if (
+    candidateStem === 'MenuLayerStageCanvas' ||
+    candidateStem === 'StaticTrainingPackHUD' ||
+    stateId === 'user-l0' ||
+    stateId === 'user-l0-edge-inspector'
+  ) {
+    return 'recipe:StaticTrainingShotInspectorDrawer';
+  }
+
   if (candidateStem.endsWith('FloatingWindow')) {
     const base = candidateStem.replace(/FloatingWindow$/, '');
     const kebab = base.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
@@ -173,97 +182,162 @@ export function classifySurfaceBucket(params: {
   };
 }
 
+const CANONICAL_RECIPE_SURFACE_ORDER: readonly string[] = [
+  'recipe:StaticTrainingShotInspectorDrawer',
+  'recipe:Layer1MainMenuRecipe',
+  'recipe:Layer2PlayRecipe',
+  'recipe:Layer2GarageRecipe',
+  'recipe:Layer2SettingsRecipe',
+  'recipe:Layer2ManageRoomRecipe',
+  'recipe:Layer3HostMatchRecipe',
+  'recipe:Layer3HostTrainingRecipe',
+  'recipe:Layer3CustomPlayRecipe',
+  'recipe:Layer3JoinRoomRecipe',
+  'recipe:Layer3ExhibitionRecipe',
+  'recipe:Layer3SelfTrainingRecipe',
+  'recipe:Layer3KickoffTrainingRecipe',
+  'recipe:Layer3TrainingConfigRecipe',
+  'recipe:Layer3CameraRecipe',
+  'recipe:Layer3KeybindingsRecipe',
+  'recipe:Layer3BallTrajectoryRecipe',
+  'recipe:Layer4StaticTrainingPackBrowseRecipe',
+  'recipe:Layer4ControllerSettingsRecipe',
+  'recipe:Layer3DevSandboxesRecipe',
+  'recipe:Layer3ExpMultiBotsRecipe',
+  'recipe:Layer3ExpBotPackRecipe',
+  'recipe:Layer3DevActiveTunersRecipe',
+  'recipe:Layer3DevCalibratedPresetsRecipe',
+  'recipe:Layer3DevSelfTestRecipe',
+  'recipe:Layer3DevRemoteProfileRecipe',
+  'recipe:Layer3DevQuickActionsRecipe',
+  'recipe:Layer3DevUnderDevelopmentRecipe',
+  'recipe:Layer3AcousticsEqualizerRecipe',
+  'recipe:Layer4AdvancedAudioRecipe',
+  'recipe:Layer4EventTriggerRulesRecipe',
+  'recipe:Layer4DevSignalingLabRecipe',
+];
+
+function resolveUnifiedSurfaceSortRank(surfaceId: string): number {
+  const recipeIdx = CANONICAL_RECIPE_SURFACE_ORDER.indexOf(surfaceId);
+  if (recipeIdx >= 0 && recipeIdx < 19) return recipeIdx;
+  if (recipeIdx >= 19) return 100 + recipeIdx;
+  if (surfaceId.startsWith('floating:')) return 200;
+  return 500;
+}
+
 /**
- * Builds the complete list of review units from `uiApprovalLedger.json` merged with
- * any runtime variant registrations and reviewer decisions.
+ * Builds the canonical 64-surface review ledger list from `uiApprovalLedger.json`
+ * merged with runtime variant registrations and reviewer decisions in Unified Stage order.
  */
 export function buildAllReviewUnits(params: {
   decisionsMap: Record<string, RuntimeReviewDecision>;
-  registeredUnitsMap: Record<string, Omit<SurfaceVariantReviewUnit, 'status' | 'bucket' | 'staleReason' | 'note' | 'updatedAt'>>;
+  registeredUnitsMap: Record<
+    string,
+    Omit<SurfaceVariantReviewUnit, 'status' | 'bucket' | 'staleReason' | 'note' | 'updatedAt'>
+  >;
   globalTemplateStaleOverride?: boolean;
+  activeUnitKey?: string;
 }): SurfaceVariantReviewUnit[] {
-  const { decisionsMap, registeredUnitsMap, globalTemplateStaleOverride } = params;
-  const unitsByKey = new Map<string, SurfaceVariantReviewUnit>();
+  const {
+    decisionsMap,
+    registeredUnitsMap,
+    globalTemplateStaleOverride,
+    activeUnitKey,
+  } = params;
 
-  // 1. Seed all 64 canonical surfaces from uiApprovalLedger.json
+  const customKeysBySurface = new Map<string, string[]>();
+  for (const rawKey of new Set([
+    ...Object.keys(registeredUnitsMap),
+    ...Object.keys(decisionsMap),
+  ])) {
+    const reg = registeredUnitsMap[rawKey];
+    const dec = decisionsMap[rawKey];
+    const rawSurface = reg?.surfaceId || dec?.surfaceId || rawKey.split('::')[0];
+    const canonicalSurface = UI_APPROVAL_LEDGER.surfaces[rawSurface]
+      ? rawSurface
+      : resolveCanonicalSurfaceId({
+          sourceFile: reg?.sourceFile || dec?.sourceFile,
+          componentName: reg?.componentName || dec?.componentName || rawSurface,
+          stateId: rawKey,
+        });
+    if (!UI_APPROVAL_LEDGER.surfaces[canonicalSurface]) continue;
+    const list = customKeysBySurface.get(canonicalSurface) ?? [];
+    list.push(rawKey);
+    customKeysBySurface.set(canonicalSurface, list);
+  }
+
+  const units: SurfaceVariantReviewUnit[] = [];
+
   for (const [surfaceId, record] of Object.entries(UI_APPROVAL_LEDGER.surfaces)) {
-    const unitKey = buildUnitKey(surfaceId, 'default');
-    const decision = decisionsMap[unitKey];
+    const defaultKey = buildUnitKey(surfaceId, 'default');
+    const candidateKeys = customKeysBySurface.get(surfaceId) ?? [];
+    const activeMatchKey =
+      activeUnitKey &&
+      (activeUnitKey.startsWith(`${surfaceId}::`) ||
+        candidateKeys.includes(activeUnitKey))
+        ? activeUnitKey
+        : undefined;
+    const decidedKey = candidateKeys.find((k) => Boolean(decisionsMap[k]));
+    const latestRegisteredKey =
+      candidateKeys.length > 0 ? candidateKeys[candidateKeys.length - 1] : undefined;
+
+    const effectiveKey =
+      activeMatchKey || decidedKey || latestRegisteredKey || defaultKey;
+    const reg = registeredUnitsMap[effectiveKey];
+    const decision =
+      decisionsMap[effectiveKey] ??
+      ( decidedKey ? decisionsMap[decidedKey] : undefined ) ??
+      decisionsMap[defaultKey];
+
+    const variantId =
+      reg?.variantId ||
+      decision?.variantId ||
+      effectiveKey.split('::')[1] ||
+      'default';
+
     const { status, bucket, staleReason } = classifySurfaceBucket({
       surfaceId,
       ledgerRecord: record,
       runtimeDecision: decision,
       globalTemplateStaleOverride,
     });
+
     const compName =
       record.entryFile
         .split('/')
         .pop()
         ?.replace(/\.(tsx|ts)$/, '') || surfaceId;
 
-    unitsByKey.set(unitKey, {
-      unitKey,
+    units.push({
+      unitKey: effectiveKey,
       surfaceId,
-      variantId: 'default',
-      label: decision?.label || compName,
+      variantId,
+      label: reg?.label || decision?.label || compName,
       referenceCode:
+        reg?.referenceCode ||
         decision?.referenceCode ||
-        (record.surfaceKind === 'floating-window' ? '6D' : '6A'),
-      componentName: compName,
-      sourceFile: record.entryFile,
+        (record.surfaceKind === 'floating-window' ? 'Floating' : 'Menu'),
+      componentName: reg?.componentName || decision?.componentName || compName,
+      sourceFile: reg?.sourceFile || decision?.sourceFile || record.entryFile,
+      subViewFile: reg?.subViewFile || decision?.subViewFile,
       status,
       bucket,
       staleReason,
       note: decision?.note ?? record.note ?? '',
       updatedAt: decision?.updatedAt ?? record.approvedAt,
-      changedSubtreeFiles: [],
-      alphaMotherDeps: extractAlphaMotherDeps(record),
+      changedSubtreeFiles: reg?.changedSubtreeFiles ?? [],
+      alphaMotherDeps: reg?.alphaMotherDeps ?? extractAlphaMotherDeps(record),
       ledgerRecord: record,
     });
   }
 
-  // 2. Overlay any fine-grained SurfaceVariantUnits mounted or reviewed in RCUITuner
-  const allCustomKeys = new Set([
-    ...Object.keys(registeredUnitsMap),
-    ...Object.keys(decisionsMap),
-  ]);
-
-  for (const unitKey of allCustomKeys) {
-    const reg = registeredUnitsMap[unitKey];
-    const decision = decisionsMap[unitKey];
-    const surfaceId = reg?.surfaceId || decision?.surfaceId || unitKey.split('::')[0];
-    const variantId = reg?.variantId || decision?.variantId || unitKey.split('::')[1] || 'default';
-    const ledgerRecord = UI_APPROVAL_LEDGER.surfaces[surfaceId];
-
-    const { status, bucket, staleReason } = classifySurfaceBucket({
-      surfaceId,
-      ledgerRecord,
-      runtimeDecision: decision,
-      globalTemplateStaleOverride,
-    });
-
-    const existing = unitsByKey.get(unitKey);
-    unitsByKey.set(unitKey, {
-      unitKey,
-      surfaceId,
-      variantId,
-      label: reg?.label || decision?.label || existing?.label || `${surfaceId} (${variantId})`,
-      referenceCode: reg?.referenceCode || decision?.referenceCode || existing?.referenceCode || '6A/6D',
-      componentName: reg?.componentName || decision?.componentName || existing?.componentName || surfaceId,
-      sourceFile: reg?.sourceFile || decision?.sourceFile || existing?.sourceFile || ledgerRecord?.entryFile || '',
-      subViewFile: reg?.subViewFile || decision?.subViewFile || existing?.subViewFile,
-      status,
-      bucket,
-      staleReason,
-      note: decision?.note ?? existing?.note ?? ledgerRecord?.note ?? '',
-      updatedAt: decision?.updatedAt ?? existing?.updatedAt ?? ledgerRecord?.approvedAt ?? new Date().toISOString(),
-      changedSubtreeFiles: reg?.changedSubtreeFiles ?? existing?.changedSubtreeFiles ?? [],
-      alphaMotherDeps: reg?.alphaMotherDeps ?? existing?.alphaMotherDeps ?? extractAlphaMotherDeps(ledgerRecord),
-      ledgerRecord,
-    });
-  }
-
-  return Array.from(unitsByKey.values()).sort((a, b) => a.unitKey.localeCompare(b.unitKey));
+  return units.sort((a, b) => {
+    const rankDiff =
+      resolveUnifiedSurfaceSortRank(a.surfaceId) -
+      resolveUnifiedSurfaceSortRank(b.surfaceId);
+    if (rankDiff !== 0) return rankDiff;
+    return a.surfaceId.localeCompare(b.surfaceId);
+  });
 }
 
 /**

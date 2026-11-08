@@ -74,8 +74,9 @@ export const RapidReviewTriageBar: React.FC<RapidReviewTriageBarProps> = React.m
           decisionsMap,
           registeredUnitsMap,
           globalTemplateStaleOverride: simulateTemplateStale,
+          activeUnitKey,
         }),
-      [decisionsMap, registeredUnitsMap, simulateTemplateStale]
+      [decisionsMap, registeredUnitsMap, simulateTemplateStale, activeUnitKey]
     );
 
     const bucketCounts = useMemo(() => {
@@ -98,8 +99,11 @@ export const RapidReviewTriageBar: React.FC<RapidReviewTriageBarProps> = React.m
     }, [allUnits, activeBucketFilter]);
 
     const activeUnit = useMemo(() => {
+      const activeSurfaceId = activeUnitKey.split('::')[0];
       return (
-        allUnits.find((u) => u.unitKey === activeUnitKey) ||
+        allUnits.find(
+          (u) => u.unitKey === activeUnitKey || u.surfaceId === activeSurfaceId
+        ) ||
         filteredQueue[0] ||
         allUnits[0]
       );
@@ -141,7 +145,7 @@ export const RapidReviewTriageBar: React.FC<RapidReviewTriageBarProps> = React.m
             surfaceId: activeUnit.surfaceId,
             diffSnapshot,
           });
-          const labelMsg = `${status.toUpperCase()} [${activeUnit.referenceCode}] ${
+          const labelMsg = `${status.toUpperCase()} · ${
             activeUnit.label
           } (${approvalMsg})${next ? ` -> Next: ${next.label}` : ''}`;
           if (status === 'approved') quickNotification.success(labelMsg);
@@ -165,7 +169,10 @@ export const RapidReviewTriageBar: React.FC<RapidReviewTriageBarProps> = React.m
 
     const currentQueueIdx = Math.max(
       0,
-      filteredQueue.findIndex((u) => u.unitKey === activeUnit.unitKey)
+      filteredQueue.findIndex(
+        (u) =>
+          u.unitKey === activeUnit.unitKey || u.surfaceId === activeUnit.surfaceId
+      )
     );
 
     const triggerDecision = (status: 'approved' | 'rejected' | 'deferred') => {
@@ -179,9 +186,9 @@ export const RapidReviewTriageBar: React.FC<RapidReviewTriageBarProps> = React.m
         surfaceId: activeUnit.surfaceId,
         diffSnapshot,
       });
-      const msg = `${status.toUpperCase()} [${activeUnit.referenceCode}] ${
-        activeUnit.label
-      } (${approvalMsg})${next ? ` -> ${next.label}` : ''}`;
+      const msg = `${status.toUpperCase()} · ${activeUnit.label} (${approvalMsg})${
+        next ? ` -> ${next.label}` : ''
+      }`;
       if (status === 'approved') quickNotification.success(msg);
       else if (status === 'rejected') quickNotification.warning(msg);
       else quickNotification.info(msg);
@@ -317,9 +324,9 @@ export const RapidReviewTriageBar: React.FC<RapidReviewTriageBarProps> = React.m
                   <ChevronRight className="h-3.5 w-3.5" />
                 </button>
 
-                <span className="text-[11px] font-bold truncate max-w-[280px]">
+                <span className="text-[11px] font-bold truncate max-w-[300px]">
                   [{currentQueueIdx + 1}/{Math.max(1, filteredQueue.length)}]{' '}
-                  [{activeUnit.referenceCode}] {activeUnit.label}
+                  {activeUnit.label}
                 </span>
 
                 <span
@@ -344,9 +351,7 @@ export const RapidReviewTriageBar: React.FC<RapidReviewTriageBarProps> = React.m
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.currentTarget.blur();
-                      quickNotification.success(
-                        `Saved note for [${activeUnit.referenceCode}] ${activeUnit.label}`
-                      );
+                      quickNotification.success(`Saved note for ${activeUnit.label}`);
                     }
                   }}
                   placeholder="Press [Space] to type optional 1-line triage note (Enter to save)..."

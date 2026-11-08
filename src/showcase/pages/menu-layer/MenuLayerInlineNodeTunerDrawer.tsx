@@ -42,14 +42,14 @@ export const MenuLayerInlineNodeTunerDrawer: React.FC<MenuLayerInlineNodeTunerDr
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2 text-xs font-mono">
           <span className="font-bold text-amber-600 dark:text-amber-400">
-            [Boost] 7A Quick in-place node adjustment:
+            Inline Quick Node Tuning:
           </span>
           <span
             className={
               isLight ? 'text-neutral-700 font-semibold' : 'text-neutral-200 font-semibold'
             }
           >
-            {inspectorInfo.pageRecipeTarget.componentName} ({inspectorInfo.pageRecipeTarget.label})
+            {inspectorInfo.pageRecipeTarget.componentName} ({inspectorInfo.pageRecipeTarget.label.replace(/^[0-9A-Z.-]+\s+/, '')})
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -68,7 +68,7 @@ export const MenuLayerInlineNodeTunerDrawer: React.FC<MenuLayerInlineNodeTunerDr
                   : 'bg-neutral-950 border-neutral-800 text-neutral-300 hover:border-amber-500/50'
               }`}
             >
-              Open full standalone page [{inspectorInfo.pageRecipeTarget.code}] ↗
+              Open in Surface Workbench ({inspectorInfo.pageRecipeTarget.componentName}) -&gt;
             </button>
           )}
           <button
@@ -84,8 +84,8 @@ export const MenuLayerInlineNodeTunerDrawer: React.FC<MenuLayerInlineNodeTunerDr
       {activePanelId && (
         <LocalPanelSizingTuner
           panelId={activePanelId}
-          label={`${inspectorInfo.pageRecipeTarget.code} · ${inspectorInfo.pageRecipeTarget.componentName} Container size contract`}
-          recommendation="Real-time link below 7A Stage Container And 6A Standalone Page"
+          label={`${inspectorInfo.pageRecipeTarget.componentName} Container size contract`}
+          recommendation="Real-time link between Unified Approval Stage and Surface Workbench"
           isLight={isLight}
         />
       )}

@@ -10,6 +10,14 @@ import {
   normalizeMenuRoute,
 } from './menuLayerRouteConfig';
 
+export interface MenuLayerFloatingUrlSyncBindings {
+  activeFloatingWindowId: string | null;
+  setActiveFloatingWindowId: (id: string | null) => void;
+  activeFloatingSubTab: string;
+  setActiveFloatingSubTab: (tab: string) => void;
+  onRestoreFloatingFromUrl?: (fwId: string, fwTab?: string) => void;
+}
+
 export interface UseMenuLayerUrlSyncParams {
   visibilityTier: MenuVisibilityTier;
   setVisibilityTier: (tier: MenuVisibilityTier) => void;
@@ -22,6 +30,7 @@ export interface UseMenuLayerUrlSyncParams {
   setGarageTab: (tab: string) => void;
   layer1ContextMode: Layer1MenuContextMode;
   setLayer1ContextMode: (mode: Layer1MenuContextMode) => void;
+  floatingSync?: MenuLayerFloatingUrlSyncBindings;
 }
 
 export function useMenuLayerUrlSync({
@@ -36,6 +45,7 @@ export function useMenuLayerUrlSync({
   setGarageTab,
   layer1ContextMode,
   setLayer1ContextMode,
+  floatingSync,
 }: UseMenuLayerUrlSyncParams): void {
   const isRestoringFromUrlRef = useRef(false);
   const hasMountedUrlSyncRef = useRef(false);
@@ -43,10 +53,21 @@ export function useMenuLayerUrlSync({
   useEffect(() => {
     const syncFromUrl = () => {
       const p = readUrlParams();
-      if (!p.route && !p.tier && !p.subtab && !p.ctx) return;
+      if (!p.route && !p.tier && !p.subtab && !p.ctx && !p.fw) return;
       isRestoringFromUrlRef.current = true;
       if (p.tier === 'user' || p.tier === 'developer') {
         setVisibilityTier(p.tier);
+      }
+      if (p.fw && floatingSync) {
+        setCurrentRoute('layer-0');
+        setDisplayedRoute('layer-0');
+        floatingSync.setActiveFloatingWindowId(p.fw);
+        floatingSync.setActiveFloatingSubTab(p.fwTab || '');
+        floatingSync.onRestoreFloatingFromUrl?.(p.fw, p.fwTab);
+        return;
+      }
+      if (floatingSync) {
+        floatingSync.setActiveFloatingWindowId(null);
       }
       const nextRoute = normalizeMenuRoute(p.route);
       if (nextRoute) {
@@ -69,13 +90,18 @@ export function useMenuLayerUrlSync({
     return () => window.removeEventListener('popstate', syncFromUrl);
   }, []);
 
+  const activeFwId = floatingSync?.activeFloatingWindowId ?? null;
+  const activeFwTab = floatingSync?.activeFloatingSubTab ?? '';
+
   useEffect(() => {
-    const subtab =
-      currentRoute === 'settings'
-        ? settingsTab
-        : currentRoute === 'garage'
-        ? garageTab
-        : null;
+    const isFwActive = currentRoute === 'layer-0' && Boolean(activeFwId);
+    const subtab = isFwActive
+      ? null
+      : currentRoute === 'settings'
+      ? settingsTab
+      : currentRoute === 'garage'
+      ? garageTab
+      : null;
     const shouldPush = hasMountedUrlSyncRef.current && !isRestoringFromUrlRef.current;
     hasMountedUrlSyncRef.current = true;
     isRestoringFromUrlRef.current = false;
@@ -84,9 +110,19 @@ export function useMenuLayerUrlSync({
         tier: visibilityTier,
         route: normalizeMenuRoute(currentRoute) ?? currentRoute,
         subtab,
-        ctx: layer1ContextMode,
+        ctx: !isFwActive ? layer1ContextMode : null,
+        fw: isFwActive ? activeFwId : null,
+        fwTab: isFwActive && activeFwTab ? activeFwTab : null,
       },
       { push: shouldPush }
     );
-  }, [visibilityTier, currentRoute, settingsTab, garageTab, layer1ContextMode]);
+  }, [
+    visibilityTier,
+    currentRoute,
+    settingsTab,
+    garageTab,
+    layer1ContextMode,
+    activeFwId,
+    activeFwTab,
+  ]);
 }

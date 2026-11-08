@@ -4,12 +4,25 @@ import {
   type CanonicalLayer1ContextVariation,
   type Layer1MenuContextMode,
 } from '../../../ui-core/recipes/layer1MenuContextSpecs';
+import { floatingStore } from '../../../ui-core/stores/floatingStore';
+import { useStaticTrainingPackStore } from '../../../ui-core/stores/staticTrainingPackStore';
+import {
+  buildFloatingWindowCrossTabTarget,
+  buildMenuRouteCrossTabTarget,
+  publishCrossTabActiveTarget,
+} from '../../stores/crossTabTargetFollow';
 import {
   MENU_ROUTE_CONFIG,
   normalizeMenuRoute,
   type ActiveMenuRoute,
   type LinearPlaylistStep,
+  type MenuVisibilityTier,
 } from './menuLayerRouteConfig';
+import { isFloatingWindowPlaylistUnit } from '../floating-windows/floatingWindowsLinearPlaylists';
+import {
+  spawnFloatingPresetOnUnifiedStage,
+  type UnifiedApprovalPlaylistStep,
+} from './menuLayerLinearPlaylists';
 import type { Layer3StepOverrideState } from './MenuLayerSandboxContext';
 import { matchesOnlineRoomPlaylistStep } from './menuLayerOnlineRoomSteps';
 
@@ -19,19 +32,33 @@ export interface ActiveViewStateSummary {
   settingsTab: string;
   garageTab: string;
   layer3StepOverride: Layer3StepOverrideState;
+  activeFloatingWindowId?: string | null;
+  activeFloatingSubTab?: string;
 }
 
-/**
- * Checks whether the current active view state on the stage matches a specific playlist step.
- */
 export function doesViewMatchPlaylistStep(
-  step: LinearPlaylistStep | undefined,
+  step: UnifiedApprovalPlaylistStep | LinearPlaylistStep | undefined,
   view: ActiveViewStateSummary
 ): boolean {
   if (!step) return false;
+  if (isFloatingWindowPlaylistUnit(step)) {
+    return (
+      view.route === 'layer-0' &&
+      view.activeFloatingWindowId === step.windowId &&
+      (step.subtab || '') === (view.activeFloatingSubTab || '')
+    );
+  }
+  if (view.activeFloatingWindowId) return false;
+
   const canonicalStepRoute = normalizeMenuRoute(step.route) ?? step.route;
   const canonicalViewRoute = normalizeMenuRoute(view.route) ?? view.route;
   if (canonicalStepRoute !== canonicalViewRoute) return false;
+
+  if (canonicalViewRoute === 'layer-0') {
+    const stepIsEdge = step.contextMode === 'static-training-edit';
+    const viewIsEdge = view.contextMode === 'static-training-edit';
+    return stepIsEdge === viewIsEdge;
+  }
 
   if (
     (canonicalViewRoute === 'main-menu' || canonicalViewRoute === 'manage-room') &&
@@ -73,12 +100,16 @@ export function doesViewMatchPlaylistStep(
   return true;
 }
 
-/**
- * Formats a concise human-readable label for the current active view on stage
- * when the user is in Free Roam mode (diverged from the approval anchor step).
- */
 export function formatActiveViewRoamLabel(view: ActiveViewStateSummary): string {
+  if (view.activeFloatingWindowId) {
+    return view.activeFloatingSubTab
+      ? `Floating · ${view.activeFloatingWindowId} (${view.activeFloatingSubTab})`
+      : `Floating · ${view.activeFloatingWindowId}`;
+  }
   const canonicalRoute = normalizeMenuRoute(view.route) ?? view.route;
+  if (canonicalRoute === 'layer-0' && view.contextMode === 'static-training-edit') {
+    return 'Edge Inspector · Static Training';
+  }
   if (canonicalRoute === 'main-menu') {
     const spec = resolveLayer1ContextSpec(view.contextMode);
     return `Main Menu (${spec.shortLabel})`;
@@ -99,10 +130,6 @@ export function formatActiveViewRoamLabel(view: ActiveViewStateSummary): string 
   return MENU_ROUTE_CONFIG[canonicalRoute]?.label || canonicalRoute;
 }
 
-/**
- * Returns the canonical sticky session context options available for the active tier,
- * always keeping 'freeplay' at the top so reviewers can reset with one click.
- */
 export function getStickySessionContextOptions(tier: 'user' | 'developer') {
   const tierVariations = LAYER1_CONTEXT_VARIATIONS.filter((v) => v.tier === tier);
   if (tier === 'user') {
@@ -110,4 +137,131 @@ export function getStickySessionContextOptions(tier: 'user' | 'developer') {
   }
   const freeplaySpec = LAYER1_CONTEXT_VARIATIONS[0];
   return [freeplaySpec, ...tierVariations];
+}
+
+export function broadcastStageTargetToWorkbench(params: {
+  currentRoute: ActiveMenuRoute;
+  settingsTab: string;
+  garageTab: string;
+  visibilityTier: MenuVisibilityTier;
+  activeFloatingWindowId: string | null;
+  activeFloatingSubTab: string;
+  stepLabel?: string;
+}): void {
+  const {
+    currentRoute,
+    settingsTab,
+    garageTab,
+    visibilityTier,
+    activeFloatingWindowId,
+    activeFloatingSubTab,
+    stepLabel,
+  } = params;
+  if (currentRoute === 'layer-0' && activeFloatingWindowId) {
+    publishCrossTabActiveTarget(
+      buildFloatingWindowCrossTabTarget({
+        windowId: activeFloatingWindowId,
+        title: stepLabel || activeFloatingWindowId,
+        subtab: activeFloatingSubTab || undefined,
+        tier: visibilityTier,
+      })
+    );
+    return;
+  }
+  publishCrossTabActiveTarget(
+    buildMenuRouteCrossTabTarget({
+      route: currentRoute,
+      settingsTab,
+      garageTab,
+      tier: visibilityTier,
+      label: stepLabel || MENU_ROUTE_CONFIG[currentRoute]?.label || currentRoute,
+    })
+  );
+}
+
+export function executeUnifiedStepTransition(params: {
+  step: UnifiedApprovalPlaylistStep;
+  nextIdx: number;
+  announceMsg?: string;
+  visibilityTier: MenuVisibilityTier;
+  stickySessionContext: Layer1MenuContextMode;
+  activeFloatingWindowId: string | null;
+  layer3StepOverride: Layer3StepOverrideState;
+  setAnchorIndex: (idx: number) => void;
+  setRouteHistory: (history: ActiveMenuRoute[]) => void;
+  setVisibilityTier: (tier: MenuVisibilityTier) => void;
+  setActiveFloatingWindowId: (id: string | null) => void;
+  setActiveFloatingSubTab: (tab: string) => void;
+  setCurrentRoute: (route: ActiveMenuRoute) => void;
+  setDisplayedRoute: (route: ActiveMenuRoute) => void;
+  setStickySessionContext: (mode: Layer1MenuContextMode) => void;
+  setSettingsTab: (tab: string) => void;
+  setGarageTab: (tab: string) => void;
+  setLayer3StepOverride: (next: Layer3StepOverrideState) => void;
+  handleSelectRoute: (
+    route: ActiveMenuRoute,
+    options?: { pushHistory?: boolean; keepFloatingWindow?: boolean }
+  ) => void;
+  showToast: (msg: string) => void;
+}): void {
+  const {
+    step,
+    nextIdx,
+    announceMsg,
+    visibilityTier,
+    stickySessionContext,
+    activeFloatingWindowId,
+    layer3StepOverride,
+    setAnchorIndex,
+    setRouteHistory,
+    setVisibilityTier,
+    setActiveFloatingWindowId,
+    setActiveFloatingSubTab,
+    setCurrentRoute,
+    setDisplayedRoute,
+    setStickySessionContext,
+    setSettingsTab,
+    setGarageTab,
+    setLayer3StepOverride,
+    handleSelectRoute,
+    showToast,
+  } = params;
+
+  setAnchorIndex(nextIdx);
+  setRouteHistory([]);
+  if (step.tier !== visibilityTier) setVisibilityTier(step.tier);
+  if (isFloatingWindowPlaylistUnit(step)) {
+    useStaticTrainingPackStore.getState().setEdgeInspectorExpanded(false);
+    setActiveFloatingWindowId(step.windowId);
+    setActiveFloatingSubTab(step.subtab || '');
+    setCurrentRoute('layer-0');
+    setDisplayedRoute('layer-0');
+    spawnFloatingPresetOnUnifiedStage(step.preset);
+    if (announceMsg) showToast(announceMsg);
+    return;
+  }
+  if (activeFloatingWindowId) {
+    setActiveFloatingWindowId(null);
+    setActiveFloatingSubTab('');
+    floatingStore.clearAll();
+  }
+  if (step.route === 'layer-0') {
+    const isEdge = step.contextMode === 'static-training-edit';
+    if (isEdge) setStickySessionContext('static-training-edit');
+    else if (stickySessionContext === 'static-training-edit') setStickySessionContext('freeplay');
+    useStaticTrainingPackStore.getState().setEdgeInspectorExpanded(isEdge);
+  } else {
+    useStaticTrainingPackStore.getState().setEdgeInspectorExpanded(false);
+    if (step.contextMode) setStickySessionContext(step.contextMode);
+    if (step.route === 'settings' && step.subtab) setSettingsTab(step.subtab);
+    if (step.route === 'garage' && step.subtab) setGarageTab(step.subtab);
+    setLayer3StepOverride({
+      progressStatus: step.progressStatus ?? 'idle',
+      currentStep: step.currentStep ?? 1,
+      defaultEditingConfig: Boolean(step.defaultEditingConfig),
+      memberSlots: step.memberSlots ?? layer3StepOverride.memberSlots ?? 3,
+    });
+  }
+  handleSelectRoute(step.route, { pushHistory: false });
+  if (announceMsg) showToast(announceMsg);
 }

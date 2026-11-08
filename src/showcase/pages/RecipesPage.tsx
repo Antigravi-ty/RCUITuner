@@ -6,6 +6,10 @@ import {
 import { Badge } from '../../ui-core/primitives/Badge';
 import { useMenuLayoutStore } from '../../ui-core/stores/menuLayoutStore';
 import { readUrlParams, updateUrlParams } from '../stores/urlSync';
+import {
+  publishCrossTabActiveTarget,
+  useCrossTabTargetFollow,
+} from '../stores/crossTabTargetFollow';
 import { useQuickNotificationStore } from '../../ui-core/stores/quickNotificationStore';
 import { dispatchOnlineRoomErrorNotification } from '../../ui-core/recipes/online/OnlineRoomCreationProgress';
 import { PageJumpDirectory, type JumpDirectoryItem } from '../PageJumpDirectory';
@@ -164,6 +168,43 @@ export const RecipesPage: React.FC<{ isLight?: boolean }> = ({ isLight = true })
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [renderMode, prevItem, nextItem, handleSelectRecipeId]);
 
+  const { activeTarget, isFollowingStage } = useCrossTabTargetFollow();
+
+  // Follow stage target updates when Following Stage is enabled
+  useEffect(() => {
+    if (!isFollowingStage) return;
+    if (
+      activeTarget.kind === 'menu-route' &&
+      activeTarget.recipeId &&
+      activeTarget.recipeId !== activeRecipeId
+    ) {
+      setActiveRecipeId(activeTarget.recipeId);
+      updateUrlParams(
+        { tab: 'recipes', recipe: activeTarget.recipeId },
+        { hash: activeTarget.recipeId }
+      );
+    }
+  }, [isFollowingStage, activeTarget.kind, activeTarget.recipeId, activeTarget.updatedAt]);
+
+  useEffect(() => {
+    const surfaceName = (
+      activeItem.name ||
+      activeItem.componentName ||
+      activeRecipeId
+    ).replace(/\s*\(.*\)$/, '');
+    publishCrossTabActiveTarget({
+      kind: 'menu-route',
+      targetId: activeTarget.route || activeRecipeId,
+      surfaceId: `recipe:${surfaceName}`,
+      label: activeItem.label || surfaceName,
+      route: activeTarget.route,
+      subtab: activeTarget.subtab,
+      recipeId: activeRecipeId,
+      tier: activeTarget.tier,
+      updatedAt: Date.now(),
+    });
+  }, [activeRecipeId, activeItem.label, activeItem.name, activeItem.componentName]);
+
   const navigationSeq = useReviewLedgerStore((s) => s.navigationSeq);
   const activeUnitKey = useReviewLedgerStore((s) => s.activeUnitKey);
   useEffect(() => {
@@ -190,13 +231,13 @@ export const RecipesPage: React.FC<{ isLight?: boolean }> = ({ isLight = true })
       <div className="flex flex-col gap-2 pb-2 border-b border-neutral-200/80 dark:border-neutral-800">
         <div className="flex items-center gap-2 flex-wrap">
           <h1 className="text-2xl font-bold tracking-tight">
-            6A · Layer 1-2-3 Menu Code Spectrum &amp; Parameter Tuner
+            Surface Workbench · Menu Surface Calibration &amp; Parameter Tuner
           </h1>
           <Badge variant="primary" size="sm" isLight={isLight}>
-            L0 → L6 → L7 Real-time Sync
+            {isFollowingStage ? `Following Stage: ${activeTarget.label}` : 'Unlinked Local Focus'}
           </Badge>
           <Badge variant="amber" size="sm" isLight={isLight}>
-            [Boost] On-demand generation mode (Click-to-Mount)
+            On-demand single-surface mounting
           </Badge>
         </div>
         <p
