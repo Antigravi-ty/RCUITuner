@@ -11,6 +11,10 @@ import {
 import { AuditTicketHeader } from '../../components/AuditTicketHeader';
 import { StageTrackpadScrubResizer } from '../../components/StageTrackpadScrubResizer';
 import { MenuLayerStageActionToolbar } from './MenuLayerStageActionToolbar';
+import {
+  FreeRoamReturnBanner,
+  StickySessionContextPill,
+} from './StickySessionContextPill';
 import { useMenuLayerSandbox } from './MenuLayerSandboxContext';
 
 export interface MenuLayerScannerAndAuditSectionProps {
@@ -24,7 +28,11 @@ export const MenuLayerScannerAndAuditSection: React.FC<
     visibilityTier,
     handleChangeVisibilityTier,
     stepPlaylistBy,
-    activePlaylistIdx,
+    anchorIndex,
+    anchorPlaylistStep,
+    isFreeRoaming,
+    activeViewRoamLabel,
+    handleReturnToAnchor,
     activePlaylist,
     activePlaylistStep,
     currentRoute,
@@ -39,7 +47,8 @@ export const MenuLayerScannerAndAuditSection: React.FC<
     setTransitionMode,
     showToast,
     auditInfo,
-    layer1ContextMode,
+    stickySessionContext,
+    setStickySessionContext,
     settingsTab,
     garageTab,
     layer3StepOverride,
@@ -91,7 +100,7 @@ export const MenuLayerScannerAndAuditSection: React.FC<
                 ? 'bg-neutral-100 hover:bg-neutral-200 border-neutral-300 text-neutral-800'
                 : 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-neutral-100'
             }`}
-            title="Previous page in linear inspection playlist (ArrowLeft ←)"
+            title="Previous page from approval anchor (ArrowLeft ←)"
           >
             <ChevronLeft className="h-3.5 w-3.5" />
             <span>Prev (←)</span>
@@ -105,15 +114,25 @@ export const MenuLayerScannerAndAuditSection: React.FC<
                 ? 'bg-neutral-100 hover:bg-neutral-200 border-neutral-300 text-neutral-800'
                 : 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-neutral-100'
             }`}
-            title="Next page in linear inspection playlist (ArrowRight →)"
+            title="Next page from approval anchor (ArrowRight →)"
           >
             <span>Next (→)</span>
             <ChevronRight className="h-3.5 w-3.5" />
           </button>
 
           <span className="px-2.5 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-bold">
-            [{activePlaylistIdx + 1}/{activePlaylist.length}] {activePlaylistStep?.label || currentRoute}
+            [{anchorIndex + 1}/{activePlaylist.length}] {anchorPlaylistStep?.label || currentRoute}
           </span>
+
+          <StickySessionContextPill
+            isLight={isLight}
+            visibilityTier={visibilityTier}
+            stickySessionContext={stickySessionContext}
+            onSelectSessionContext={(ctx) => {
+              setStickySessionContext(ctx);
+              showToast(`Session Context set to: ${ctx}`);
+            }}
+          />
         </div>
 
         {/* Quick Canvas Boundary Manual / Scrub / Lock W×H */}
@@ -129,6 +148,15 @@ export const MenuLayerScannerAndAuditSection: React.FC<
           onChangeSize={handleChangeManualBoundarySize}
         />
       </div>
+
+      <FreeRoamReturnBanner
+        isLight={isLight}
+        isFreeRoaming={isFreeRoaming}
+        activeViewRoamLabel={activeViewRoamLabel}
+        anchorIndex={anchorIndex}
+        anchorLabel={anchorPlaylistStep?.label || currentRoute}
+        onReturnToAnchor={handleReturnToAnchor}
+      />
 
       <MenuLayerStageActionToolbar
         isLight={isLight}
@@ -146,9 +174,9 @@ export const MenuLayerScannerAndAuditSection: React.FC<
         }`}
       >
         <AuditTicketHeader
-          index={activePlaylistIdx + 1}
+          index={anchorIndex + 1}
           label={
-            activePlaylistStep?.label ||
+            (isFreeRoaming ? activeViewRoamLabel : anchorPlaylistStep?.label) ||
             MENU_ROUTE_CONFIG[currentRoute]?.label ||
             currentRoute
           }
@@ -160,8 +188,9 @@ export const MenuLayerScannerAndAuditSection: React.FC<
           activeProps={{
             route: currentRoute,
             tier: visibilityTier,
+            sessionContext: stickySessionContext,
             ...(currentRoute === 'main-menu' || currentRoute === 'manage-room'
-              ? { contextMode: layer1ContextMode }
+              ? { contextMode: stickySessionContext }
               : {}),
             ...(currentRoute === 'settings' ? { activeTab: settingsTab } : {}),
             ...(currentRoute === 'garage' ? { activeTab: garageTab } : {}),

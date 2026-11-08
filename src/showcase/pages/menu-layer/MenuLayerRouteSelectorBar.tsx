@@ -12,7 +12,6 @@ import { resolveLayer1ContextSpec } from '../../../ui-core/recipes/layer1MenuCon
 import type { ActiveMenuRoute } from './menuLayerRouteConfig';
 import {
   USER_LINEAR_PLAYLIST, DEV_LINEAR_PLAYLIST,
-  findPlaylistStepIndex,
 } from './menuLayerLinearPlaylists';
 import {
   MenuLayerL1ContextualSubBar,
@@ -42,14 +41,16 @@ export const MenuLayerRouteSelectorBar = React.memo<MenuLayerRouteSelectorBarPro
     setSettingsTab,
     garageTab,
     setGarageTab,
-    showToast,
     activeRouteSize,
     feedbackToast,
     onNavigateShowcase,
     showInlineTuner,
     setShowInlineTuner,
-    layer3StepOverride,
-    setLayer3StepOverride: onChangeLayer3StepOverride,
+    anchorIndex,
+    anchorPlaylistStep,
+    activePlaylist,
+    activePlaylistStep,
+    stepPlaylistBy,
   } = useMenuLayerSandbox();
   const activeRouteSizeModeLabel = activeRouteSize.modeLabel;
   const onToggleInlineTuner = () => setShowInlineTuner((prev) => !prev);
@@ -57,51 +58,9 @@ export const MenuLayerRouteSelectorBar = React.memo<MenuLayerRouteSelectorBarPro
   const getPanelWidth = (panelId: MenuPanelId) =>
     (panels?.[panelId] ?? DEFAULT_PANEL_SIZING[panelId])?.width ?? 480;
 
-  const activePlaylist = visibilityTier === 'user' ? USER_LINEAR_PLAYLIST : DEV_LINEAR_PLAYLIST;
   const normalizedLayer1Ctx = resolveLayer1ContextSpec(layer1ContextMode).id;
-
-  const currentPlaylistIndex = findPlaylistStepIndex(
-    activePlaylist,
-    currentRoute,
-    normalizedLayer1Ctx,
-    settingsTab,
-    garageTab,
-    layer3StepOverride
-  );
-
-  const currentStep = activePlaylist[currentPlaylistIndex] || activePlaylist[0];
-
-  const applyPlaylistStep = (idx: number) => {
-    const wrapped = (idx + activePlaylist.length) % activePlaylist.length;
-    const step = activePlaylist[wrapped];
-    if (!step) return;
-    if (step.contextMode) {
-      onChangeLayer1ContextMode(step.contextMode);
-    }
-    if (step.route === 'settings' && step.subtab) {
-      setSettingsTab(step.subtab);
-    }
-    if (step.route === 'garage' && step.subtab) {
-      setGarageTab(step.subtab);
-    }
-    onChangeLayer3StepOverride?.(
-      step.progressStatus
-        ? {
-            progressStatus: step.progressStatus,
-            currentStep: step.currentStep ?? 1,
-            defaultEditingConfig: Boolean(step.defaultEditingConfig),
-            memberSlots: step.memberSlots ?? layer3StepOverride?.memberSlots ?? 3,
-          }
-        : {
-            progressStatus: 'idle',
-            currentStep: 1,
-            defaultEditingConfig: false,
-            memberSlots: step.memberSlots ?? layer3StepOverride?.memberSlots ?? 3,
-          }
-    );
-    handleSelectRoute(step.route);
-    showToast(`[${wrapped + 1}/${activePlaylist.length}] ${step.label}`);
-  };
+  const currentPlaylistIndex = anchorIndex;
+  const currentStep = anchorPlaylistStep || activePlaylistStep || activePlaylist[0];
 
   const getRouteBtnCls = (route: ActiveMenuRoute) =>
     `flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
@@ -184,7 +143,7 @@ export const MenuLayerRouteSelectorBar = React.memo<MenuLayerRouteSelectorBarPro
         <div className="flex items-center gap-2 flex-wrap">
           <button
             type="button"
-            onClick={() => applyPlaylistStep(currentPlaylistIndex - 1)}
+            onClick={() => stepPlaylistBy(-1)}
             className={stepNavBtnCls}
           >
             <ChevronLeft className="h-3.5 w-3.5" />
@@ -206,7 +165,7 @@ export const MenuLayerRouteSelectorBar = React.memo<MenuLayerRouteSelectorBarPro
 
           <button
             type="button"
-            onClick={() => applyPlaylistStep(currentPlaylistIndex + 1)}
+            onClick={() => stepPlaylistBy(1)}
             className={stepNavBtnCls}
           >
             <span>Next Page</span>

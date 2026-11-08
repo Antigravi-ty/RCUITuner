@@ -14,6 +14,7 @@ import {
   MENU_ROUTE_CONFIG,
   normalizeMenuRoute,
   type ActiveMenuRoute,
+  type LinearPlaylistStep,
   type LivePreviewAnimPhase,
   type MenuVisibilityTier,
 } from './menuLayerRouteConfig';
@@ -23,6 +24,10 @@ import {
   findPlaylistStepIndex,
   resolveRouteAuditInfo,
 } from './menuLayerLinearPlaylists';
+import {
+  doesViewMatchPlaylistStep,
+  formatActiveViewRoamLabel,
+} from './menuLayerFreeRoamUtils';
 import { useMenuLayerUrlSync } from './useMenuLayerUrlSync';
 
 const useState = createScopedSyncedState('page:menu-layer-v2');
@@ -41,12 +46,17 @@ export function useMenuLayerNavigationHandlers({
   const visibilityTier: MenuVisibilityTier =
     rawVisibilityTier === 'developer' ? 'developer' : 'user';
 
-  const [rawLayer1ContextMode, setLayer1ContextMode] = useState<Layer1MenuContextMode>(() => {
-    const p = readUrlParams();
-    return resolveLayer1ContextSpec(p.ctx).id;
-  }, 'layer1ContextMode');
-  const layer1ContextMode: Layer1MenuContextMode =
-    resolveLayer1ContextSpec(rawLayer1ContextMode).id;
+  const [rawStickySessionContext, setRawStickySessionContext] =
+    useState<Layer1MenuContextMode>(() => {
+      const p = readUrlParams();
+      return resolveLayer1ContextSpec(p.ctx).id;
+    }, 'layer1ContextMode');
+  const stickySessionContext = resolveLayer1ContextSpec(rawStickySessionContext).id;
+  const layer1ContextMode: Layer1MenuContextMode = stickySessionContext;
+  const setStickySessionContext = (mode: Layer1MenuContextMode) => {
+    setRawStickySessionContext(resolveLayer1ContextSpec(mode).id);
+  };
+  const setLayer1ContextMode = setStickySessionContext;
 
   const [rawCurrentRoute, setCurrentRoute] = useState<ActiveMenuRoute>(() => {
     const p = readUrlParams();
@@ -91,6 +101,53 @@ export function useMenuLayerNavigationHandlers({
     'layer3StepOverride'
   );
 
+  const activePlaylist = visibilityTier === 'user' ? USER_LINEAR_PLAYLIST : DEV_LINEAR_PLAYLIST;
+
+  const [rawAnchorIndex, setAnchorIndex] = useState<number>(() => {
+    const p = readUrlParams();
+    const initTier = p.tier === 'developer' ? 'developer' : 'user';
+    const initPlaylist = initTier === 'user' ? USER_LINEAR_PLAYLIST : DEV_LINEAR_PLAYLIST;
+    const initRoute = normalizeMenuRoute(p.route) ?? 'main-menu';
+    const initCtx = resolveLayer1ContextSpec(p.ctx).id;
+    const initSettingsTab = p.route !== 'garage' && p.subtab ? p.subtab : 'gameplay';
+    const initGarageTab = p.route === 'garage' && p.subtab ? p.subtab : 'car';
+    return findPlaylistStepIndex(
+      initPlaylist,
+      initRoute,
+      initCtx,
+      initSettingsTab,
+      initGarageTab
+    );
+  }, 'anchorIndex');
+
+  const anchorIndex = Math.max(0, Math.min(activePlaylist.length - 1, rawAnchorIndex));
+  const anchorPlaylistStep = activePlaylist[anchorIndex] || activePlaylist[0];
+
+  const activeViewSummary = {
+    route: currentRoute,
+    contextMode: stickySessionContext,
+    settingsTab,
+    garageTab,
+    layer3StepOverride,
+  };
+
+  const isFreeRoaming = !doesViewMatchPlaylistStep(anchorPlaylistStep, activeViewSummary);
+  const activeViewRoamLabel = formatActiveViewRoamLabel(activeViewSummary);
+
+  const matchedStepIdx = findPlaylistStepIndex(
+    activePlaylist,
+    currentRoute,
+    stickySessionContext,
+    settingsTab,
+    garageTab,
+    layer3StepOverride
+  );
+  const activePlaylistIdx = anchorIndex;
+  const activePlaylistStep =
+    (doesViewMatchPlaylistStep(activePlaylist[matchedStepIdx], activeViewSummary)
+      ? activePlaylist[matchedStepIdx]
+      : undefined) || anchorPlaylistStep;
+
   useMenuLayerUrlSync({
     visibilityTier,
     setVisibilityTier,
@@ -101,27 +158,36 @@ export function useMenuLayerNavigationHandlers({
     setSettingsTab,
     garageTab,
     setGarageTab,
-    layer1ContextMode,
-    setLayer1ContextMode,
+    layer1ContextMode: stickySessionContext,
+    setLayer1ContextMode: setStickySessionContext,
   });
 
-  const activePlaylist = visibilityTier === 'user' ? USER_LINEAR_PLAYLIST : DEV_LINEAR_PLAYLIST;
-  const activePlaylistIdx = findPlaylistStepIndex(
-    activePlaylist,
-    currentRoute,
-    layer1ContextMode,
-    settingsTab,
-    garageTab,
-    layer3StepOverride
-  );
-  const activePlaylistStep = activePlaylist[activePlaylistIdx] || activePlaylist[0];
   const auditInfo = resolveRouteAuditInfo(currentRoute, visibilityTier);
+
+  const applyPlaylistStepState = (step: LinearPlaylistStep, nextIdx: number) => {
+    setAnchorIndex(nextIdx);
+    setRouteHistory([]);
+    if (step.contextMode) {
+      setStickySessionContext(step.contextMode);
+    }
+    if (step.route === 'settings' && step.subtab) setSettingsTab(step.subtab);
+    if (step.route === 'garage' && step.subtab) setGarageTab(step.subtab);
+    setLayer3StepOverride({
+      progressStatus: step.progressStatus ?? 'idle',
+      currentStep: step.currentStep ?? 1,
+      defaultEditingConfig: Boolean(step.defaultEditingConfig),
+      memberSlots: step.memberSlots ?? layer3StepOverride.memberSlots ?? 3,
+    });
+    handleSelectRoute(step.route, { pushHistory: false });
+  };
 
   const handleChangeVisibilityTier = (nextTier: MenuVisibilityTier) => {
     setVisibilityTier(nextTier);
+    setAnchorIndex(0);
+    setRouteHistory([]);
     if (nextTier === 'developer') {
-      if (layer1ContextMode !== 'dev-test-lab' && layer1ContextMode !== 'exp-multi-bots') {
-        setLayer1ContextMode('dev-test-lab');
+      if (stickySessionContext !== 'dev-test-lab' && stickySessionContext !== 'exp-multi-bots') {
+        setStickySessionContext('dev-test-lab');
       }
       setSettingsTab('developer');
       const cfg = MENU_ROUTE_CONFIG[currentRoute];
@@ -130,8 +196,8 @@ export function useMenuLayerNavigationHandlers({
         setDisplayedRoute('settings');
       }
     } else {
-      if (layer1ContextMode === 'dev-test-lab' || layer1ContextMode === 'exp-multi-bots') {
-        setLayer1ContextMode('freeplay');
+      if (stickySessionContext === 'dev-test-lab' || stickySessionContext === 'exp-multi-bots') {
+        setStickySessionContext('freeplay');
       }
       if (settingsTab === 'developer') {
         setSettingsTab('gameplay');
@@ -243,21 +309,23 @@ export function useMenuLayerNavigationHandlers({
     handleSelectRoute(fallbackParent, { pushHistory: false });
   };
 
-  const stepPlaylistBy = (delta: 1 | -1) => {
-    const nextIdx = (activePlaylistIdx + delta + activePlaylist.length) % activePlaylist.length;
+  const stepPlaylistToIndex = (rawIndex: number) => {
+    const nextIdx = (rawIndex + activePlaylist.length) % activePlaylist.length;
     const step = activePlaylist[nextIdx];
     if (!step) return;
-    if (step.contextMode) setLayer1ContextMode(step.contextMode);
-    if (step.route === 'settings' && step.subtab) setSettingsTab(step.subtab);
-    if (step.route === 'garage' && step.subtab) setGarageTab(step.subtab);
-    setLayer3StepOverride({
-      progressStatus: step.progressStatus ?? 'idle',
-      currentStep: step.currentStep ?? 1,
-      defaultEditingConfig: Boolean(step.defaultEditingConfig),
-      memberSlots: step.memberSlots ?? layer3StepOverride.memberSlots ?? 3,
-    });
-    handleSelectRoute(step.route);
+    applyPlaylistStepState(step, nextIdx);
     showToast(`[${nextIdx + 1}/${activePlaylist.length}] ${step.label}`);
+  };
+
+  const stepPlaylistBy = (delta: 1 | -1) => {
+    stepPlaylistToIndex(anchorIndex + delta);
+  };
+
+  const handleReturnToAnchor = () => {
+    const step = activePlaylist[anchorIndex];
+    if (!step) return;
+    applyPlaylistStepState(step, anchorIndex);
+    showToast(`Returned to #${anchorIndex + 1} ${step.label}`);
   };
 
   useEffect(() => {
@@ -276,7 +344,7 @@ export function useMenuLayerNavigationHandlers({
           handleToggleLivePreview();
         } else if (
           currentRoute === 'layer-0' &&
-          layer1ContextMode === 'static-training-edit'
+          stickySessionContext === 'static-training-edit'
         ) {
           e.preventDefault();
           useStaticTrainingPackStore.getState().toggleEdgeInspectorExpanded();
@@ -293,18 +361,20 @@ export function useMenuLayerNavigationHandlers({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [
     currentRoute,
-    layer1ContextMode,
+    stickySessionContext,
     liveAnimPhase,
     lastParentRoute,
     routeHistory,
     activePlaylist,
-    activePlaylistIdx,
+    anchorIndex,
   ]);
 
   return {
     visibilityTier,
-    layer1ContextMode,
-    setLayer1ContextMode,
+    layer1ContextMode: stickySessionContext,
+    setLayer1ContextMode: setStickySessionContext,
+    stickySessionContext,
+    setStickySessionContext,
     currentRoute,
     displayedRoute,
     transitionMode,
@@ -323,6 +393,10 @@ export function useMenuLayerNavigationHandlers({
     activePlaylist,
     activePlaylistIdx,
     activePlaylistStep,
+    anchorIndex,
+    anchorPlaylistStep,
+    isFreeRoaming,
+    activeViewRoamLabel,
     auditInfo,
     handleChangeVisibilityTier,
     handleSelectRoute,
@@ -330,5 +404,7 @@ export function useMenuLayerNavigationHandlers({
     handleTriggerExpand,
     handleNavigateBack,
     stepPlaylistBy,
+    stepPlaylistToIndex,
+    handleReturnToAnchor,
   };
 }

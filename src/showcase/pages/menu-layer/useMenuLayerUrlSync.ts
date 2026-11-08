@@ -84,7 +84,7 @@ export function useMenuLayerUrlSync({
         tier: visibilityTier,
         route: normalizeMenuRoute(currentRoute) ?? currentRoute,
         subtab,
-        ctx: currentRoute === 'main-menu' ? layer1ContextMode : null,
+        ctx: layer1ContextMode,
       },
       { push: shouldPush }
     );

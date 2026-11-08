@@ -64,6 +64,8 @@ export interface MenuLayerSandboxContextValue {
   handleChangeVisibilityTier: (tier: MenuVisibilityTier) => void;
   layer1ContextMode: Layer1MenuContextMode;
   setLayer1ContextMode: (mode: Layer1MenuContextMode) => void;
+  stickySessionContext: Layer1MenuContextMode;
+  setStickySessionContext: (mode: Layer1MenuContextMode) => void;
   touchMode: boolean;
   setTouchMode: (v: boolean) => void;
   settingsTab: string;
@@ -83,6 +85,12 @@ export interface MenuLayerSandboxContextValue {
   layer3StepOverride: Layer3StepOverrideState;
   setLayer3StepOverride: (next: Layer3StepOverrideState) => void;
   stepPlaylistBy: (delta: -1 | 1) => void;
+  stepPlaylistToIndex: (index: number) => void;
+  handleReturnToAnchor: () => void;
+  anchorIndex: number;
+  anchorPlaylistStep: LinearPlaylistStep | undefined;
+  isFreeRoaming: boolean;
+  activeViewRoamLabel: string;
   activePlaylistIdx: number;
   activePlaylist: LinearPlaylistStep[];
   activePlaylistStep: LinearPlaylistStep | undefined;
