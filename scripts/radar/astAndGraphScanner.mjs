@@ -14,7 +14,12 @@ import {
 export function walkSourceFiles(dir, acc = []) {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   for (const entry of entries) {
-    if (entry.name === 'node_modules' || entry.name === 'dist' || entry.name.startsWith('.')) {
+    if (
+      entry.name === 'node_modules' ||
+      entry.name === 'dist' ||
+      entry.name === 'scripts' ||
+      entry.name.startsWith('.')
+    ) {
       continue;
     }
     const fullPath = path.join(dir, entry.name);
@@ -60,13 +65,18 @@ export function resolveImportTarget(fromFileAbs, importSpec) {
 
 export function checkLockfileInvariants() {
   const violations = [];
-  for (const forbiddenLock of ['package-lock.json', 'yarn.lock']) {
+  for (const forbiddenLock of ['package-lock.json', 'yarn.lock', 'bun.lockb', 'bun.lock']) {
     const absLock = path.join(ROOT_DIR, forbiddenLock);
     if (fs.existsSync(absLock)) {
       violations.push(
         `[DUPLICATE LOCKFILE VIOLATION] Found "${forbiddenLock}" alongside "pnpm-lock.yaml". Delete "${forbiddenLock}".`
       );
     }
+  }
+  if (!fs.existsSync(path.join(ROOT_DIR, 'pnpm-lock.yaml'))) {
+    violations.push(
+      '[LOCKFILE HYGIENE VIOLATION] Missing "pnpm-lock.yaml" in repository root.'
+    );
   }
   return violations;
 }

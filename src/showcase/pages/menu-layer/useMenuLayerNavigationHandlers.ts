@@ -30,6 +30,7 @@ import {
   type UnifiedPlaylistScope,
 } from './menuLayerLinearPlaylists';
 import {
+  bindMenuLayerStageKeydown,
   broadcastStageTargetToWorkbench,
   doesViewMatchPlaylistStep,
   executeUnifiedStepTransition,
@@ -405,46 +406,32 @@ export function useMenuLayerNavigationHandlers({
     if (step) applyUnifiedStep(step, anchorIndex, `Returned to #${anchorIndex + 1} ${step.label}`);
   };
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.defaultPrevented || dialogue.getCount() > 0) return;
-      const target = e.target as HTMLElement | null;
-      const isEditable =
-        target &&
-        (target.tagName === 'INPUT' ||
-          target.tagName === 'TEXTAREA' ||
-          target.tagName === 'SELECT' ||
-          target.isContentEditable);
-      if (e.key === 'Tab') {
-        if (currentRoute === 'trajectory' || currentRoute === 'camera') {
-          e.preventDefault();
-          if (liveAnimPhase === 'expanded') handleTriggerCollapse();
-          else if (liveAnimPhase === 'collapsed') handleTriggerExpand();
-        } else if (currentRoute === 'layer-0' && stickySessionContext === 'static-training-edit') {
-          e.preventDefault();
-          useStaticTrainingPackStore.getState().toggleEdgeInspectorExpanded();
-        }
-      } else if (e.key === 'Escape') {
-        e.preventDefault();
-        handleNavigateBack();
-      } else if (!isEditable && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
-        e.preventDefault();
-        stepPlaylistBy(e.key === 'ArrowRight' ? 1 : -1);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [
-    currentRoute,
-    stickySessionContext,
-    liveAnimPhase,
-    lastParentRoute,
-    routeHistory,
-    activePlaylist,
-    anchorIndex,
-    activeFloatingWindowId,
-    activeFloatingSubTab,
-  ]);
+  useEffect(
+    () =>
+      bindMenuLayerStageKeydown({
+        currentRoute,
+        stickySessionContext,
+        liveAnimPhase,
+        isModalOpen: () => dialogue.getCount() > 0,
+        onTriggerCollapse: handleTriggerCollapse,
+        onTriggerExpand: handleTriggerExpand,
+        onToggleEdgeInspector: () =>
+          useStaticTrainingPackStore.getState().toggleEdgeInspectorExpanded(),
+        onNavigateBack: handleNavigateBack,
+        onStepPlaylist: stepPlaylistBy,
+      }),
+    [
+      currentRoute,
+      stickySessionContext,
+      liveAnimPhase,
+      lastParentRoute,
+      routeHistory,
+      activePlaylist,
+      anchorIndex,
+      activeFloatingWindowId,
+      activeFloatingSubTab,
+    ]
+  );
 
   return {
     playlistScope,

@@ -265,3 +265,48 @@ export function executeUnifiedStepTransition(params: {
   handleSelectRoute(step.route, { pushHistory: false });
   if (announceMsg) showToast(announceMsg);
 }
+
+export function bindMenuLayerStageKeydown(params: {
+  currentRoute: ActiveMenuRoute;
+  stickySessionContext: Layer1MenuContextMode;
+  liveAnimPhase: string;
+  isModalOpen: () => boolean;
+  onTriggerCollapse: () => void;
+  onTriggerExpand: () => void;
+  onToggleEdgeInspector: () => void;
+  onNavigateBack: () => void;
+  onStepPlaylist: (delta: 1 | -1) => void;
+}): () => void {
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.defaultPrevented || params.isModalOpen()) return;
+    const target = e.target as HTMLElement | null;
+    const isEditable =
+      target &&
+      (target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.tagName === 'SELECT' ||
+        target.isContentEditable);
+    if (e.key === 'Tab') {
+      if (params.currentRoute === 'trajectory' || params.currentRoute === 'camera') {
+        e.preventDefault();
+        if (params.liveAnimPhase === 'expanded') params.onTriggerCollapse();
+        else if (params.liveAnimPhase === 'collapsed') params.onTriggerExpand();
+      } else if (
+        params.currentRoute === 'layer-0' &&
+        params.stickySessionContext === 'static-training-edit'
+      ) {
+        e.preventDefault();
+        params.onToggleEdgeInspector();
+      }
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      params.onNavigateBack();
+    } else if (!isEditable && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+      e.preventDefault();
+      params.onStepPlaylist(e.key === 'ArrowRight' ? 1 : -1);
+    }
+  };
+  window.addEventListener('keydown', handleKeyDown);
+  return () => window.removeEventListener('keydown', handleKeyDown);
+}
+
