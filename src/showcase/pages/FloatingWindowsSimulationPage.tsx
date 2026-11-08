@@ -1,6 +1,11 @@
 import React, { useRef, useEffect, useMemo } from 'react';
 import { quickNotification } from '../../ui-core/stores/quickNotificationStore';
 import { createScopedSyncedState } from '../stores/crossClientSync';
+import {
+  buildFloatingWindowCrossTabTarget,
+  publishCrossTabActiveTarget,
+  useCrossTabTargetFollow,
+} from '../stores/crossTabTargetFollow';
 import { readUrlParams, updateUrlParams } from '../stores/urlSync';
 import { AppWindow } from 'lucide-react';
 import { floatingSandboxStore, useFloatingStore } from '../../ui-core/stores/floatingStore';
@@ -144,6 +149,44 @@ export const FloatingWindowsSimulationPage: React.FC<FloatingWindowsSimulationPa
     setActiveSubTab,
   });
 
+  const { activeTarget, isFollowingStage } = useCrossTabTargetFollow();
+
+  useEffect(() => {
+    if (!isFollowingStage) return;
+    if (
+      activeTarget.kind === 'floating-window' &&
+      activeTarget.floatingWindowId &&
+      activeTarget.floatingWindowId !== selectedWindowId
+    ) {
+      if (activeTarget.tier && activeTarget.tier !== tier) {
+        setTier(activeTarget.tier);
+      }
+      setSelectedWindowId(activeTarget.floatingWindowId);
+      if (activeTarget.subtab !== undefined) {
+        setActiveSubTab(activeTarget.subtab);
+      }
+    }
+  }, [
+    isFollowingStage,
+    activeTarget.kind,
+    activeTarget.floatingWindowId,
+    activeTarget.subtab,
+    activeTarget.tier,
+    activeTarget.updatedAt,
+  ]);
+
+  useEffect(() => {
+    if (!currentPreset) return;
+    publishCrossTabActiveTarget(
+      buildFloatingWindowCrossTabTarget({
+        windowId: currentPreset.id,
+        title: currentPreset.title,
+        subtab: activeSubTab || currentPreset.tabs?.[0]?.id,
+        tier,
+      })
+    );
+  }, [currentPreset?.id, currentPreset?.title, activeSubTab, tier]);
+
   useEffect(() => {
     updateUrlParams({
       tier,
@@ -271,7 +314,7 @@ export const FloatingWindowsSimulationPage: React.FC<FloatingWindowsSimulationPa
           </div>
           <div>
             <h1 className="text-2xl font-bold tracking-tight">
-              6D · Floating Window Suite
+              Surface Workbench · Floating Window Calibration Suite
             </h1>
             <p className={`text-xs mt-0.5 ${isLight ? 'text-neutral-500' : 'text-neutral-400'}`}>
               Static top-pinned View Box stage — all window scanners, boundary locks, mode switchers, and Clear All Windows actions operate below the View Box.

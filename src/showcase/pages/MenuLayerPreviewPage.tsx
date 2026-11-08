@@ -2,6 +2,10 @@ import React, { useState as useLocalState, useEffect, useRef } from 'react';
 import { Layers } from 'lucide-react';
 import type { MenuPanelWidthAdaptiveMode } from '../../ui-core/navigation/menuPanelAdaptive';
 import { crossClientSync, createScopedSyncedState } from '../stores/crossClientSync';
+import {
+  buildFloatingWindowCrossTabTarget,
+  publishCrossTabActiveTarget,
+} from '../stores/crossTabTargetFollow';
 import { useViewportStore } from '../../ui-core/stores/viewportStore';
 const useState = createScopedSyncedState('page:menu-layer-v2');
 import { floatingStore, useFloatingStore } from '../../ui-core/stores/floatingStore';
@@ -165,7 +169,15 @@ export const MenuLayerPreviewPage: React.FC<MenuLayerPreviewPageProps> = ({
   const handleAddPresetWindow = (preset: PresetConfig, e: React.MouseEvent<HTMLButtonElement>) => {
     if (!stageRef.current) return;
     floatingStore.spawnWithFlight(preset, e.currentTarget, stageRef.current);
-    showToast(`[ok] Has set "${preset.title}" Collapse to top-right corner Stack`);
+    publishCrossTabActiveTarget(
+      buildFloatingWindowCrossTabTarget({
+        windowId: preset.id,
+        title: preset.title,
+        subtab: preset.tabs?.[0]?.id,
+        tier: preset.tier || visibilityTier,
+      })
+    );
+    showToast(`[ok] Spawned "${preset.title}" into top-right Floating Stack`);
   };
 
   const isDockState =
@@ -352,12 +364,12 @@ export const MenuLayerPreviewPage: React.FC<MenuLayerPreviewPageProps> = ({
     handleResetAutoMinWidth,
   };
 
-  const handleReset7ADefaults = () => {
+  const handleResetStageDefaults = () => {
     crossClientSync.resetAll({ scopePrefix: 'page:menu-layer-v2:' });
-    showToast('[ok] Reset 7A Menu Layer adaptive engine and route sandbox defaults');
+    showToast('[ok] Reset Unified Approval Stage adaptive engine and route defaults');
   };
 
-  const build7AExportCode = () => {
+  const buildStageExportCode = () => {
     const snapshot = {
       routeState: {
         visibilityTier,
@@ -384,7 +396,7 @@ export const MenuLayerPreviewPage: React.FC<MenuLayerPreviewPageProps> = ({
         ballSimSpeed,
       },
     };
-    return `// 7A Menu Layer Adaptive Engine & Route Sandbox Default Snapshot\nexport const DEFAULT_7A_MENU_LAYER_SNAPSHOT = ${JSON.stringify(snapshot, null, 2)};`;
+    return `// Unified Approval Stage Adaptive Engine & Route Snapshot\nexport const DEFAULT_APPROVAL_STAGE_SNAPSHOT = ${JSON.stringify(snapshot, null, 2)};`;
   };
 
   return (
@@ -392,13 +404,15 @@ export const MenuLayerPreviewPage: React.FC<MenuLayerPreviewPageProps> = ({
       <div className="flex flex-col gap-5 w-full">
         <div className="flex items-center justify-between gap-4 pb-2 border-b border-neutral-200/80 dark:border-neutral-800">
           <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
+            <div className="h-8 w-8 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0">
               <Layers className="h-5 w-5" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight">7A · Menu Layer Live Preview</h1>
+              <h1 className="text-2xl font-bold tracking-tight">
+                Unified Approval Stage · Rocket Companion UI Stand-In
+              </h1>
               <p className={`text-xs mt-0.5 ${isLight ? 'text-neutral-500' : 'text-neutral-400'}`}>
-                Static top-pinned View Box stage — all route scanners, boundary locks, and layout tuners operate below the View Box so nothing above it ever changes.
+                Clean interactive acceptance stage with trackpad scrub resizer, linear review stepper, cross-tab Surface Workbench target broadcasting, and smart tiered diff export.
               </p>
             </div>
           </div>
@@ -415,22 +429,22 @@ export const MenuLayerPreviewPage: React.FC<MenuLayerPreviewPageProps> = ({
         <MenuLayerRouteSelectorBar isLight={isLight} />
 
         <TunerConfigExporterBar
-          badge="7A-EXPORT"
-          title="Menu Layer Adaptive Engine & Route Sandbox One-Click Config Exporter"
-          subtitle="Exports 7A adaptive widthMode, canvas boundary lock, manual min-width overrides, transitionMode & active route/tier snapshot"
-          copyLabel="Copy 7A Menu Layer Config (Export Snapshot)"
-          codeTitle="Current 7A Menu Layer Adaptive & Route Parameter Snapshot (Paste directly into DEFAULT_7A_MENU_LAYER_SNAPSHOT)"
-          actionId="export-7a-menu-layer-config"
+          badge="STAGE-EXPORT"
+          title="Unified Approval Stage Adaptive Engine & Route Snapshot Exporter"
+          subtitle="Exports adaptive widthMode, canvas boundary lock, manual min-width overrides, transitionMode & active route/tier snapshot"
+          copyLabel="Copy Stage Config (Export Snapshot)"
+          codeTitle="Current Unified Approval Stage Adaptive & Route Parameter Snapshot"
+          actionId="export-approval-stage-config"
           isLight={isLight}
-          buildExportCode={build7AExportCode}
-          onResetDefaults={handleReset7ADefaults}
+          buildExportCode={buildStageExportCode}
+          onResetDefaults={handleResetStageDefaults}
         />
 
         <PageJumpDirectory
-          title={`7A · Menu Layer Full-link sandbox quick-jump directory (${
+          title={`Unified Approval Stage Surface Directory (${
             visibilityTier === 'user' ? 'User Only View' : 'Developer Only View'
           })`}
-          subtitle="Click any card to immediately load the L6 Menu component into the fluid stage above · Click copy icon to copy standard reference name"
+          subtitle="Click any card to immediately load the surface into the interactive stage above"
           items={MENU_SANDBOX_JUMP_ITEMS.filter((item) => item.tier === visibilityTier)}
           onSelect={(item) => {
             const r = (item as JumpDirectoryItem & { route?: ActiveMenuRoute }).route;

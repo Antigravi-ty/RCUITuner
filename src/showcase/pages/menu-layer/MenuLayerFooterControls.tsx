@@ -83,11 +83,11 @@ export const MenuLayerFooterControls: React.FC<MenuLayerFooterControlsProps> = (
                     ? 'bg-white hover:bg-neutral-100 border-neutral-300 text-neutral-800 shadow-2xs'
                     : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-700 text-neutral-200 shadow-2xs'
                 }`}
-                title="No Need to Leave 7A Sandbox, Expand directly on current page/Collapse this node panel and SettingActionRow Internal row real-time tuner"
+                title="Expand or collapse inline quick-tuner directly on the Approval Stage"
               >
                 <Sliders className="h-3 w-3" />
                 <span>
-                  {showInlineTuner ? 'Collapse Inline Quick-Tuning' : 'Quick in-place node adjustment'}
+                  {showInlineTuner ? 'Collapse Inline Quick-Tuning' : 'Quick In-Place Node Tuning'}
                 </span>
               </button>
             )}
@@ -102,9 +102,9 @@ export const MenuLayerFooterControls: React.FC<MenuLayerFooterControlsProps> = (
                   )
                 }
                 className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold border transition-all cursor-pointer active:scale-95 bg-amber-500 hover:bg-amber-400 text-neutral-950 border-amber-400 shadow-2xs"
-                title={`One-click jump to independent tuning page: [${pageRecipeTarget.code}] ${pageRecipeTarget.componentName}`}
+                title={`One-click jump to Surface Workbench tuner: ${pageRecipeTarget.componentName}`}
               >
-                <span>Jump to current page settings [{pageRecipeTarget.code}]</span>
+                <span>Open in Surface Workbench ({pageRecipeTarget.componentName})</span>
                 <ArrowUpRight className="h-3.5 w-3.5 stroke-[2.5]" />
               </button>
             )}
@@ -114,7 +114,7 @@ export const MenuLayerFooterControls: React.FC<MenuLayerFooterControlsProps> = (
         {onNavigateShowcase && elementTargets.length > 0 && (
           <div className="flex items-center gap-1.5 flex-wrap pt-2 border-t border-neutral-200/70 dark:border-neutral-800/70">
             <span className="text-[11px] text-neutral-400 shrink-0">
-              Internal element tuning jump for current page:
+              Underlying Primitives &amp; Tuners:
             </span>
             {elementTargets.map((target) => (
               <button
@@ -126,12 +126,12 @@ export const MenuLayerFooterControls: React.FC<MenuLayerFooterControlsProps> = (
                     ? 'bg-white hover:bg-amber-50 border-neutral-200/90 hover:border-amber-400 text-neutral-700 hover:text-amber-700 shadow-2xs'
                     : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-800 hover:border-amber-500/60 text-neutral-300 hover:text-amber-300'
                 }`}
-                title={`Jump to independent underlying component tuning page: [${target.code}] ${target.componentName}`}
+                title={`Jump to component tuner: ${target.componentName}`}
               >
                 <span className="px-1 py-0.2 rounded text-[9.5px] font-extrabold bg-amber-500/15 text-amber-600 dark:text-amber-400">
-                  {target.code}
+                  {target.componentName}
                 </span>
-                <span>{target.label}</span>
+                <span>{target.label.replace(/^[0-9A-Z.-]+\s+/, '')}</span>
                 <ArrowUpRight className="h-3 w-3 opacity-70" />
               </button>
             ))}

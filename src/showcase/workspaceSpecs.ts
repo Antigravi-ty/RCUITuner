@@ -32,20 +32,27 @@ export type ShowcaseTab =
   | 'layer-preview'
   | 'notification-integration';
 
-export type TunerWorkspaceId = 'alpha' | 'bravo';
+export type TunerWorkspaceId = 'primitives' | 'workbench' | 'approval';
+
+export const WORKSPACE_ORDER: readonly TunerWorkspaceId[] = [
+  'primitives',
+  'workbench',
+  'approval',
+] as const;
 
 export type WorkspaceSectionId =
-  | 'alpha-0'
-  | 'alpha-1'
-  | 'alpha-2'
-  | 'alpha-3'
-  | 'alpha-4'
-  | 'bravo-1'
-  | 'bravo-2'
-  | 'bravo-3';
+  | 'primitives-0'
+  | 'primitives-1'
+  | 'primitives-2'
+  | 'primitives-3'
+  | 'workbench-1'
+  | 'workbench-2'
+  | 'approval-1'
+  | 'approval-2';
 
 export interface TunerWorkspaceSpec {
   id: TunerWorkspaceId;
+  index: 1 | 2 | 3;
   code: string;
   shortLabel: string;
   title: string;
@@ -55,27 +62,41 @@ export interface TunerWorkspaceSpec {
 }
 
 export const WORKSPACE_SPECS: Record<TunerWorkspaceId, TunerWorkspaceSpec> = {
-  alpha: {
-    id: 'alpha',
-    code: 'WORKSPACE ALPHA',
-    shortLabel: 'Alpha · Master Primitives & Component Lab',
-    title: 'Foundational Master Primitives & Isolated Component Lab',
+  primitives: {
+    id: 'primitives',
+    index: 1,
+    code: 'WORKSPACE 1 · PRIMITIVES',
+    shortLabel: '1 · UI Primitives & Lab',
+    title: 'UI Primitives & Motion Lab',
     subtitle:
-      'L0–L5 Tokens, Atomic Primitives, Universal 3-Stage Shells & In-Game HUD/Spatial Labs',
+      'Typography, Color Tokens, Buttons, Sliders, Setting Rows, UnderlineTabs, Container Shells & Morphing Curves',
     defaultTab: 'panels',
     badgeColor:
       'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30',
   },
-  bravo: {
-    id: 'bravo',
-    code: 'WORKSPACE BRAVO',
-    shortLabel: 'Bravo · Panel Approval & Calibration Pipeline',
-    title: 'Integrated Panel Approval & Calibration Pipeline',
+  workbench: {
+    id: 'workbench',
+    index: 2,
+    code: 'WORKSPACE 2 · WORKBENCH',
+    shortLabel: '2 · Surface Workbench',
+    title: 'Surface Calibration & Parameter Workbench',
     subtitle:
-      'L6–L7 Menu Recipes, Floating Windows, 3-Layer Semantic Approval & Calibration Overlay',
+      'Menu Adaptive Sizing, Floating Window Presets, HUD Spatial Choreography & Auto-Reflected Surface Tuners',
     defaultTab: 'recipes',
     badgeColor:
       'bg-sky-500/15 text-sky-600 dark:text-sky-400 border-sky-500/30',
+  },
+  approval: {
+    id: 'approval',
+    index: 3,
+    code: 'WORKSPACE 3 · APPROVAL STAGE',
+    shortLabel: '3 · Unified Approval Stage',
+    title: 'Unified Approval Stage',
+    subtitle:
+      'Clean Rocket Companion Interactive Acceptance Stage, Linear Review Queue, Trackpad Scrub Resizer & Smart Diff Export',
+    defaultTab: 'layer-preview',
+    badgeColor:
+      'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30',
   },
 };
 
@@ -89,75 +110,75 @@ export interface WorkspaceSectionMeta {
 }
 
 export const WORKSPACE_SECTIONS: Record<WorkspaceSectionId, WorkspaceSectionMeta> = {
-  'alpha-0': {
-    id: 'alpha-0',
-    workspace: 'alpha',
-    code: 'ALPHA-0',
+  'primitives-0': {
+    id: 'primitives-0',
+    workspace: 'primitives',
+    code: 'PRIMITIVES · ARCH',
     title: 'Architecture & Dependency Pyramid',
-    rule: 'Unidirectional L0→L7 dependency contract & zero-barrel module addressing',
+    rule: 'Unidirectional L0->L7 dependency contract & zero-barrel module addressing',
     badgeColor:
       'bg-neutral-500/15 text-neutral-600 dark:text-neutral-300 border-neutral-400/30',
   },
-  'alpha-1': {
-    id: 'alpha-1',
-    workspace: 'alpha',
-    code: 'ALPHA-1',
-    title: 'Design Tokens & Foundations (L0)',
+  'primitives-1': {
+    id: 'primitives-1',
+    workspace: 'primitives',
+    code: 'PRIMITIVES · TOKENS',
+    title: 'Design Tokens & Foundations',
     rule: 'Static color, corner radius, spacing, easing & visual tone tokens',
     badgeColor:
       'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30',
   },
-  'alpha-2': {
-    id: 'alpha-2',
-    workspace: 'alpha',
-    code: 'ALPHA-2',
-    title: 'Atomic Primitives & Compounds (L1/L3)',
-    rule: 'UnderlineTabs, SliderControl, SettingActionRow, Dialogue & QuickNotification',
+  'primitives-2': {
+    id: 'primitives-2',
+    workspace: 'primitives',
+    code: 'PRIMITIVES · ATOMIC',
+    title: 'Atomic Controls & Compound Rows',
+    rule: 'UnderlineTabs, SliderControl, DualGrabber, SettingActionRow, Dialogue & QuickNotification',
     badgeColor:
       'bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/30',
   },
-  'alpha-3': {
-    id: 'alpha-3',
-    workspace: 'alpha',
-    code: 'ALPHA-3',
-    title: 'Universal 3-Stage Shells & Motion (L2/L4)',
-    rule: 'Menu & Floating 3-Stage Shell, PlayModeCard, Stacks & Morphing Transitions',
+  'primitives-3': {
+    id: 'primitives-3',
+    workspace: 'primitives',
+    code: 'PRIMITIVES · SHELLS',
+    title: 'Container Shells, Cards & Motion Lab',
+    rule: '3-Stage Universal Shell, Floating Window Shell, PlayModeCard, Stacks & Morphing Curves',
     badgeColor:
       'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/30',
   },
-  'alpha-4': {
-    id: 'alpha-4',
-    workspace: 'alpha',
-    code: 'ALPHA-4',
-    title: 'In-Game HUD & Spatial Projection (L5)',
-    rule: '5A Match HUD · 5B Charts · 5C Safe Area · 5D Loading · 5E Alert · 5G Takeover · 5H NameTag',
-    badgeColor:
-      'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30',
-  },
-  'bravo-1': {
-    id: 'bravo-1',
-    workspace: 'bravo',
-    code: 'BRAVO-1',
-    title: 'Menu Recipes & State Matrix Stage (6A/7A)',
-    rule: 'Store-First Menu Recipes, Multi-State Matrix Shootout & Full-Tree Sandbox',
+  'workbench-1': {
+    id: 'workbench-1',
+    workspace: 'workbench',
+    code: 'WORKBENCH · SURFACES',
+    title: 'Business Surface & Window Calibration',
+    rule: 'Menu Surface Tuners, Floating Window Min-Width/Height Calibration & AutoConfigTunerPanel',
     badgeColor:
       'bg-sky-500/15 text-sky-600 dark:text-sky-400 border-sky-500/30',
   },
-  'bravo-2': {
-    id: 'bravo-2',
-    workspace: 'bravo',
-    code: 'BRAVO-2',
-    title: 'Floating Windows & Flat Matrix Wall (6D)',
-    rule: 'User & Dev Floating Windows, Sizing Calibration & Multi-Tab Matrix Audit',
+  'workbench-2': {
+    id: 'workbench-2',
+    workspace: 'workbench',
+    code: 'WORKBENCH · HUD',
+    title: 'In-Game HUD & Spatial Choreography',
+    rule: 'Match HUD, Telemetry Charts, Safe Area, Loading Pipeline, Alerts, Takeover & NameTag Tuners',
     badgeColor:
-      'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/30',
+      'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30',
   },
-  'bravo-3': {
-    id: 'bravo-3',
-    workspace: 'bravo',
-    code: 'BRAVO-3',
-    title: 'Dock, Edge Inspector & Stress Suites (6C/6E/7B)',
-    rule: 'Live Preview Dock, Edge Inspector Drawer & Concurrent Notification Regression',
+  'approval-1': {
+    id: 'approval-1',
+    workspace: 'approval',
+    code: 'APPROVAL · STAGE',
+    title: 'Unified Approval Stage',
+    rule: 'Rocket Companion UI Stand-in, Trackpad Resizer, Linear Stepper & Smart Tiered Diff Export',
+    badgeColor:
+      'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30',
+  },
+  'approval-2': {
+    id: 'approval-2',
+    workspace: 'approval',
+    code: 'APPROVAL · DOCKS',
+    title: 'Interactive Docks & Concurrency Verification',
+    rule: 'Live Preview Side Pill Dock, Edge Inspector Drawer & Notification Concurrency Suite',
     badgeColor:
       'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30',
   },
@@ -200,6 +221,23 @@ export function getApprovalLedgerSummary(): ApprovalLedgerSummary {
     calibratedCount: Object.keys(SURFACE_CALIBRATION_OVERRIDES ?? {}).length,
     templateHash: UI_APPROVAL_LEDGER.templateHash || 'n/a',
   };
+}
+
+export function normalizeWorkspaceId(
+  rawWorkspace?: string | null
+): TunerWorkspaceId | null {
+  if (!rawWorkspace) return null;
+  const clean = rawWorkspace.trim().toLowerCase();
+  if (clean === 'primitives' || clean === 'alpha' || clean === '1') {
+    return 'primitives';
+  }
+  if (clean === 'workbench' || clean === 'tuner' || clean === '2') {
+    return 'workbench';
+  }
+  if (clean === 'approval' || clean === 'bravo' || clean === 'stage' || clean === '3') {
+    return 'approval';
+  }
+  return null;
 }
 
 export function syncWorkspaceUrlParam(workspace: TunerWorkspaceId): void {

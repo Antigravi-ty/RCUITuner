@@ -6,6 +6,7 @@ import {
   X,
   CheckCircle2,
   FlaskConical,
+  Sliders,
   ClipboardCheck,
   Layers,
   ArrowLeft,
@@ -13,6 +14,7 @@ import {
 import { useAccentStore } from './stores/themeStore';
 import { AccentColor } from '../ui-core/tokens/colors';
 import {
+  WORKSPACE_ORDER,
   WORKSPACE_SPECS,
   type ApprovalLedgerSummary,
   type ShowcaseTab,
@@ -39,6 +41,32 @@ export interface TopWorkspaceHeaderBarProps {
   ledgerSummary: ApprovalLedgerSummary;
 }
 
+function renderWorkspaceIcon(wsId: TunerWorkspaceId, className = 'h-3.5 w-3.5 shrink-0') {
+  if (wsId === 'primitives') {
+    return <FlaskConical className={`${className} text-amber-500`} />;
+  }
+  if (wsId === 'workbench') {
+    return <Sliders className={`${className} text-sky-500`} />;
+  }
+  return <ClipboardCheck className={`${className} text-emerald-500`} />;
+}
+
+function getWorkspaceSelectedStyles(wsId: TunerWorkspaceId, isLight: boolean): string {
+  if (wsId === 'primitives') {
+    return isLight
+      ? 'bg-white text-amber-800 font-bold shadow-xs border border-amber-400/60'
+      : 'bg-neutral-800 text-amber-300 font-bold shadow-xs border border-amber-500/50';
+  }
+  if (wsId === 'workbench') {
+    return isLight
+      ? 'bg-white text-sky-800 font-bold shadow-xs border border-sky-400/60'
+      : 'bg-neutral-800 text-sky-300 font-bold shadow-xs border border-sky-500/50';
+  }
+  return isLight
+    ? 'bg-white text-emerald-800 font-bold shadow-xs border border-emerald-400/60'
+    : 'bg-neutral-800 text-emerald-300 font-bold shadow-xs border border-emerald-500/50';
+}
+
 export const TopWorkspaceHeaderBar: React.FC<TopWorkspaceHeaderBarProps> = ({
   isLight,
   activeTab,
@@ -59,7 +87,7 @@ export const TopWorkspaceHeaderBar: React.FC<TopWorkspaceHeaderBarProps> = ({
         <span className="font-bold tracking-tight shrink-0">RCUITuner</span>
         <span className="text-neutral-400 shrink-0">/</span>
         {activeSectionMeta && (
-          <span className={`hidden lg:inline-flex px-1.5 py-0.5 rounded text-[10px] font-mono font-extrabold border shrink-0 ${activeSectionMeta.badgeColor}`}>
+          <span className={`hidden xl:inline-flex px-1.5 py-0.5 rounded text-[10px] font-mono font-extrabold border shrink-0 ${activeSectionMeta.badgeColor}`}>
             {activeSectionMeta.code}
           </span>
         )}
@@ -69,16 +97,10 @@ export const TopWorkspaceHeaderBar: React.FC<TopWorkspaceHeaderBarProps> = ({
       </div>
 
       <div className={`flex items-center gap-1 p-1 rounded-xl border shrink-0 ${isLight ? 'bg-neutral-100/90 border-neutral-200/90' : 'bg-neutral-900/90 border-neutral-800'}`}>
-        {(['alpha', 'bravo'] as const).map((wsId) => {
+        {WORKSPACE_ORDER.map((wsId) => {
+          const spec = WORKSPACE_SPECS[wsId];
           const isSelected = activeWorkspace === wsId;
-          const isAlpha = wsId === 'alpha';
-          const selectedClass = isLight
-            ? isAlpha
-              ? 'bg-white text-amber-800 font-bold shadow-xs border border-amber-400/60'
-              : 'bg-white text-sky-800 font-bold shadow-xs border border-sky-400/60'
-            : isAlpha
-            ? 'bg-neutral-800 text-amber-300 font-bold shadow-xs border border-amber-500/50'
-            : 'bg-neutral-800 text-sky-300 font-bold shadow-xs border border-sky-500/50';
+          const selectedClass = getWorkspaceSelectedStyles(wsId, isLight);
           const idleClass = isLight
             ? 'text-neutral-600 hover:text-neutral-900 hover:bg-white/50'
             : 'text-neutral-400 hover:text-neutral-100 hover:bg-neutral-800/50';
@@ -88,19 +110,12 @@ export const TopWorkspaceHeaderBar: React.FC<TopWorkspaceHeaderBarProps> = ({
               type="button"
               onClick={() => onSelectWorkspace(wsId)}
               data-top-workspace={wsId}
-              title={`${WORKSPACE_SPECS[wsId].title} (Alt+${isAlpha ? '1' : '2'})`}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer ${isSelected ? selectedClass : idleClass}`}
+              title={`${spec.title} (Alt+${spec.index})`}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer ${isSelected ? selectedClass : idleClass}`}
             >
-              {isAlpha ? (
-                <FlaskConical className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-              ) : (
-                <ClipboardCheck className="h-3.5 w-3.5 text-sky-500 shrink-0" />
-              )}
-              <span>{isAlpha ? 'Workspace Alpha' : 'Workspace Bravo'}</span>
-              <span className="hidden xl:inline text-[10px] opacity-75">
-                {isAlpha ? '· Primitives & Lab' : '· Approval & Calibration'}
-              </span>
-              {!isAlpha && (
+              {renderWorkspaceIcon(wsId)}
+              <span>{spec.shortLabel}</span>
+              {wsId === 'approval' && (
                 <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
                   <CheckCircle2 className="h-2.5 w-2.5" />
                   <span>{ledgerSummary.approvedCount}/{ledgerSummary.totalSurfaces}</span>
@@ -111,7 +126,7 @@ export const TopWorkspaceHeaderBar: React.FC<TopWorkspaceHeaderBarProps> = ({
         })}
       </div>
 
-      <div className="flex items-center gap-3 shrink-0">
+      <div className="flex items-center gap-2 shrink-0">
         <ViewportControls isLight={isLight} />
       </div>
     </header>
@@ -206,7 +221,7 @@ export const SidebarWorkspaceHeader: React.FC<SidebarWorkspaceHeaderProps> = ({
           </div>
           <div className="flex flex-col min-w-0">
             <span className="font-bold text-sm tracking-tight truncate">RCUITuner</span>
-            <span className={`text-[10px] font-mono truncate ${mutedText}`}>Dual-Workspace SPA v3.0</span>
+            <span className={`text-[10px] font-mono truncate ${mutedText}`}>3-Workspace SPA v4.0</span>
           </div>
         </div>
 
@@ -226,35 +241,31 @@ export const SidebarWorkspaceHeader: React.FC<SidebarWorkspaceHeaderProps> = ({
       </div>
 
       <div className={`p-2 rounded-xl border flex flex-col gap-2 ${isLight ? 'bg-white border-neutral-200/90 shadow-2xs' : 'bg-neutral-900/70 border-neutral-800'}`}>
-        <div className="grid grid-cols-2 gap-1 bg-neutral-200/60 dark:bg-neutral-950 p-1 rounded-lg border border-neutral-300/40 dark:border-neutral-800">
-          {(['alpha', 'bravo'] as const).map((wsId) => {
-            const isAlpha = wsId === 'alpha';
+        <div className="grid grid-cols-3 gap-1 bg-neutral-200/60 dark:bg-neutral-950 p-1 rounded-lg border border-neutral-300/40 dark:border-neutral-800">
+          {WORKSPACE_ORDER.map((wsId) => {
+            const spec = WORKSPACE_SPECS[wsId];
             const isActive = activeWorkspace === wsId && !showAllPyramidLayers;
+            const compactLabel =
+              wsId === 'primitives'
+                ? '1·Primitives'
+                : wsId === 'workbench'
+                ? '2·Workbench'
+                : '3·Approval';
             return (
               <button
                 key={wsId}
                 type="button"
                 onClick={() => onSelectWorkspace(wsId)}
                 data-workspace-switch={wsId}
-                className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md text-[11px] font-mono transition-all cursor-pointer ${
+                className={`flex items-center justify-center gap-1 py-1.5 px-1.5 rounded-md text-[10px] font-mono transition-all cursor-pointer ${
                   isActive
-                    ? isLight
-                      ? isAlpha
-                        ? 'bg-white text-amber-700 font-bold shadow-xs border border-amber-400/50'
-                        : 'bg-white text-sky-700 font-bold shadow-xs border border-sky-400/50'
-                      : isAlpha
-                      ? 'bg-neutral-800 text-amber-300 font-bold shadow-xs border border-amber-500/40'
-                      : 'bg-neutral-800 text-sky-300 font-bold shadow-xs border border-sky-500/40'
+                    ? getWorkspaceSelectedStyles(wsId, isLight)
                     : 'text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200'
                 }`}
-                title={`Switch to Workspace ${isAlpha ? 'Alpha (Alt+1)' : 'Bravo (Alt+2)'}`}
+                title={`Switch to ${spec.shortLabel} (Alt+${spec.index})`}
               >
-                {isAlpha ? (
-                  <FlaskConical className="h-3.5 w-3.5 shrink-0 text-amber-500" />
-                ) : (
-                  <ClipboardCheck className="h-3.5 w-3.5 shrink-0 text-sky-500" />
-                )}
-                <span className="truncate">{isAlpha ? 'Alpha · Primitives' : 'Bravo · Approval'}</span>
+                {renderWorkspaceIcon(wsId, 'h-3 w-3 shrink-0')}
+                <span className="truncate">{compactLabel}</span>
               </button>
             );
           })}
@@ -265,10 +276,14 @@ export const SidebarWorkspaceHeader: React.FC<SidebarWorkspaceHeaderProps> = ({
             <span className={`px-1.5 py-0.5 rounded text-[9px] font-mono font-extrabold border ${activeWsSpec.badgeColor}`}>
               {activeWsSpec.code}
             </span>
-            {activeWorkspace === 'bravo' ? (
+            {activeWorkspace === 'approval' ? (
               <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400">
                 <CheckCircle2 className="h-3 w-3 shrink-0" />
                 <span>{ledgerSummary.approvedCount}/{ledgerSummary.totalSurfaces} Approved</span>
+              </span>
+            ) : activeWorkspace === 'workbench' ? (
+              <span className="text-[10px] font-mono font-semibold text-sky-500">
+                {ledgerSummary.calibratedCount} Calibrated
               </span>
             ) : (
               <span className={`text-[10px] font-mono ${mutedText}`}>
@@ -290,7 +305,7 @@ export const SidebarWorkspaceHeader: React.FC<SidebarWorkspaceHeaderProps> = ({
             type="text"
             value={searchQuery}
             onChange={(e) => onSearchQueryChange(e.target.value)}
-            placeholder="Filter tabs / codes..."
+            placeholder="Filter tabs / surfaces..."
             className="w-full bg-transparent outline-none text-[11px] font-mono placeholder:text-neutral-400"
           />
           {searchQuery && (
@@ -308,7 +323,7 @@ export const SidebarWorkspaceHeader: React.FC<SidebarWorkspaceHeaderProps> = ({
         <button
           type="button"
           onClick={onTogglePyramidLayers}
-          title="Toggle between Workspace Sections and full L0–L7 Pyramid view"
+          title="Toggle between Workspace Sections and full L0-L7 Pyramid view"
           className={`px-2 py-1 rounded-lg border text-[10px] font-mono font-bold flex items-center gap-1 shrink-0 transition-colors cursor-pointer ${
             showAllPyramidLayers
               ? 'bg-amber-500/15 border-amber-500/40 text-amber-600 dark:text-amber-300'
@@ -318,7 +333,7 @@ export const SidebarWorkspaceHeader: React.FC<SidebarWorkspaceHeaderProps> = ({
           }`}
         >
           <Layers className="h-3 w-3" />
-          <span>L0–L7</span>
+          <span>L0-L7</span>
         </button>
       </div>
 

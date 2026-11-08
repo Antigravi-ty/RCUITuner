@@ -100,7 +100,7 @@ export function resolveRouteAuditInfo(
   const jumpEntry =
     MENU_SANDBOX_JUMP_ITEMS.find((j) => j.route === canonicalRoute && j.tier === tier) ||
     MENU_SANDBOX_JUMP_ITEMS.find((j) => j.route === canonicalRoute);
-  const referenceCode = jumpEntry?.code || '7A';
+  const referenceCode = jumpEntry?.code || 'STAGE';
   const rawComp = (jumpEntry?.componentName || 'Layer1MainMenuRecipe').replace(
     /\s*\(Dev\)$/,
     ''

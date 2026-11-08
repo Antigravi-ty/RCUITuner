@@ -210,6 +210,7 @@ function classifySyncKeyScope(key: string): StoreDiffEntry['scope'] {
 
 const TRANSIENT_SYNC_KEYS = new Set<string>([
   'app:activeTab',
+  'sync:activeTarget',
   'store:quickNotification',
   'store:nameTagTelemetry',
 ]);

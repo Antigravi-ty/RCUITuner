@@ -8,6 +8,10 @@ import {
   type Layer1MenuContextMode,
 } from '../../../ui-core/recipes/layer1MenuContextSpecs';
 import { createScopedSyncedState } from '../../stores/crossClientSync';
+import {
+  buildMenuRouteCrossTabTarget,
+  publishCrossTabActiveTarget,
+} from '../../stores/crossTabTargetFollow';
 import { readUrlParams } from '../../stores/urlSync';
 import type { Layer3StepOverrideState } from './MenuLayerStageRecipeRouter';
 import {
@@ -116,6 +120,18 @@ export function useMenuLayerNavigationHandlers({
   );
   const activePlaylistStep = activePlaylist[activePlaylistIdx] || activePlaylist[0];
   const auditInfo = resolveRouteAuditInfo(currentRoute, visibilityTier);
+
+  useEffect(() => {
+    publishCrossTabActiveTarget(
+      buildMenuRouteCrossTabTarget({
+        route: currentRoute,
+        settingsTab,
+        garageTab,
+        tier: visibilityTier,
+        label: activePlaylistStep?.label || MENU_ROUTE_CONFIG[currentRoute]?.label || currentRoute,
+      })
+    );
+  }, [currentRoute, settingsTab, garageTab, visibilityTier, activePlaylistStep?.label]);
 
   const handleChangeVisibilityTier = (nextTier: MenuVisibilityTier) => {
     setVisibilityTier(nextTier);
