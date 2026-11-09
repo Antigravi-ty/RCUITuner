@@ -109,7 +109,7 @@ export const MenuLayerPreviewPage: React.FC<MenuLayerPreviewPageProps> = ({
   const stageRef = useRef<HTMLDivElement | null>(null);
   const [stageSize, setStageSize] = useLocalState({ width: 900, height: 620 });
   const [isShaking, setIsShaking] = useLocalState(false);
-  const shakeTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const shakeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const triggerShake = () => {
     if (isShaking) return;
     setIsShaking(true);
