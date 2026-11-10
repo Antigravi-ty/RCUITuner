@@ -23,6 +23,7 @@ import {
 } from './RapidReviewBucketFilterStrip';
 import {
   buildAllReviewUnits,
+  findUnitIndexByKeyOrSurface,
   pickRepresentativeTemplateStaleSamples,
 } from './reviewLedgerAdapter';
 import { ReviewBundleExporterModal } from './ReviewBundleExporterModal';
@@ -39,6 +40,7 @@ export const RapidReviewTriageBar: React.FC<RapidReviewTriageBarProps> = React.m
       decisionsMap,
       registeredUnitsMap,
       activeUnitKey,
+      playlistScope,
       activeBucketFilter,
       simulateTemplateStale,
       isExporterModalOpen,
@@ -75,8 +77,9 @@ export const RapidReviewTriageBar: React.FC<RapidReviewTriageBarProps> = React.m
           registeredUnitsMap,
           globalTemplateStaleOverride: simulateTemplateStale,
           activeUnitKey,
+          playlistScope,
         }),
-      [decisionsMap, registeredUnitsMap, simulateTemplateStale, activeUnitKey]
+      [decisionsMap, registeredUnitsMap, simulateTemplateStale, activeUnitKey, playlistScope]
     );
 
     const bucketCounts = useMemo(() => {
@@ -99,11 +102,9 @@ export const RapidReviewTriageBar: React.FC<RapidReviewTriageBarProps> = React.m
     }, [allUnits, activeBucketFilter]);
 
     const activeUnit = useMemo(() => {
-      const activeSurfaceId = activeUnitKey.split('::')[0];
+      const matchIdx = findUnitIndexByKeyOrSurface(allUnits, activeUnitKey);
       return (
-        allUnits.find(
-          (u) => u.unitKey === activeUnitKey || u.surfaceId === activeSurfaceId
-        ) ||
+        (matchIdx >= 0 ? allUnits[matchIdx] : undefined) ||
         filteredQueue[0] ||
         allUnits[0]
       );
@@ -169,10 +170,7 @@ export const RapidReviewTriageBar: React.FC<RapidReviewTriageBarProps> = React.m
 
     const currentQueueIdx = Math.max(
       0,
-      filteredQueue.findIndex(
-        (u) =>
-          u.unitKey === activeUnit.unitKey || u.surfaceId === activeUnit.surfaceId
-      )
+      findUnitIndexByKeyOrSurface(filteredQueue, activeUnit.unitKey)
     );
 
     const triggerDecision = (status: 'approved' | 'rejected' | 'deferred') => {
@@ -325,7 +323,7 @@ export const RapidReviewTriageBar: React.FC<RapidReviewTriageBarProps> = React.m
                 </button>
 
                 <span className="text-[11px] font-bold truncate max-w-[300px]">
-                  [{currentQueueIdx + 1}/{Math.max(1, filteredQueue.length)}]{' '}
+                  [#{currentQueueIdx + 1}/{Math.max(1, filteredQueue.length)}]{' '}
                   {activeUnit.label}
                 </span>
 

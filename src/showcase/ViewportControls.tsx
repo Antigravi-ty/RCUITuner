@@ -62,42 +62,6 @@ export const ViewportControls: React.FC<ViewportControlsProps> = ({ isLight = tr
 
   return (
     <div className="flex items-center gap-2">
-      {/* 0. Cross-Tab Target Follow Toggle ([Following Stage] vs [Unlinked]) */}
-      <button
-        type="button"
-        onClick={toggleFollowingStage}
-        data-ui-action="toggle-follow-stage"
-        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-mono font-semibold transition-all cursor-pointer active:scale-95 ${
-          isFollowingStage
-            ? isLight
-              ? 'bg-sky-50 hover:bg-sky-100/80 border-sky-300 text-sky-800 shadow-2xs'
-              : 'bg-sky-950/60 hover:bg-sky-900/60 border-sky-500/40 text-sky-300'
-            : isLight
-            ? 'bg-white hover:bg-neutral-100 border-neutral-200 text-neutral-500'
-            : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-800 text-neutral-400'
-        }`}
-        title={
-          isFollowingStage
-            ? `Following Stage Active Target (${activeTarget.label} -> ${activeTarget.targetId}) · Window workspaceMode stays local while activeTargetId syncs across tabs. Click to Unlink.`
-            : 'Unlinked from Stage Target Follow · Click to re-link and follow active stage target across tabs.'
-        }
-      >
-        {isFollowingStage ? (
-          <Link2 className="h-3.5 w-3.5 text-sky-500 shrink-0" />
-        ) : (
-          <Unlink className="h-3.5 w-3.5 text-neutral-400 shrink-0" />
-        )}
-        <span>{isFollowingStage ? 'Following Stage' : 'Unlinked'}</span>
-        {isFollowingStage && activeTarget?.targetId && (
-          <span
-            className={`hidden 2xl:inline px-1.5 py-0.2 rounded text-[10px] font-bold truncate max-w-[120px] ${
-              isLight ? 'bg-sky-500/15 text-sky-700' : 'bg-sky-500/20 text-sky-200'
-            }`}
-          >
-            {activeTarget.targetId}
-          </span>
-        )}
-      </button>
 
       {/* 1. UI Scaling Slider Control */}
       <div
@@ -237,37 +201,74 @@ export const ViewportControls: React.FC<ViewportControlsProps> = ({ isLight = tr
         <span className="hidden sm:inline">HUD</span>
       </button>
 
-      {/* 4. Vite WebSocket Multi-Screen Live Sync Toggle */}
-      <button
-        type="button"
-        onClick={togglePaused}
-        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-mono font-medium transition-all cursor-pointer ${
-          !paused && connected
-            ? isLight
-              ? 'bg-neutral-100 hover:bg-neutral-200/70 border-neutral-300 text-neutral-900 shadow-2xs'
-              : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-700 text-neutral-100'
-            : isLight
-            ? 'bg-white hover:bg-neutral-50 border-neutral-200 text-neutral-400'
-            : 'bg-neutral-950 hover:bg-neutral-900 border-neutral-800 text-neutral-500'
+      {/* 4. Unified Cross-Window Sync & Target Follow Pill */}
+      <div
+        className={`inline-flex items-center rounded-xl border overflow-hidden text-xs font-mono ${
+          isLight
+            ? 'bg-white border-neutral-200 shadow-2xs'
+            : 'bg-neutral-900/80 border-neutral-800'
         }`}
-        title={
-          paused
-            ? 'Cross-screen parameter sync paused for current window (Click to restore real-time sync)'
-            : `Real-time parameter & target sync enabled (${transport}) · Click to pause`
-        }
       >
-        <span
-          className={`h-2 w-2 rounded-full shrink-0 ${
-            !paused && connected
-              ? 'bg-emerald-500 animate-pulse'
-              : paused
-              ? 'bg-amber-500'
-              : 'bg-neutral-400'
+        <button
+          type="button"
+          onClick={toggleFollowingStage}
+          data-ui-action="toggle-follow-stage"
+          className={`flex items-center gap-1 px-2 py-1.5 border-r transition-colors cursor-pointer ${
+            isFollowingStage
+              ? isLight
+                ? 'bg-sky-50/90 hover:bg-sky-100/80 border-neutral-200 text-sky-700 font-semibold'
+                : 'bg-sky-950/60 hover:bg-sky-900/60 border-neutral-800 text-sky-300 font-semibold'
+              : isLight
+              ? 'hover:bg-neutral-50 border-neutral-200 text-neutral-400'
+              : 'hover:bg-neutral-800 border-neutral-800 text-neutral-500'
           }`}
-        />
-        <Radio className="h-3.5 w-3.5 shrink-0 opacity-80" />
-        <span className="hidden md:inline">{paused ? 'Sync Off' : 'Sync'}</span>
-      </button>
+          title={
+            isFollowingStage
+              ? `Following Stage Active Target (${activeTarget.label} -> ${activeTarget.targetId}) · Click to unlink`
+              : 'Unlinked from Stage Target Follow · Click to follow active stage target across tabs'
+          }
+        >
+          {isFollowingStage ? (
+            <Link2 className="h-3.5 w-3.5 text-sky-500 shrink-0" />
+          ) : (
+            <Unlink className="h-3.5 w-3.5 shrink-0" />
+          )}
+          <span className="hidden xl:inline">
+            {isFollowingStage ? 'Follow' : 'Unlinked'}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={togglePaused}
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 font-medium transition-colors cursor-pointer ${
+            !paused && connected
+              ? isLight
+                ? 'hover:bg-neutral-100 text-neutral-900'
+                : 'hover:bg-neutral-800 text-neutral-100'
+              : isLight
+              ? 'hover:bg-neutral-50 text-neutral-400'
+              : 'hover:bg-neutral-800 text-neutral-500'
+          }`}
+          title={
+            paused
+              ? 'Cross-screen parameter sync paused for current window (Click to restore real-time sync)'
+              : `Real-time parameter & target sync enabled (${transport}) · Click to pause`
+          }
+        >
+          <span
+            className={`h-2 w-2 rounded-full shrink-0 ${
+              !paused && connected
+                ? 'bg-emerald-500 animate-pulse'
+                : paused
+                ? 'bg-amber-500'
+                : 'bg-neutral-400'
+            }`}
+          />
+          <Radio className="h-3.5 w-3.5 shrink-0 opacity-80" />
+          <span className="hidden md:inline">{paused ? 'Sync Off' : 'Sync'}</span>
+        </button>
+      </div>
 
       {/* 5. Export Current Layer Parameters (Copy JSON) */}
       <button

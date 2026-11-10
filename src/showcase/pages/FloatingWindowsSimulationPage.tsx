@@ -23,9 +23,9 @@ import { FloatingWindowsStageToolbar } from './floating-windows/FloatingWindowsS
 import { FloatingWindowsAuditSection } from './floating-windows/FloatingWindowsAuditSection';
 import {
   buildMergedFloatingPresets,
+  useFloatingPlaylistState,
   useFloatingWindowsCalibration,
 } from './floating-windows/useFloatingWindowsCalibration';
-import { useFloatingPlaylistState } from './floating-windows/floatingWindowsLinearPlaylists';
 import { RapidReviewTriageBar } from '../components/review/RapidReviewTriageBar';
 import { AutoConfigTunerPanel } from '../components/tuner/AutoConfigTunerPanel';
 

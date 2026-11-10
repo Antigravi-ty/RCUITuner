@@ -6,6 +6,11 @@ import type {
   SurfaceApprovalRecord,
   SurfaceApprovalStatus,
 } from '../../../ui-core/manifest/surfaceMetaTypes';
+import {
+  resolveRouteAuditInfo,
+  resolveUnifiedPlaylistByScope,
+  type UnifiedPlaylistScope,
+} from '../../pages/menu-layer/menuLayerLinearPlaylists';
 import type {
   ReviewStaleReason,
   ReviewTriageBucketId,
@@ -64,6 +69,16 @@ export function resolveCanonicalSurfaceId(params: {
 export function buildUnitKey(surfaceId: string, variantId: string = 'default'): string {
   const cleanVariant = variantId.trim() || 'default';
   return `${surfaceId}::${cleanVariant}`;
+}
+
+export function findUnitIndexByKeyOrSurface(
+  list: readonly SurfaceVariantReviewUnit[],
+  targetKey: string
+): number {
+  const exactIdx = list.findIndex((u) => u.unitKey === targetKey);
+  if (exactIdx >= 0) return exactIdx;
+  const targetSurfaceId = targetKey.split('::')[0];
+  return list.findIndex((u) => u.surfaceId === targetSurfaceId);
 }
 
 /**
@@ -182,52 +197,10 @@ export function classifySurfaceBucket(params: {
   };
 }
 
-const CANONICAL_RECIPE_SURFACE_ORDER: readonly string[] = [
-  'recipe:StaticTrainingShotInspectorDrawer',
-  'recipe:Layer1MainMenuRecipe',
-  'recipe:Layer2PlayRecipe',
-  'recipe:Layer2GarageRecipe',
-  'recipe:Layer2SettingsRecipe',
-  'recipe:Layer2ManageRoomRecipe',
-  'recipe:Layer3HostMatchRecipe',
-  'recipe:Layer3HostTrainingRecipe',
-  'recipe:Layer3CustomPlayRecipe',
-  'recipe:Layer3JoinRoomRecipe',
-  'recipe:Layer3ExhibitionRecipe',
-  'recipe:Layer3SelfTrainingRecipe',
-  'recipe:Layer3KickoffTrainingRecipe',
-  'recipe:Layer3TrainingConfigRecipe',
-  'recipe:Layer3CameraRecipe',
-  'recipe:Layer3KeybindingsRecipe',
-  'recipe:Layer3BallTrajectoryRecipe',
-  'recipe:Layer4StaticTrainingPackBrowseRecipe',
-  'recipe:Layer4ControllerSettingsRecipe',
-  'recipe:Layer3DevSandboxesRecipe',
-  'recipe:Layer3ExpMultiBotsRecipe',
-  'recipe:Layer3ExpBotPackRecipe',
-  'recipe:Layer3DevActiveTunersRecipe',
-  'recipe:Layer3DevCalibratedPresetsRecipe',
-  'recipe:Layer3DevSelfTestRecipe',
-  'recipe:Layer3DevRemoteProfileRecipe',
-  'recipe:Layer3DevQuickActionsRecipe',
-  'recipe:Layer3DevUnderDevelopmentRecipe',
-  'recipe:Layer3AcousticsEqualizerRecipe',
-  'recipe:Layer4AdvancedAudioRecipe',
-  'recipe:Layer4EventTriggerRulesRecipe',
-  'recipe:Layer4DevSignalingLabRecipe',
-];
-
-function resolveUnifiedSurfaceSortRank(surfaceId: string): number {
-  const recipeIdx = CANONICAL_RECIPE_SURFACE_ORDER.indexOf(surfaceId);
-  if (recipeIdx >= 0 && recipeIdx < 19) return recipeIdx;
-  if (recipeIdx >= 19) return 100 + recipeIdx;
-  if (surfaceId.startsWith('floating:')) return 200;
-  return 500;
-}
-
 /**
- * Builds the canonical 64-surface review ledger list from `uiApprovalLedger.json`
- * merged with runtime variant registrations and reviewer decisions in Unified Stage order.
+ * Builds the Unified Approval Playlist review queue in strict 1:1 sequential order
+ * (`#1..#N`) matching `MenuLayerScannerAndAuditSection` (`All` / `User` / `Dev` scope),
+ * merged with `uiApprovalLedger.json` records and runtime reviewer decisions.
  */
 export function buildAllReviewUnits(params: {
   decisionsMap: Record<string, RuntimeReviewDecision>;
@@ -237,63 +210,31 @@ export function buildAllReviewUnits(params: {
   >;
   globalTemplateStaleOverride?: boolean;
   activeUnitKey?: string;
+  playlistScope?: UnifiedPlaylistScope;
 }): SurfaceVariantReviewUnit[] {
   const {
     decisionsMap,
     registeredUnitsMap,
     globalTemplateStaleOverride,
-    activeUnitKey,
+    playlistScope = 'all',
   } = params;
 
-  const customKeysBySurface = new Map<string, string[]>();
-  for (const rawKey of new Set([
-    ...Object.keys(registeredUnitsMap),
-    ...Object.keys(decisionsMap),
-  ])) {
-    const reg = registeredUnitsMap[rawKey];
-    const dec = decisionsMap[rawKey];
-    const rawSurface = reg?.surfaceId || dec?.surfaceId || rawKey.split('::')[0];
-    const canonicalSurface = UI_APPROVAL_LEDGER.surfaces[rawSurface]
-      ? rawSurface
-      : resolveCanonicalSurfaceId({
-          sourceFile: reg?.sourceFile || dec?.sourceFile,
-          componentName: reg?.componentName || dec?.componentName || rawSurface,
-          stateId: rawKey,
-        });
-    if (!UI_APPROVAL_LEDGER.surfaces[canonicalSurface]) continue;
-    const list = customKeysBySurface.get(canonicalSurface) ?? [];
-    list.push(rawKey);
-    customKeysBySurface.set(canonicalSurface, list);
-  }
-
+  const playlist = resolveUnifiedPlaylistByScope(playlistScope);
   const units: SurfaceVariantReviewUnit[] = [];
 
-  for (const [surfaceId, record] of Object.entries(UI_APPROVAL_LEDGER.surfaces)) {
+  for (const step of playlist) {
+    const auditInfo = resolveRouteAuditInfo(
+      step.route,
+      step.tier,
+      step.contextMode,
+      step
+    );
+    const { surfaceId, variantId } = auditInfo;
+    const unitKey = buildUnitKey(surfaceId, variantId);
     const defaultKey = buildUnitKey(surfaceId, 'default');
-    const candidateKeys = customKeysBySurface.get(surfaceId) ?? [];
-    const activeMatchKey =
-      activeUnitKey &&
-      (activeUnitKey.startsWith(`${surfaceId}::`) ||
-        candidateKeys.includes(activeUnitKey))
-        ? activeUnitKey
-        : undefined;
-    const decidedKey = candidateKeys.find((k) => Boolean(decisionsMap[k]));
-    const latestRegisteredKey =
-      candidateKeys.length > 0 ? candidateKeys[candidateKeys.length - 1] : undefined;
-
-    const effectiveKey =
-      activeMatchKey || decidedKey || latestRegisteredKey || defaultKey;
-    const reg = registeredUnitsMap[effectiveKey];
-    const decision =
-      decisionsMap[effectiveKey] ??
-      ( decidedKey ? decisionsMap[decidedKey] : undefined ) ??
-      decisionsMap[defaultKey];
-
-    const variantId =
-      reg?.variantId ||
-      decision?.variantId ||
-      effectiveKey.split('::')[1] ||
-      'default';
+    const record = UI_APPROVAL_LEDGER.surfaces[surfaceId];
+    const reg = registeredUnitsMap[unitKey];
+    const decision = decisionsMap[unitKey] ?? decisionsMap[defaultKey];
 
     const { status, bucket, staleReason } = classifySurfaceBucket({
       surfaceId,
@@ -302,42 +243,27 @@ export function buildAllReviewUnits(params: {
       globalTemplateStaleOverride,
     });
 
-    const compName =
-      record.entryFile
-        .split('/')
-        .pop()
-        ?.replace(/\.(tsx|ts)$/, '') || surfaceId;
-
     units.push({
-      unitKey: effectiveKey,
+      unitKey,
       surfaceId,
       variantId,
-      label: reg?.label || decision?.label || compName,
-      referenceCode:
-        reg?.referenceCode ||
-        decision?.referenceCode ||
-        (record.surfaceKind === 'floating-window' ? 'Floating' : 'Menu'),
-      componentName: reg?.componentName || decision?.componentName || compName,
-      sourceFile: reg?.sourceFile || decision?.sourceFile || record.entryFile,
+      label: step.label || reg?.label || decision?.label || auditInfo.componentName,
+      referenceCode: reg?.referenceCode || decision?.referenceCode || auditInfo.referenceCode,
+      componentName: reg?.componentName || decision?.componentName || auditInfo.componentName,
+      sourceFile: reg?.sourceFile || decision?.sourceFile || auditInfo.sourceFile,
       subViewFile: reg?.subViewFile || decision?.subViewFile,
       status,
       bucket,
       staleReason,
-      note: decision?.note ?? record.note ?? '',
-      updatedAt: decision?.updatedAt ?? record.approvedAt,
+      note: decision?.note ?? record?.note ?? '',
+      updatedAt: decision?.updatedAt ?? record?.approvedAt ?? '',
       changedSubtreeFiles: reg?.changedSubtreeFiles ?? [],
       alphaMotherDeps: reg?.alphaMotherDeps ?? extractAlphaMotherDeps(record),
       ledgerRecord: record,
     });
   }
 
-  return units.sort((a, b) => {
-    const rankDiff =
-      resolveUnifiedSurfaceSortRank(a.surfaceId) -
-      resolveUnifiedSurfaceSortRank(b.surfaceId);
-    if (rankDiff !== 0) return rankDiff;
-    return a.surfaceId.localeCompare(b.surfaceId);
-  });
+  return units;
 }
 
 /**
@@ -347,7 +273,13 @@ export function buildAllReviewUnits(params: {
 export function pickRepresentativeTemplateStaleSamples(
   units: SurfaceVariantReviewUnit[]
 ): SurfaceVariantReviewUnit[] {
-  const templateUnits = units.filter((u) => u.bucket === 'bucket-3-template');
+  const seenSurfaces = new Set<string>();
+  const templateUnits = units.filter((u) => {
+    if (u.bucket !== 'bucket-3-template') return false;
+    if (seenSurfaces.has(u.surfaceId)) return false;
+    seenSurfaces.add(u.surfaceId);
+    return true;
+  });
   if (templateUnits.length <= 3) return templateUnits;
 
   const sortedByDensity = [...templateUnits].sort((a, b) => {
@@ -362,3 +294,4 @@ export function pickRepresentativeTemplateStaleSamples(
 
   return [simplest, median, densest];
 }
+

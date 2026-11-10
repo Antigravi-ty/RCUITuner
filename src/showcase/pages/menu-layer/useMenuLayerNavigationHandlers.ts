@@ -193,7 +193,9 @@ export function useMenuLayerNavigationHandlers({
   );
 
   useEffect(() => {
-    useReviewLedgerStore.getState().setActiveUnit({
+    const store = useReviewLedgerStore.getState();
+    store.setPlaylistScope(playlistScope);
+    store.setActiveUnit({
       surfaceId: auditInfo.surfaceId,
       variantId: auditInfo.variantId,
       label: activePlaylistStep?.label || currentRoute,
@@ -202,6 +204,7 @@ export function useMenuLayerNavigationHandlers({
       sourceFile: auditInfo.sourceFile,
     });
   }, [
+    playlistScope,
     auditInfo.surfaceId,
     auditInfo.variantId,
     auditInfo.referenceCode,

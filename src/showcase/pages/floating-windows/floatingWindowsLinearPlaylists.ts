@@ -1,4 +1,3 @@
-import { useEffect, useMemo } from 'react';
 import { getDiscoveredFloatingSurfaces } from '../../../ui-core/manifest/floatingSurfaceRegistry';
 import {
   ATMOSPHERE_FX_TABS,
@@ -15,8 +14,6 @@ import {
   type FloatingWindowVisibilityTier,
   type PresetConfig,
 } from '../../../ui-core/stores/floatingPresets';
-import { buildUnitKey } from '../../components/review/reviewLedgerAdapter';
-import { useReviewLedgerStore } from '../../components/review/reviewLedgerStore';
 import type {
   ActiveMenuRoute,
   LinearPlaylistStep,
@@ -214,7 +211,7 @@ export function buildFloatingWindowsLinearPlaylist(
           windowId: preset.id,
           surfaceId,
           variantId,
-          unitKey: buildUnitKey(surfaceId, variantId),
+          unitKey: `${surfaceId}::${variantId}`,
           stateId: `${preset.id}:${tab.id}`,
           referenceCode: `${baseRefCode}.${tabIndex + 1}`,
           componentName,
@@ -250,7 +247,7 @@ export function buildFloatingWindowsLinearPlaylist(
       windowId: preset.id,
       surfaceId,
       variantId: 'default',
-      unitKey: buildUnitKey(surfaceId, 'default'),
+      unitKey: `${surfaceId}::default`,
       stateId: `${preset.id}:default`,
       referenceCode: baseRefCode,
       componentName,
@@ -355,95 +352,4 @@ export function findFloatingPlaylistUnitByKey(
       u.stateId === unitKeyOrStateId ||
       u.id === unitKeyOrStateId
   );
-}
-
-export interface UseFloatingPlaylistStateParams {
-  tier: FloatingWindowVisibilityTier;
-  fwMode: 'inspector' | 'stack' | 'matrix';
-  activeTierWindows: PresetConfig[];
-  allWindows: PresetConfig[];
-  currentPreset: PresetConfig | undefined;
-  activeSubTab: string;
-  setTier: (next: FloatingWindowVisibilityTier) => void;
-  setSelectedWindowId: (next: string) => void;
-  setActiveSubTab: (next: string) => void;
-}
-
-export function useFloatingPlaylistState({
-  tier,
-  fwMode,
-  activeTierWindows,
-  allWindows,
-  currentPreset,
-  activeSubTab,
-  setTier,
-  setSelectedWindowId,
-  setActiveSubTab,
-}: UseFloatingPlaylistStateParams) {
-  const activePlaylist = useMemo(
-    () => buildFloatingWindowsLinearPlaylist(tier, { presets: activeTierWindows }),
-    [tier, activeTierWindows]
-  );
-  const activePlaylistIdx = useMemo(
-    () =>
-      findFloatingPlaylistUnitIndex(
-        activePlaylist,
-        currentPreset?.id || '',
-        activeSubTab
-      ),
-    [activePlaylist, currentPreset?.id, activeSubTab]
-  );
-  const activePlaylistUnit = activePlaylist[activePlaylistIdx] || activePlaylist[0];
-  const activePlaylistPresets = useMemo(
-    () => activePlaylist.map((u) => u.preset),
-    [activePlaylist]
-  );
-  const toolbarDisplayPreset = useMemo(
-    () =>
-      currentPreset
-        ? { ...currentPreset, title: activePlaylistUnit?.label || currentPreset.title }
-        : undefined,
-    [currentPreset, activePlaylistUnit]
-  );
-
-  useEffect(() => {
-    if (fwMode === 'matrix' || !activePlaylistUnit) return;
-    useReviewLedgerStore.getState().setActiveUnit({
-      surfaceId: activePlaylistUnit.surfaceId,
-      variantId: activePlaylistUnit.variantId,
-      label: activePlaylistUnit.label,
-      referenceCode: activePlaylistUnit.referenceCode,
-      componentName: activePlaylistUnit.componentName,
-      sourceFile: activePlaylistUnit.sourceFile,
-    });
-  }, [fwMode, activePlaylistUnit]);
-
-  const navigationSeq = useReviewLedgerStore((s) => s.navigationSeq);
-  const activeUnitKey = useReviewLedgerStore((s) => s.activeUnitKey);
-  useEffect(() => {
-    if (navigationSeq === 0 || !activeUnitKey.startsWith('floating:')) return;
-    const [surfaceId, variantId = 'default'] = activeUnitKey.split('::');
-    const fwId = surfaceId.replace(/^floating:/, '');
-    const target = allWindows.find((w) => w.id === fwId);
-    if (!target) return;
-    const targetTier: FloatingWindowVisibilityTier =
-      target.tier === 'developer' ? 'developer' : 'user';
-    if (targetTier !== tier) {
-      setTier(targetTier);
-    }
-    setSelectedWindowId(target.id);
-    if (variantId && variantId !== 'default') {
-      setActiveSubTab(variantId);
-    } else {
-      setActiveSubTab(target.tabs?.[0]?.id || '');
-    }
-  }, [navigationSeq]);
-
-  return {
-    activePlaylist,
-    activePlaylistIdx,
-    activePlaylistUnit,
-    activePlaylistPresets,
-    toolbarDisplayPreset,
-  };
 }

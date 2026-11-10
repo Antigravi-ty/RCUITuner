@@ -86,7 +86,7 @@ export const LAYER_RULES = [
 ];
 
 export const ARBITRARY_SPLIT_FILENAME_RE =
-  /(Part[1-9]|Half[1-9]|Chunk[1-9]|Split[1-9]|Section[1-9]$|Tab[1-9]$|Helper[1-9]|PlaybackStepper)/i;
+  /(Part[1-9]|Half[1-9]|Chunk[1-9]|Split[1-9]|Section[1-9]$|Tab[1-9]$|Helper[1-9])/i;
 
 export const FRAGMENT_EXEMPT_FILENAME_RE =
   /(Types|Tokens|Config|Constants|Presets|Specs|Snapshot|Scope|Context|index|main)\.(ts|tsx)$/i;

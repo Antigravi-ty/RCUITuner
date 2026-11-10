@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { quickNotification } from '../../../ui-core/stores/quickNotificationStore';
 import { floatingSandboxStore, useFloatingStore } from '../../../ui-core/stores/floatingStore';
 import { createScopedSyncedState } from '../../stores/crossClientSync';
@@ -10,7 +10,12 @@ import {
 import { DEV_PRESET_WINDOWS } from '../../../ui-core/stores/devFloatingPresets';
 import { getDiscoveredFloatingSurfaces } from '../../../ui-core/manifest/floatingSurfaceRegistry';
 import { resolveCalibratedSurfaceSizing } from '../../../ui-core/manifest/surfaceCalibration';
-import { resolveFloatingPresetSubTabs } from './floatingWindowsLinearPlaylists';
+import { useReviewLedgerStore } from '../../components/review/reviewLedgerStore';
+import {
+  buildFloatingWindowsLinearPlaylist,
+  findFloatingPlaylistUnitIndex,
+  resolveFloatingPresetSubTabs,
+} from './floatingWindowsLinearPlaylists';
 
 const useSyncedState = createScopedSyncedState('page:floating-windows-v2');
 
@@ -330,3 +335,95 @@ export function useFloatingWindowsCalibration(currentPreset?: PresetConfig) {
     handleCopyCalibratedParams,
   };
 }
+
+export interface UseFloatingPlaylistStateParams {
+  tier: FloatingWindowVisibilityTier;
+  fwMode: 'inspector' | 'stack' | 'matrix';
+  activeTierWindows: PresetConfig[];
+  allWindows: PresetConfig[];
+  currentPreset: PresetConfig | undefined;
+  activeSubTab: string;
+  setTier: (next: FloatingWindowVisibilityTier) => void;
+  setSelectedWindowId: (next: string) => void;
+  setActiveSubTab: (next: string) => void;
+}
+
+export function useFloatingPlaylistState({
+  tier,
+  fwMode,
+  activeTierWindows,
+  allWindows,
+  currentPreset,
+  activeSubTab,
+  setTier,
+  setSelectedWindowId,
+  setActiveSubTab,
+}: UseFloatingPlaylistStateParams) {
+  const activePlaylist = useMemo(
+    () => buildFloatingWindowsLinearPlaylist(tier, { presets: activeTierWindows }),
+    [tier, activeTierWindows]
+  );
+  const activePlaylistIdx = useMemo(
+    () =>
+      findFloatingPlaylistUnitIndex(
+        activePlaylist,
+        currentPreset?.id || '',
+        activeSubTab
+      ),
+    [activePlaylist, currentPreset?.id, activeSubTab]
+  );
+  const activePlaylistUnit = activePlaylist[activePlaylistIdx] || activePlaylist[0];
+  const activePlaylistPresets = useMemo(
+    () => activePlaylist.map((u) => u.preset),
+    [activePlaylist]
+  );
+  const toolbarDisplayPreset = useMemo(
+    () =>
+      currentPreset
+        ? { ...currentPreset, title: activePlaylistUnit?.label || currentPreset.title }
+        : undefined,
+    [currentPreset, activePlaylistUnit]
+  );
+
+  useEffect(() => {
+    if (fwMode === 'matrix' || !activePlaylistUnit) return;
+    useReviewLedgerStore.getState().setActiveUnit({
+      surfaceId: activePlaylistUnit.surfaceId,
+      variantId: activePlaylistUnit.variantId,
+      label: activePlaylistUnit.label,
+      referenceCode: activePlaylistUnit.referenceCode,
+      componentName: activePlaylistUnit.componentName,
+      sourceFile: activePlaylistUnit.sourceFile,
+    });
+  }, [fwMode, activePlaylistUnit]);
+
+  const navigationSeq = useReviewLedgerStore((s) => s.navigationSeq);
+  const activeUnitKey = useReviewLedgerStore((s) => s.activeUnitKey);
+  useEffect(() => {
+    if (navigationSeq === 0 || !activeUnitKey.startsWith('floating:')) return;
+    const [surfaceId, variantId = 'default'] = activeUnitKey.split('::');
+    const fwId = surfaceId.replace(/^floating:/, '');
+    const target = allWindows.find((w) => w.id === fwId);
+    if (!target) return;
+    const targetTier: FloatingWindowVisibilityTier =
+      target.tier === 'developer' ? 'developer' : 'user';
+    if (targetTier !== tier) {
+      setTier(targetTier);
+    }
+    setSelectedWindowId(target.id);
+    if (variantId && variantId !== 'default') {
+      setActiveSubTab(variantId);
+    } else {
+      setActiveSubTab(target.tabs?.[0]?.id || '');
+    }
+  }, [navigationSeq]);
+
+  return {
+    activePlaylist,
+    activePlaylistIdx,
+    activePlaylistUnit,
+    activePlaylistPresets,
+    toolbarDisplayPreset,
+  };
+}
+

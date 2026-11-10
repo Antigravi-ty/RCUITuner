@@ -73,10 +73,10 @@ export const TopWorkspaceHeaderBar: React.FC<TopWorkspaceHeaderBarProps> = ({
   activeNavLabel,
   activeSectionMeta,
   activeWorkspace,
-  onSelectWorkspace,
   ledgerSummary,
 }) => {
   const { tokens } = useAccentStore();
+  const activeWsSpec = WORKSPACE_SPECS[activeWorkspace];
   return (
     <header
       className={`h-16 px-4 md:px-6 border-b flex items-center justify-between gap-3 shrink-0 z-20 transition-colors ${
@@ -86,6 +86,17 @@ export const TopWorkspaceHeaderBar: React.FC<TopWorkspaceHeaderBarProps> = ({
       <div className="flex items-center gap-2.5 text-xs min-w-0">
         <span className="font-bold tracking-tight shrink-0">RCUITuner</span>
         <span className="text-neutral-400 shrink-0">/</span>
+        <span
+          className={`hidden md:inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold border shrink-0 ${activeWsSpec.badgeColor}`}
+        >
+          {renderWorkspaceIcon(activeWorkspace, 'h-3 w-3 shrink-0')}
+          <span>{activeWsSpec.shortLabel}</span>
+          {activeWorkspace === 'approval' && (
+            <span className="ml-0.5 inline-flex items-center gap-0.5 text-[10px] font-bold">
+              · {ledgerSummary.approvedCount}/{ledgerSummary.totalSurfaces}
+            </span>
+          )}
+        </span>
         {activeSectionMeta && (
           <span className={`hidden xl:inline-flex px-1.5 py-0.5 rounded text-[10px] font-mono font-extrabold border shrink-0 ${activeSectionMeta.badgeColor}`}>
             {activeSectionMeta.code}
@@ -94,36 +105,6 @@ export const TopWorkspaceHeaderBar: React.FC<TopWorkspaceHeaderBarProps> = ({
         <span className={`font-mono font-medium truncate ${tokens.text}`}>
           {activeNavLabel ?? activeTab}
         </span>
-      </div>
-
-      <div className={`flex items-center gap-1 p-1 rounded-xl border shrink-0 ${isLight ? 'bg-neutral-100/90 border-neutral-200/90' : 'bg-neutral-900/90 border-neutral-800'}`}>
-        {WORKSPACE_ORDER.map((wsId) => {
-          const spec = WORKSPACE_SPECS[wsId];
-          const isSelected = activeWorkspace === wsId;
-          const selectedClass = getWorkspaceSelectedStyles(wsId, isLight);
-          const idleClass = isLight
-            ? 'text-neutral-600 hover:text-neutral-900 hover:bg-white/50'
-            : 'text-neutral-400 hover:text-neutral-100 hover:bg-neutral-800/50';
-          return (
-            <button
-              key={wsId}
-              type="button"
-              onClick={() => onSelectWorkspace(wsId)}
-              data-top-workspace={wsId}
-              title={`${spec.title} (Alt+${spec.index})`}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer ${isSelected ? selectedClass : idleClass}`}
-            >
-              {renderWorkspaceIcon(wsId)}
-              <span>{spec.shortLabel}</span>
-              {wsId === 'approval' && (
-                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-                  <CheckCircle2 className="h-2.5 w-2.5" />
-                  <span>{ledgerSummary.approvedCount}/{ledgerSummary.totalSurfaces}</span>
-                </span>
-              )}
-            </button>
-          );
-        })}
       </div>
 
       <div className="flex items-center gap-2 shrink-0">

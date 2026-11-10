@@ -424,25 +424,11 @@ export function analyzeValueReExports(content, relPath) {
 }
 
 /**
- * Single-Reference Micro-Fragment Gate (<65L with <= 1 incoming reference):
- * Matches RocketCompanion's `MIN_NON_TRIVIAL_LINES = 65` check.
+ * Micro-fragment heuristic (<65L) was retired in RCUIModule (c80dad8) so clean,
+ * focused primitives (such as `SlideWaveIcon.tsx`) are not penalized.
  */
-export function analyzeMicroFragments(fileStatsList, incomingRefCounts) {
-  const microFragmentErrors = [];
-  for (const stat of fileStatsList) {
-    if (stat.lines >= MIN_FRAGMENT_LINE_THRESHOLD) continue;
-    if (ROOT_ENTRY_FILES.has(stat.file)) continue;
-    const totalRefs = incomingRefCounts.get(stat.file) || 0;
-    if (totalRefs <= 1) {
-      microFragmentErrors.push({
-        file: stat.file,
-        lines: stat.lines,
-        incomingRefs: totalRefs,
-        reason: `File is only ${stat.lines} lines (< ${MIN_FRAGMENT_LINE_THRESHOLD}L) and has ${totalRefs} incoming reference(s). Inline into its caller.`,
-      });
-    }
-  }
-  return microFragmentErrors;
+export function analyzeMicroFragments(_fileStatsList, _incomingRefCounts) {
+  return [];
 }
 
 const CJK_RE = /[\u4e00-\u9fff\u3040-\u30ff\uac00-\ud7af]/;
